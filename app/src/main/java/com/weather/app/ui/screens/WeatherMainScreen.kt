@@ -68,7 +68,9 @@ import com.weather.app.ui.components.DailyForecastList
 import com.weather.app.ui.components.DayDetailsBottomSheet
 import com.weather.app.ui.components.HourlyForecastRow
 import com.weather.app.ui.components.SearchCityBottomSheet
+import com.weather.app.ui.components.SunriseSunsetCard
 import com.weather.app.ui.components.WeatherMetricsGrid
+import com.weather.app.ui.components.WeatherRadarCard
 import com.weather.app.ui.components.WeatherTopBar
 import com.weather.app.ui.state.WeatherUiState
 import com.weather.app.ui.theme.LocalReducedMotion
@@ -133,9 +135,6 @@ fun WeatherMainScreen(
 
             if (bestLocation != null) {
                 viewModel.onGpsLocationAcquired(context, bestLocation.latitude, bestLocation.longitude)
-                scope.launch {
-                    snackbarHostState.showSnackbar("Визначаємо населений пункт за GPS...")
-                }
             }
 
             // Якщо кешованої локації немає або вона застаріла, запитуємо свіжі координати
@@ -408,6 +407,15 @@ private fun WeatherSuccessContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Схід і захід сонця
+        SunriseSunsetCard(
+            todayForecast = forecast.daily14Days.firstOrNull(),
+            currentTime = forecast.current.time,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Погодинний прогноз (24 год)
         HourlyForecastRow(
             hourlyItems = forecast.hourly24h,
@@ -420,6 +428,14 @@ private fun WeatherSuccessContent(
         DailyForecastList(
             dailyItems = forecast.daily14Days,
             onDayClick = onDayClick,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Погодний радар
+        WeatherRadarCard(
+            cityName = forecast.location.name,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 

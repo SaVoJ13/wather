@@ -124,6 +124,8 @@ object WeatherLocalCache {
                         put("pop", item.precipitationProbabilityPercent)
                         put("precipSum", item.precipitationSumMm)
                         put("maxWind", item.maxWindSpeedKmh)
+                        item.sunrise?.let { put("sunrise", it.format(isoFormatter)) }
+                        item.sunset?.let { put("sunset", it.format(isoFormatter)) }
                     }
                     dailyArr.put(dObj)
                 }
@@ -178,6 +180,14 @@ object WeatherLocalCache {
             val dailyList = mutableListOf<DailyForecastItem>()
             for (i in 0 until dailyArr.length()) {
                 val dObj = dailyArr.getJSONObject(i)
+                val sunriseStr = if (dObj.has("sunrise")) dObj.optString("sunrise") else null
+                val sunrise = sunriseStr?.takeIf { it.isNotBlank() }?.let {
+                    runCatching { LocalDateTime.parse(it, isoFormatter) }.getOrNull()
+                }
+                val sunsetStr = if (dObj.has("sunset")) dObj.optString("sunset") else null
+                val sunset = sunsetStr?.takeIf { it.isNotBlank() }?.let {
+                    runCatching { LocalDateTime.parse(it, isoFormatter) }.getOrNull()
+                }
                 dailyList.add(
                     DailyForecastItem(
                         date = LocalDateTime.parse(dObj.getString("date"), isoFormatter),
@@ -186,7 +196,9 @@ object WeatherLocalCache {
                         condition = runCatching { WeatherCondition.valueOf(dObj.getString("condition")) }.getOrDefault(WeatherCondition.CLEAR_SKY),
                         precipitationProbabilityPercent = dObj.optInt("pop", 0),
                         precipitationSumMm = dObj.optDouble("precipSum", 0.0),
-                        maxWindSpeedKmh = dObj.optDouble("maxWind", 10.0)
+                        maxWindSpeedKmh = dObj.optDouble("maxWind", 10.0),
+                        sunrise = sunrise,
+                        sunset = sunset
                     )
                 )
             }
