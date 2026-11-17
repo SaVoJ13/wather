@@ -12,10 +12,10 @@
 |---|---|---|---|---|---|
 | **TASK-001** | Ініціалізація governance-пам'яті, інвентаризація та технічні ADR | Фаза 0 | Agent 0 | `QA_VERIFIED` | ✅ 2026-11-17 |
 | **TASK-002** | Архітектурні контракти та моделі між UI, Domain та Data | Фаза 0/1 | Agent 0 | `QA_VERIFIED` | ✅ 2026-11-17 |
-| **TASK-003** | UX-специфікація інформаційної архітектури, станів та reduced-motion | Фаза 1 | product-ux | `IN_PROGRESS` | - |
-| **TASK-004** | Інтеграція Open-Meteo API-адаптера, WMO-мапінг та Mock-провайдер | Фаза 2 | weather-location | `IN_PROGRESS` | - |
-| **TASK-005** | Пошук міст через геокодування та безпечне визначення локації | Фаза 2/3 | weather-location | `TODO` | - |
-| **TASK-006** | Скелет Android Compose проєкту, дизайн-система та головний екран | Фаза 3 | android-ui | `TODO` | - |
+| **TASK-003** | UX-специфікація інформаційної архітектури, станів та reduced-motion | Фаза 1 | product-ux | `QA_VERIFIED` | ✅ 2026-11-17 |
+| **TASK-004** | Інтеграція Open-Meteo API-адаптера, WMO-мапінг та Mock-провайдер | Фаза 2 | weather-location | `QA_VERIFIED` | ✅ 2026-11-17 |
+| **TASK-005** | Пошук міст через геокодування та безпечне визначення локації | Фаза 2/3 | weather-location | `IN_PROGRESS` | - |
+| **TASK-006** | Скелет Android Compose проєкту, дизайн-система та головний екран | Фаза 3 | android-ui | `IN_PROGRESS` | - |
 | **TASK-007** | Домашній погодний AppWidget на базі Jetpack Glance | Фаза 4 | android-ui | `TODO` | - |
 | **TASK-008** | Комплексний аудит приватності, дозволів та незалежна верифікація | Фаза 5 | qa-privacy | `TODO` | - |
 

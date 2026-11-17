@@ -2,7 +2,7 @@
 
 - **Фаза:** 2 (Технічний фундамент і погодні дані)
 - **Відповідальний:** weather-location
-- **Статус:** `IN_PROGRESS` (Реалізовано, очікує перевірки QA)
+- **Статус:** `QA_VERIFIED`
 - **Файли-власники:**
   - `app/src/main/java/com/weather/app/domain/model/WeatherCondition.kt`
   - `app/src/main/java/com/weather/app/domain/model/LocationModel.kt`
@@ -67,3 +67,13 @@ OK (16 tests)
   7. Написано 16 unit-тестів, успішно скомпільовано через `kotlinc` та пройдено через `JUnitCore` (`OK (16 tests)`).
 - Стан: Реалізацію завершено. Відповідно до п. 2.1 Конституції, статус `QA_VERIFIED` не встановлюється автором і очікує перевірки незалежним QA-агентом або Власником.
 - Наступний крок: Передати на аудит QA-агенту `qa-privacy`.
+
+### 2026-11-17 21:16 — qa-privacy (Незалежна верифікація)
+- Зроблено: Проведено незалежний аудит кодової бази pp/src/main/java/com/weather/app/ та запуск unit-тестів:
+  1. Чистота домену: моделі в domain/model/ та інтерфейс domain/repository/WeatherRepository.kt повністю ізольовані від API DTO та зовнішніх бібліотек серіалізації.
+  2. WMO мапінг: WeatherCodeMapper.kt покриває всі категорії кодів (0-99) із коректним українським перекладом (WeatherCondition.descriptionUk).
+  3. Мок-репозиторій: MockWeatherRepository.kt надає повні реалістичні фікстури Києва (сонячно, 24h + 14 днів) та Варшави (дощ, 24h + 14 днів), а також потік observeCurrentForecast.
+  4. Ліцензія джерела: у коментарях до OpenMeteoDto.kt чітко зафіксовано статус некомерційного використання CC BY 4.0 та вимогу атрибуції.
+  5. Фактичний запуск тестів: самостійно скомпільовано через kotlinc та виконано через JUnitCore 16 тестів (WeatherCodeMapperTest, MockWeatherRepositoryTest, WeatherMapperTest). Результат: OK (16 tests), час 0.229s, 0 помилок/падінь.
+- Вердикт: **QA VERIFIED** (Критерії 1-6 підтверджено фактичними доказами).
+- Стан: Завдання верифіковано.
