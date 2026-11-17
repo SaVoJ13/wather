@@ -3,13 +3,16 @@
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.weather.app.data.local.WeatherLocalCache
 import com.weather.app.data.location.ReverseGeocoder
 import com.weather.app.data.repository.LocationRepositoryImpl
 import com.weather.app.data.repository.WeatherRepositoryImpl
+import com.weather.app.domain.model.FullWeatherForecast
 import com.weather.app.domain.model.LocationModel
 import com.weather.app.domain.repository.LocationRepository
 import com.weather.app.domain.repository.WeatherRepository
 import com.weather.app.ui.state.WeatherUiState
+import com.weather.app.widget.WeatherWidgetScheduler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -125,7 +128,11 @@ class WeatherViewModel(
         }
     }
 
-    fun loadForecast(location: LocationModel = currentLocation, forceRefresh: Boolean = false) {
+    fun loadForecast(
+        location: LocationModel = currentLocation,
+        forceRefresh: Boolean = false,
+        onLoaded: ((FullWeatherForecast) -> Unit)? = null
+    ) {
         currentLocation = location
         val currentState = _uiState.value
 
@@ -144,6 +151,7 @@ class WeatherViewModel(
                         isRefreshing = false,
                         isOffline = forecast.isStale
                     )
+                    onLoaded?.invoke(forecast)
                 },
                 onFailure = { error ->
                     val lastForecast = (currentState as? WeatherUiState.Success)?.forecast
@@ -157,12 +165,12 @@ class WeatherViewModel(
         }
     }
 
-    fun refresh() {
-        loadForecast(currentLocation, forceRefresh = true)
+    fun refresh(onLoaded: ((FullWeatherForecast) -> Unit)? = null) {
+        loadForecast(currentLocation, forceRefresh = true, onLoaded = onLoaded)
     }
 
-    fun selectLocation(location: LocationModel) {
-        loadForecast(location, forceRefresh = false)
+    fun selectLocation(location: LocationModel, onLoaded: ((FullWeatherForecast) -> Unit)? = null) {
+        loadForecast(location, forceRefresh = false, onLoaded = onLoaded)
     }
 
     suspend fun searchCities(query: String): List<LocationModel> {
@@ -178,7 +186,10 @@ class WeatherViewModel(
         viewModelScope.launch {
             _uiState.value = WeatherUiState.Loading
             val resolvedLocation = ReverseGeocoder.resolveLocation(context, latitude, longitude)
-            selectLocation(resolvedLocation)
+            WeatherLocalCache.saveActiveLocation(context, resolvedLocation)
+            selectLocation(resolvedLocation, onLoaded = { forecast ->
+                WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+            })
         }
     }
 }

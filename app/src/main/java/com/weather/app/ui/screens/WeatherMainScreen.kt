@@ -172,8 +172,15 @@ fun WeatherMainScreen(
         }
     }
 
-    // Якщо дозвіл уже надано раніше, автоматично визначаємо локацію при запуску
+    // Завантажуємо збережену локацію або визначаємо поточну за GPS
     androidx.compose.runtime.LaunchedEffect(Unit) {
+        val savedLoc = com.weather.app.data.local.WeatherLocalCache.loadActiveLocation(context)
+        if (savedLoc != null) {
+            viewModel.selectLocation(savedLoc, onLoaded = { forecast ->
+                com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+            })
+        }
+
         val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
         if (hasFine || hasCoarse) {
@@ -227,7 +234,11 @@ fun WeatherMainScreen(
         WeatherMainScreenContent(
             uiState = uiState,
             snackbarHostState = snackbarHostState,
-            onRefresh = { viewModel.refresh() },
+            onRefresh = {
+                viewModel.refresh(onLoaded = { forecast ->
+                    com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+                })
+            },
             onSearchClick = { isSearchSheetOpen = true },
             onLocationClick = onLocationClick,
             modifier = modifier
@@ -238,7 +249,10 @@ fun WeatherMainScreen(
             SearchCityBottomSheet(
                 onDismissRequest = { isSearchSheetOpen = false },
                 onCitySelected = { city ->
-                    viewModel.selectLocation(city)
+                    com.weather.app.data.local.WeatherLocalCache.saveActiveLocation(context, city)
+                    viewModel.selectLocation(city, onLoaded = { forecast ->
+                        com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+                    })
                 },
                 onSearchQuery = { query ->
                     viewModel.searchCities(query)

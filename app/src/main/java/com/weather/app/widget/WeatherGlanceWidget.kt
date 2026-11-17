@@ -73,9 +73,13 @@ class WeatherGlanceWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Responsive(setOf(COMPACT_SIZE, EXPANDED_SIZE))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        // Отримуємо останній закешований прогноз або фолбек
-        val forecast = com.weather.app.data.repository.WeatherRepositoryImpl.lastKnownForecast
+        // Отримуємо останній закешований прогноз локації користувача з дискового кешу, пам'яті або фолбек
+        val forecast = com.weather.app.data.local.WeatherLocalCache.loadCachedForecast(context)
+            ?: com.weather.app.data.repository.WeatherRepositoryImpl.lastKnownForecast
             ?: MockWeatherRepository.createKyivForecast()
+
+        // Переконуємося, що 10-хвилинне оновлення заплановане
+        WeatherWidgetScheduler.scheduleNextUpdate(context)
 
         val openAppIntent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP

@@ -47,3 +47,10 @@
 - Зібрано оновлений APK `app-debug.apk` (розмір: 18.6 МБ / 18 667 299 байт).
 - Встановлено на підключений пристрій Samsung Galaxy S24 Ultra (`RZCX326349A`).
 - Підтверджено фактичний вивід на екрані пристрою через `uiautomator dump`: відображається точна назва `Пшецлав (Przecław)` з іконкою GPS та реальними погодними даними Open-Meteo.
+### 2026-11-17 23:25 — Незалежна QA & Privacy верифікація TASK-009 (Автооновлення віджета кожні 10 хвилин та збереження локації)
+- Проведено незалежну перевірку змін агентом qa-privacy згідно з Конституцією v2.0 (п. 2.1, Червона лінія №9).
+- Перевірено дисковий кеш WeatherLocalCache.kt, планувальник WeatherWidgetScheduler.kt, ресивер WeatherWidgetReceiver.kt, Glance-віджет WeatherGlanceWidget.kt, маніфест AndroidManifest.xml та тести WeatherWidgetSchedulerTest.kt.
+- Тести: ./gradlew testDebugUnitTest --rerun-tasks — 39 з 39 unit-тестів успішні (100% pass, 0 failed, 0 errors, 0 skipped).
+- Приватність: ACCESS_BACKGROUND_LOCATION суворо відсутній; жодних фонових опитувань GPS чи витоків локації.
+- Періодичність оновлення: рівно 10 хвилин (600 000 мс) через AlarmManager.setAndAllowWhileIdle.
+- Статус TASK-009 офіційно переведено в QA_VERIFIED ✅.
