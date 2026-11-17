@@ -1,0 +1,20 @@
+﻿<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Sun rays -->
+    <path
+        android:strokeColor="#FFB300"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M8,1v1.5 M3,6.5h1.5 M4.4,2.9l1.1,1.1 M11.6,2.9l-1.1,1.1 M4.4,10.1l1.1,-1.1"/>
+    <!-- Sun body -->
+    <path
+        android:fillColor="#FFB300"
+        android:pathData="M8,3a3.5,3.5 0 1,0 0.001,0z"/>
+    <!-- Cloud in front -->
+    <path
+        android:fillColor="#ECEFF1"
+        android:pathData="M19.35,12.04C18.67,8.59 15.64,6 12,6 9.11,6 6.6,7.64 5.35,10.04 2.34,10.36 0,12.91 0,16c0,3.31 2.69,6 6,6h13c2.76,0 5,-2.24 5,-5 0,-2.64 -2.05,-4.78 -4.65,-4.96z"/>
+</vector>

@@ -113,9 +113,9 @@ object WeatherLocalCache {
                 }
                 put("hourly", hourlyArr)
 
-                // Daily (сьогоднішній день)
+                // Daily (найближчі 5 днів для віджета)
                 val dailyArr = JSONArray()
-                forecast.daily14Days.take(1).forEach { item ->
+                forecast.daily14Days.take(5).forEach { item ->
                     val dObj = JSONObject().apply {
                         put("date", item.date.format(isoFormatter))
                         put("min", item.minTemperatureCelsius)

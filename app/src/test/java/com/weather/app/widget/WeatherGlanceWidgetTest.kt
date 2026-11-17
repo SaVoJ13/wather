@@ -20,11 +20,26 @@ class WeatherGlanceWidgetTest {
     @Test
     fun testSpecificWeatherConditionDrawables() {
         assertEquals(R.drawable.ic_widget_sunny, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.CLEAR_SKY))
+        assertEquals(R.drawable.ic_widget_partly_cloudy, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.MAINLY_CLEAR))
+        assertEquals(R.drawable.ic_widget_partly_cloudy, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.PARTLY_CLOUDY))
         assertEquals(R.drawable.ic_widget_cloudy, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.OVERCAST))
+        assertEquals(R.drawable.ic_widget_rain, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.DRIZZLE))
         assertEquals(R.drawable.ic_widget_rain, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.RAIN))
+        assertEquals(R.drawable.ic_widget_rain, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.HEAVY_RAIN))
         assertEquals(R.drawable.ic_widget_snow, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.SNOW))
         assertEquals(R.drawable.ic_widget_thunderstorm, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.THUNDERSTORM))
         assertEquals(R.drawable.ic_widget_fog, WeatherGlanceWidget.weatherConditionDrawableRes(WeatherCondition.FOG))
+    }
+
+    @Test
+    fun testFormatDayOfWeekUk() {
+        assertEquals("пн", WeatherGlanceWidget.formatDayOfWeekUk(java.time.DayOfWeek.MONDAY))
+        assertEquals("вт", WeatherGlanceWidget.formatDayOfWeekUk(java.time.DayOfWeek.TUESDAY))
+        assertEquals("ср", WeatherGlanceWidget.formatDayOfWeekUk(java.time.DayOfWeek.WEDNESDAY))
+        assertEquals("чт", WeatherGlanceWidget.formatDayOfWeekUk(java.time.DayOfWeek.THURSDAY))
+        assertEquals("пт", WeatherGlanceWidget.formatDayOfWeekUk(java.time.DayOfWeek.FRIDAY))
+        assertEquals("сб", WeatherGlanceWidget.formatDayOfWeekUk(java.time.DayOfWeek.SATURDAY))
+        assertEquals("нд", WeatherGlanceWidget.formatDayOfWeekUk(java.time.DayOfWeek.SUNDAY))
     }
 
     @Test

@@ -59,13 +59,26 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
         fun weatherConditionDrawableRes(condition: WeatherCondition): Int {
             return when (condition) {
-                WeatherCondition.CLEAR_SKY, WeatherCondition.MAINLY_CLEAR -> R.drawable.ic_widget_sunny
-                WeatherCondition.PARTLY_CLOUDY, WeatherCondition.OVERCAST -> R.drawable.ic_widget_cloudy
+                WeatherCondition.CLEAR_SKY -> R.drawable.ic_widget_sunny
+                WeatherCondition.MAINLY_CLEAR, WeatherCondition.PARTLY_CLOUDY -> R.drawable.ic_widget_partly_cloudy
+                WeatherCondition.OVERCAST -> R.drawable.ic_widget_cloudy
                 WeatherCondition.DRIZZLE, WeatherCondition.RAIN, WeatherCondition.HEAVY_RAIN -> R.drawable.ic_widget_rain
                 WeatherCondition.SNOW -> R.drawable.ic_widget_snow
                 WeatherCondition.THUNDERSTORM -> R.drawable.ic_widget_thunderstorm
                 WeatherCondition.FOG -> R.drawable.ic_widget_fog
                 WeatherCondition.UNKNOWN -> R.drawable.ic_widget_cloudy
+            }
+        }
+
+        fun formatDayOfWeekUk(dayOfWeek: java.time.DayOfWeek): String {
+            return when (dayOfWeek) {
+                java.time.DayOfWeek.MONDAY -> "пн"
+                java.time.DayOfWeek.TUESDAY -> "вт"
+                java.time.DayOfWeek.WEDNESDAY -> "ср"
+                java.time.DayOfWeek.THURSDAY -> "чт"
+                java.time.DayOfWeek.FRIDAY -> "пт"
+                java.time.DayOfWeek.SATURDAY -> "сб"
+                java.time.DayOfWeek.SUNDAY -> "нд"
             }
         }
     }
@@ -108,7 +121,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
     @androidx.compose.runtime.Composable
     private fun CompactWidgetContent(forecast: FullWeatherForecast) {
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
-        val tempString = (if (tempInt > 0) "+$tempInt" else "$tempInt") + "°"
+        val tempString = "$tempInt°"
         val today = forecast.daily14Days.firstOrNull()
         val minToday = today?.minTemperatureCelsius?.roundToInt() ?: 0
         val maxToday = today?.maxTemperatureCelsius?.roundToInt() ?: 0
@@ -123,13 +136,20 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 modifier = GlanceModifier.fillMaxWidth(),
                 verticalAlignment = Alignment.Vertical.CenterVertically
             ) {
+                Image(
+                    provider = ImageProvider(R.drawable.ic_widget_location),
+                    contentDescription = null,
+                    modifier = GlanceModifier.size(14.dp)
+                )
+                Spacer(modifier = GlanceModifier.width(4.dp))
                 Text(
                     text = forecast.location.name,
                     style = TextStyle(
-                        color = ColorProvider(Color.White),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Bold
+                        color = ColorProvider(Color(0xFFB8C1D1)),
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium
                     ),
+                    maxLines = 1,
                     modifier = GlanceModifier.defaultWeight()
                 )
                 Image(
@@ -139,7 +159,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 )
             }
 
-            Spacer(modifier = GlanceModifier.height(4.dp))
+            Spacer(modifier = GlanceModifier.height(2.dp))
 
             Text(
                 text = tempString,
@@ -150,22 +170,31 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 )
             )
 
+            Text(
+                text = forecast.current.condition.descriptionUk,
+                style = TextStyle(
+                    color = ColorProvider(Color(0xFFE2E8F0)),
+                    fontSize = 12.sp
+                ),
+                maxLines = 1
+            )
+
             Spacer(modifier = GlanceModifier.height(2.dp))
 
             Text(
-                text = "↑ ${if (maxToday > 0) "+$maxToday" else "$maxToday"}°  ↓ ${if (minToday > 0) "+$minToday" else "$minToday"}°",
+                text = "↑${maxToday}° / ↓${minToday}°",
                 style = TextStyle(
-                    color = ColorProvider(Color(0xFFE0E0E0)),
+                    color = ColorProvider(Color(0xFFB8C1D1)),
                     fontSize = 11.sp
                 )
             )
 
-            Spacer(modifier = GlanceModifier.height(4.dp))
+            Spacer(modifier = GlanceModifier.height(2.dp))
 
             Text(
                 text = "Оновл. $updateTime",
                 style = TextStyle(
-                    color = ColorProvider(Color(0x99FFFFFF)),
+                    color = ColorProvider(Color(0x80B8C1D1)),
                     fontSize = 9.sp
                 )
             )
@@ -175,123 +204,142 @@ class WeatherGlanceWidget : GlanceAppWidget() {
     @androidx.compose.runtime.Composable
     private fun ExpandedWidgetContent(forecast: FullWeatherForecast) {
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
-        val tempString = (if (tempInt > 0) "+$tempInt" else "$tempInt") + "°"
-        val feelsLikeInt = forecast.current.apparentTemperatureCelsius.roundToInt()
-        val feelsLikeString = "Відчувається як " + (if (feelsLikeInt > 0) "+$feelsLikeInt" else "$feelsLikeInt") + "°"
+        val tempString = "$tempInt°"
+        val today = forecast.daily14Days.firstOrNull()
+        val minToday = today?.minTemperatureCelsius?.roundToInt() ?: 0
+        val maxToday = today?.maxTemperatureCelsius?.roundToInt() ?: 0
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
         val updateTime = forecast.updatedAt.format(timeFormatter)
-        val hourlyUpcoming = forecast.hourly24h.take(3)
+        val dailyItems = forecast.daily14Days.take(4)
 
         Row(
             modifier = GlanceModifier.fillMaxSize(),
             verticalAlignment = Alignment.Vertical.CenterVertically
         ) {
-            // Ліва колонка: поточна температура та стан
+            // Ліва колонка (~46% ширини): велика іконка, температура, опис, діапазон, локація
             Column(
                 modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
                 verticalAlignment = Alignment.Vertical.CenterVertically
             ) {
-                Text(
-                    text = forecast.location.name,
-                    style = TextStyle(
-                        color = ColorProvider(Color.White),
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                )
-
-                Row(
-                    verticalAlignment = Alignment.Vertical.CenterVertically
-                ) {
-                    Text(
-                        text = tempString,
-                        style = TextStyle(
-                            color = ColorProvider(Color.White),
-                            fontSize = 30.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Spacer(modifier = GlanceModifier.width(8.dp))
-                    Image(
-                        provider = ImageProvider(weatherConditionDrawableRes(forecast.current.condition)),
-                        contentDescription = forecast.current.condition.descriptionUk,
-                        modifier = GlanceModifier.size(28.dp)
-                    )
-                }
-
-                Text(
-                    text = feelsLikeString,
-                    style = TextStyle(
-                        color = ColorProvider(Color(0xFFD0D0D0)),
-                        fontSize = 10.sp
-                    )
+                Image(
+                    provider = ImageProvider(weatherConditionDrawableRes(forecast.current.condition)),
+                    contentDescription = forecast.current.condition.descriptionUk,
+                    modifier = GlanceModifier.size(44.dp)
                 )
 
                 Spacer(modifier = GlanceModifier.height(2.dp))
 
                 Text(
-                    text = "Оновлено о $updateTime",
+                    text = tempString,
                     style = TextStyle(
-                        color = ColorProvider(Color(0x99FFFFFF)),
-                        fontSize = 9.sp
+                        color = ColorProvider(Color.White),
+                        fontSize = 36.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 )
+
+                Text(
+                    text = forecast.current.condition.descriptionUk,
+                    style = TextStyle(
+                        color = ColorProvider(Color(0xFFE2E8F0)),
+                        fontSize = 13.sp
+                    ),
+                    maxLines = 1
+                )
+
+                Spacer(modifier = GlanceModifier.height(2.dp))
+
+                Text(
+                    text = "↑${maxToday}° / ↓${minToday}°",
+                    style = TextStyle(
+                        color = ColorProvider(Color(0xFFB8C1D1)),
+                        fontSize = 12.sp
+                    )
+                )
+
+                Spacer(modifier = GlanceModifier.height(3.dp))
+
+                Row(
+                    verticalAlignment = Alignment.Vertical.CenterVertically
+                ) {
+                    Image(
+                        provider = ImageProvider(R.drawable.ic_widget_location),
+                        contentDescription = null,
+                        modifier = GlanceModifier.size(13.dp)
+                    )
+                    Spacer(modifier = GlanceModifier.width(4.dp))
+                    Text(
+                        text = forecast.location.name,
+                        style = TextStyle(
+                            color = ColorProvider(Color(0xFFB8C1D1)),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        maxLines = 1
+                    )
+                    Spacer(modifier = GlanceModifier.width(4.dp))
+                    Text(
+                        text = "• $updateTime",
+                        style = TextStyle(
+                            color = ColorProvider(Color(0x80B8C1D1)),
+                            fontSize = 10.sp
+                        )
+                    )
+                }
             }
 
-            Spacer(modifier = GlanceModifier.width(8.dp))
+            Spacer(modifier = GlanceModifier.width(10.dp))
 
-            // Права колонка: найближчі 3 години прогнозу
-            Row(
+            // Права колонка (~54% ширини): міні-таблиця щоденного прогнозу на 4 дні
+            Column(
                 modifier = GlanceModifier.defaultWeight().fillMaxHeight(),
                 verticalAlignment = Alignment.Vertical.CenterVertically
             ) {
-                hourlyUpcoming.forEach { hourItem ->
-                    val hourTempInt = hourItem.temperatureCelsius.roundToInt()
-                    val hourTempString = (if (hourTempInt > 0) "+$hourTempInt" else "$hourTempInt") + "°"
-                    val hourLabel = hourItem.time.format(timeFormatter)
+                dailyItems.forEachIndexed { index, item ->
+                    val max = item.maxTemperatureCelsius.roundToInt()
+                    val min = item.minTemperatureCelsius.roundToInt()
+                    val dayLabel = formatDayOfWeekUk(item.date.dayOfWeek)
 
-                    Column(
-                        modifier = GlanceModifier.defaultWeight(),
-                        horizontalAlignment = Alignment.Horizontal.CenterHorizontally
+                    Row(
+                        modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+                        verticalAlignment = Alignment.Vertical.CenterVertically
                     ) {
                         Text(
-                            text = hourLabel,
+                            text = dayLabel,
                             style = TextStyle(
-                                color = ColorProvider(Color(0xFFB0BEC5)),
-                                fontSize = 10.sp
-                            )
+                                color = ColorProvider(Color(0xFFB8C1D1)),
+                                fontSize = 13.sp
+                            ),
+                            modifier = GlanceModifier.width(26.dp)
                         )
 
-                        Spacer(modifier = GlanceModifier.height(4.dp))
+                        Spacer(modifier = GlanceModifier.defaultWeight())
 
                         Image(
-                            provider = ImageProvider(weatherConditionDrawableRes(hourItem.condition)),
-                            contentDescription = null,
+                            provider = ImageProvider(weatherConditionDrawableRes(item.condition)),
+                            contentDescription = item.condition.descriptionUk,
                             modifier = GlanceModifier.size(20.dp)
                         )
 
-                        Spacer(modifier = GlanceModifier.height(4.dp))
+                        Spacer(modifier = GlanceModifier.defaultWeight())
 
                         Text(
-                            text = hourTempString,
+                            text = "${max}° ${min}°",
                             style = TextStyle(
                                 color = ColorProvider(Color.White),
-                                fontSize = 12.sp,
+                                fontSize = 13.sp,
                                 fontWeight = FontWeight.Medium
                             )
                         )
+                    }
 
-                        if (hourItem.precipitationProbabilityPercent > 10) {
-                            Text(
-                                text = "${hourItem.precipitationProbabilityPercent}%",
-                                style = TextStyle(
-                                    color = ColorProvider(Color(0xFF4FC3F7)),
-                                    fontSize = 9.sp
-                                )
-                            )
-                        } else {
-                            Spacer(modifier = GlanceModifier.height(11.dp))
-                        }
+                    if (index < dailyItems.size - 1) {
+                        Box(
+                            modifier = GlanceModifier
+                                .fillMaxWidth()
+                                .height(1.dp)
+                                .background(ColorProvider(Color(0x26FFFFFF)))
+                        ) {}
                     }
                 }
             }
