@@ -10,7 +10,7 @@
 
 | Компонент / Сервіс | Призначення | Ліцензія / Умови | Квоти та обмеження | Статус схвалення | Офіційне джерело |
 |---|---|---|---|---|---|
-| **Open-Meteo Weather Forecast API** | Погодинний прогноз (до 7-14 днів) та денний прогноз (до 16 днів) | [CC BY 4.0](https://open-meteo.com/en/terms) (лише для некомерційного використання) | До 10,000 запитів на добу безкоштовно. Вимагає обов'язкової атрибуції в UI ("Weather data by Open-Meteo.com"). Заборонено використовувати в застосунках з платною підпискою чи рекламою без комерційної ліцензії. | **Кандидат для некомерційного прототипу**. Для релізу потребує рішення Власника щодо бізнес-моделі. | https://open-meteo.com/ |
+| **Open-Meteo Weather Forecast API** | Погодинний прогноз (до 7-14 днів) та денний прогноз (до 16 днів) | [CC BY 4.0](https://open-meteo.com/en/terms) (лише для некомерційного використання) | До 10,000 запитів на добу безкоштовно. Заборонено для публічного релізу з рекламою без комерційної підписки. | **Схвалено лише для розробки та локального тестування (dev/test)**. Для релізу потрібна комерційна підписка або заміна провайдера. | https://open-meteo.com/ |
 | **Open-Meteo Geocoding API** | Пошук міст та координат за назвою | [CC BY 4.0](https://open-meteo.com/en/terms) (некомерційне використання) | Дозволяє швидкий пошук без потреби реєстрації та ключів. Працює автономно без GPS. | **Кандидат для прототипу**. | https://open-meteo.com/en/docs/geocoding-api |
 | **Android Location Services (LocationManager)** | Отримання поточної геопозиції за явним запитом користувача | Android Open Source Project (AOSP / Apache 2.0) | Тільки foreground location (`ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION`). Жодної фонової локації. | **Схвалено**. | https://developer.android.com/develop/sensors-and-location/location |
 
@@ -28,6 +28,7 @@
 | **Jetpack Glance (AppWidget)** | `androidx.glance:glance-appwidget`, `androidx.glance:glance-material3` | Apache 2.0 | Схвалено | https://developer.android.com/jetpack/androidx/releases/glance |
 | **Ktor Client (або OkHttp)** | Легкий клієнт для HTTP-запитів до Weather API | Apache 2.0 | Схвалено | https://ktor.io/ |
 | **AndroidX DataStore** | Локальне збереження обраних міст та налаштувань | Apache 2.0 | Схвалено | https://developer.android.com/topic/libraries/architecture/datastore |
+| **Google Mobile Ads Lite SDK (AdMob)** | Показ банерної реклами (компонент комерційної моделі) | Google Play Services SDK License | Схвалено для розробки з тестовими Ad Unit ID. Бойові ключі — лише Власник перед релізом. | https://developers.google.com/admob/android/quick-start |
 
 ---
 
