@@ -2,7 +2,7 @@
 
 - **Фаза:** 2 / 3
 - **Відповідальний:** weather-location
-- **Статус:** `IN_PROGRESS` (Реалізовано, очікує перевірки QA)
+- **Статус:** `QA_VERIFIED`
 - **Файли-власники:**
   - `app/src/main/java/com/weather/app/domain/repository/LocationRepository.kt`
   - `app/src/main/java/com/weather/app/data/remote/dto/GeocodingDto.kt`

@@ -28,8 +28,9 @@
 ### 2026-11-17 20:03 — Рішення Власника
 - Власник затвердив бізнес-модель: застосунок буде комерційним із рекламою (Ad-supported).
 - Зафіксовано ADR-005 у `DECISIONS.md`. Оновлено `PROJECT_PROFILE.md`, `THIRD_PARTY.md` (додано Google Mobile Ads з тестовими ID), `OWNER_INBOX.md` та `CURRENT_STATE.md`.
-### 2026-11-17 21:20 — Завершення та незалежна верифікація Фази 1 (UX) та Фази 2 (Data Foundation)
-- `product-ux` завершив TASK-003: створено вичерпну специфікацію `UX_SPEC.md` та токени `DESIGN_TOKENS.md` (WCAG AA ≥ 4.5:1, тач-таргети 48dp, TalkBack, reduced-motion, безпечний GPS, рекламний слот унизу, відсутність реклами у віджеті).
-- `weather-location` завершив TASK-004: створено доменні моделі, WMO-мапер кодів 0-99, Open-Meteo адаптер та автономний `MockWeatherRepository` з фікстурами Києва та Варшави на 24h + 14 днів.
-- `qa-privacy` провів незалежний аудит і фактичний запуск тестів (16/16 OK). Завдання TASK-003 та TASK-004 отримали статус `QA_VERIFIED` ✅.
-- Робота переходить до реалізації пошуку міст (TASK-005) та каркаса Compose UI (TASK-006).
+### 2026-11-17 21:46 — Завершення та незалежна верифікація TASK-005 та TASK-006, збірка першого APK
+- `weather-location` завершив TASK-005: реалізовано автономний пошук міст GeocodingApiClient, безпечний foreground LocationClient без background location та менеджмент збережених міст. 24 unit-тести пройдено. QA Verified ✅.
+- `android-ui` завершив TASK-006: налаштовано Android Compose під Android 15 (minSdk 26), створено дизайн-систему, погодний екран із 24h/14d прогнозом, рекламним блоком та підтримкою reduced-motion.
+- Фактичний результат збірки: `./gradlew assembleDebug` завершився успішно, створено артефакт `app/build/outputs/apk/debug/app-debug.apk` (розмір 16.4 МБ).
+- Фактичний результат тестів: `./gradlew testDebugUnitTest` — 33 тести пройдено (100% success rate, 0 failures). QA Verified ✅.
+- Робота переходить до реалізації домашнього віджета Jetpack Glance (TASK-007).
