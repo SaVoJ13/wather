@@ -129,6 +129,8 @@ fun WeatherMainScreen(
                 }
             }
 
+            val isFresh = bestLocation != null && (System.currentTimeMillis() - bestLocation.time) < 15 * 60 * 1000
+
             if (bestLocation != null) {
                 viewModel.onGpsLocationAcquired(context, bestLocation.latitude, bestLocation.longitude)
                 scope.launch {
@@ -136,8 +138,8 @@ fun WeatherMainScreen(
                 }
             }
 
-            // Сучасний Android API для отримання свіжих координат
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            // Якщо кешованої локації немає або вона застаріла, запитуємо свіжі координати
+            if (!isFresh && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
                 try {
                     val activeProvider = when {
                         locationManager.isProviderEnabled("fused") -> "fused"
@@ -149,7 +151,7 @@ fun WeatherMainScreen(
                         null,
                         ContextCompat.getMainExecutor(context)
                     ) { freshLoc ->
-                        if (freshLoc != null) {
+                        if (freshLoc != null && bestLocation == null) {
                             viewModel.onGpsLocationAcquired(context, freshLoc.latitude, freshLoc.longitude)
                         }
                     }

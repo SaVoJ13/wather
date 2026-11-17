@@ -28,6 +28,11 @@ class WeatherRepositoryImpl(
     private val cacheTtlMinutes: Long = 30L
 ) : WeatherRepository {
 
+    companion object {
+        @Volatile
+        var lastKnownForecast: FullWeatherForecast? = null
+    }
+
     private val cache = ConcurrentHashMap<String, CachedForecast>()
     private val _currentForecastFlow = MutableStateFlow<FullWeatherForecast?>(null)
 
@@ -60,6 +65,7 @@ class WeatherRepositoryImpl(
                 val response = apiResult.getOrThrow()
                 val domainForecast = WeatherMapper.toDomain(response, location, now)
                 cache[cacheKey] = CachedForecast(domainForecast, now)
+                lastKnownForecast = domainForecast
                 _currentForecastFlow.value = domainForecast
                 return Result.success(domainForecast)
             } else {

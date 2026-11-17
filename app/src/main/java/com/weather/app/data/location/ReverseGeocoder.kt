@@ -66,27 +66,17 @@ object ReverseGeocoder {
             return@withContext onlineLocation
         }
 
-        // 3. Фолбек для відомих координат або красивий рядок координат
-        val isPrzeclawArea = latitude in 53.34..53.42 && longitude in 14.43..14.52
-        val placeName = if (isPrzeclawArea) {
-            "Пшецлав (Przecław)"
-        } else {
-            val latRounded = String.format(Locale.US, "%.2f", latitude)
-            val lonRounded = String.format(Locale.US, "%.2f", longitude)
-            "$latRounded°N, $lonRounded°E"
-        }
-
-        val admin = if (isPrzeclawArea) "Західнопоморське воєводство (передмістя Щецина)" else null
-        val country = if (isPrzeclawArea) "Польща" else "Місцезнаходження за GPS"
-
+        // 3. Нейтральний фолбек координат
+        val latRounded = String.format(Locale.US, "%.2f", latitude)
+        val lonRounded = String.format(Locale.US, "%.2f", longitude)
         LocationModel(
             id = (latitude * 10000 + longitude).toLong(),
-            name = placeName,
-            country = country,
-            admin1 = admin,
+            name = "$latRounded°N, $lonRounded°E",
+            country = "Місцезнаходження за GPS",
+            admin1 = null,
             latitude = latitude,
             longitude = longitude,
-            timezone = if (isPrzeclawArea) "Europe/Warsaw" else "auto",
+            timezone = "auto",
             isCurrentLocation = true
         )
     }
@@ -139,14 +129,15 @@ object ReverseGeocoder {
             ?: addr.locality
             ?: addr.subAdminArea
             ?: addr.featureName
-            ?: "Пшецлав"
+            ?: run {
+                val latStr = String.format(Locale.US, "%.2f", latitude)
+                val lonStr = String.format(Locale.US, "%.2f", longitude)
+                "$latStr°N, $lonStr°E"
+            }
 
         val placeName = formatSettlementName(rawPlaceName)
-        val country = addr.countryName ?: "Польща"
-        var admin1 = addr.adminArea
-        if (placeName.contains("Przecław", ignoreCase = true) && admin1 == null) {
-            admin1 = "Західнопоморське воєводство (передмістя Щецина)"
-        }
+        val country = addr.countryName ?: ""
+        val admin1 = addr.adminArea
 
         return LocationModel(
             id = (latitude * 10000 + longitude).toLong(),
@@ -168,7 +159,7 @@ object ReverseGeocoder {
             conn.requestMethod = "GET"
             conn.connectTimeout = 5000
             conn.readTimeout = 5000
-            conn.setRequestProperty("User-Agent", "WeatherApp-Android/1.0 (contact: info@weather.app)")
+            conn.setRequestProperty("User-Agent", "WeatherApp-Android/1.0 (Open-Source Weather App)")
 
             if (conn.responseCode in 200..299) {
                 val jsonString = BufferedReader(InputStreamReader(conn.inputStream, Charsets.UTF_8)).use { it.readText() }
@@ -182,17 +173,19 @@ object ReverseGeocoder {
                         ?: addressObj.optString("town").takeIf { it.isNotEmpty() }
                         ?: addressObj.optString("city").takeIf { it.isNotEmpty() }
                         ?: addressObj.optString("municipality").takeIf { it.isNotEmpty() }
-                        ?: "Пшецлав"
+                        ?: run {
+                            val latStr = String.format(Locale.US, "%.2f", latitude)
+                            val lonStr = String.format(Locale.US, "%.2f", longitude)
+                            "$latStr°N, $lonStr°E"
+                        }
 
                     val placeName = formatSettlementName(rawPlaceName)
-                    val country = if (addressObj.has("country")) addressObj.optString("country") else "Польща"
+                    val country = if (addressObj.has("country")) addressObj.optString("country") else ""
 
                     val state = if (addressObj.has("state") && !addressObj.isNull("state")) {
                         addressObj.optString("state")
                     } else if (addressObj.has("county") && !addressObj.isNull("county")) {
                         addressObj.optString("county")
-                    } else if (placeName.contains("Przecław", ignoreCase = true)) {
-                        "Західнопоморське воєводство (передмістя Щецина)"
                     } else {
                         null
                     }
@@ -204,7 +197,7 @@ object ReverseGeocoder {
                         admin1 = state,
                         latitude = latitude,
                         longitude = longitude,
-                        timezone = "Europe/Warsaw",
+                        timezone = "auto",
                         isCurrentLocation = true
                     )
                 }

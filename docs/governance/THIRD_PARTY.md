@@ -12,6 +12,7 @@
 |---|---|---|---|---|---|
 | **Open-Meteo Weather Forecast API** | Погодинний прогноз (до 7-14 днів) та денний прогноз (до 16 днів) | [CC BY 4.0](https://open-meteo.com/en/terms) (лише для некомерційного використання) | До 10,000 запитів на добу безкоштовно. Заборонено для публічного релізу з рекламою без комерційної підписки. | **Схвалено лише для розробки та локального тестування (dev/test)**. Для релізу потрібна комерційна підписка або заміна провайдера. | https://open-meteo.com/ |
 | **Open-Meteo Geocoding API** | Пошук міст та координат за назвою | [CC BY 4.0](https://open-meteo.com/en/terms) (некомерційне використання) | Дозволяє швидкий пошук без потреби реєстрації та ключів. Працює автономно без GPS. | **Кандидат для прототипу**. | https://open-meteo.com/en/docs/geocoding-api |
+| **OpenStreetMap Nominatim API** | Зворотне геокодування GPS-координат у назву населеного пункту (село/місто) | [ODbL 1.0](https://www.openstreetmap.org/copyright) | До 1 запиту на секунду, обов'язковий User-Agent. Використовується виключно за явної foreground дії користувача. | **Схвалено для dev/test**. | https://nominatim.org/ |
 | **Android Location Services (LocationManager)** | Отримання поточної геопозиції за явним запитом користувача | Android Open Source Project (AOSP / Apache 2.0) | Тільки foreground location (`ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION`). Жодної фонової локації. | **Схвалено**. | https://developer.android.com/develop/sensors-and-location/location |
 
 ---

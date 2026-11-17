@@ -1,11 +1,11 @@
 ﻿package com.weather.app.data.remote
 
-import com.weather.app.data.mapper.GeocodingMapper
 import com.weather.app.data.remote.dto.GeocodingResponse
 import com.weather.app.domain.model.LocationModel
 
 /**
- * Клієнт геокодування Open-Meteo з автономним мок-фолбеком на випадок відсутності мережі.
+ * Клієнт геокодування Open-Meteo з підтримкою багатомовності, транслітерації (PL/UK)
+ * та локальною базою популярних міст для роботи без інтернету.
  * 
  * Першоджерело: https://geocoding-api.open-meteo.com/v1/search?name={query}&count=10&language=uk&format=json
  * Ліцензія: CC BY 4.0.
@@ -17,6 +17,33 @@ class GeocodingApiClient(
 ) {
 
     private val mockCities = listOf(
+        LocationModel(
+            id = 3088006L,
+            name = "Пшецлав (Przecław)",
+            country = "Польща",
+            admin1 = "Західнопоморське воєводство (передмістя Щецина)",
+            latitude = 53.3745,
+            longitude = 14.4725,
+            timezone = "Europe/Warsaw"
+        ),
+        LocationModel(
+            id = 3083829L,
+            name = "Щецин (Szczecin)",
+            country = "Польща",
+            admin1 = "Західнопоморське воєводство",
+            latitude = 53.4285,
+            longitude = 14.5528,
+            timezone = "Europe/Warsaw"
+        ),
+        LocationModel(
+            id = 756135L,
+            name = "Варшава (Warszawa)",
+            country = "Польща",
+            admin1 = "Мазовецьке воєводство",
+            latitude = 52.2297,
+            longitude = 21.0122,
+            timezone = "Europe/Warsaw"
+        ),
         LocationModel(
             id = 703448L,
             name = "Київ",
@@ -61,34 +88,20 @@ class GeocodingApiClient(
             latitude = 48.4647,
             longitude = 35.0462,
             timezone = "Europe/Kyiv"
-        ),
-        LocationModel(
-            id = 756135L,
-            name = "Варшава",
-            country = "Польща",
-            admin1 = "Мазовецьке воєводство",
-            latitude = 52.2297,
-            longitude = 21.0122,
-            timezone = "Europe/Warsaw"
-        ),
-        LocationModel(
-            id = 2643743L,
-            name = "Лондон",
-            country = "Велика Британія",
-            admin1 = "Англія",
-            latitude = 51.5085,
-            longitude = -0.1257,
-            timezone = "Europe/London"
-        ),
-        LocationModel(
-            id = 2950159L,
-            name = "Берлін",
-            country = "Німеччина",
-            admin1 = "Берлін",
-            latitude = 52.5244,
-            longitude = 13.4105,
-            timezone = "Europe/Berlin"
         )
+    )
+
+    // Словник транслітерації кирилиці в польські/латинські топоніми
+    private val translitAliases = mapOf(
+        "пшецлав" to "Przecław",
+        "щецин" to "Szczecin",
+        "щецін" to "Szczecin",
+        "варшава" to "Warszawa",
+        "краків" to "Krakow",
+        "вроцлав" to "Wroclaw",
+        "познань" to "Poznan",
+        "гданськ" to "Gdansk",
+        "колбасково" to "Kolbaskowo"
     )
 
     suspend fun search(query: String, language: String = "uk"): Result<List<LocationModel>> {
@@ -97,22 +110,53 @@ class GeocodingApiClient(
             return Result.success(emptyList())
         }
 
-        // Якщо передано реальний мережевий обробник — викликаємо його
+        // Перевірка відповідності в локальній базі
+        val localMatches = mockCities.filter { city ->
+            city.name.contains(cleanQuery, ignoreCase = true) ||
+                    (city.admin1?.contains(cleanQuery, ignoreCase = true) == true) ||
+                    city.country.contains(cleanQuery, ignoreCase = true)
+        }
+
+        // Якщо мережевий клієнт доступний — робимо запит
         if (networkSearch != null) {
+            // Шукаємо за оригінальним запитом
             val netResult = networkSearch.invoke(cleanQuery, language)
-            if (netResult.isSuccess) {
-                val list = GeocodingMapper.toDomainList(netResult.getOrThrow())
-                return Result.success(list)
+            var networkCities = netResult.getOrNull()?.results?.map { item ->
+                LocationModel(
+                    id = item.id,
+                    name = item.name,
+                    country = item.country ?: "",
+                    admin1 = item.admin1,
+                    latitude = item.latitude,
+                    longitude = item.longitude,
+                    timezone = item.timezone ?: "auto"
+                )
+            } ?: emptyList()
+
+            // Якщо запит був кирилицею і нічого не знайдено, або є прямий псевдонім (наприклад: "пшецлав" -> "Przecław")
+            val alias = translitAliases[cleanQuery.lowercase()]
+            if (networkCities.isEmpty() && alias != null) {
+                val aliasResult = networkSearch.invoke(alias, "en")
+                networkCities = aliasResult.getOrNull()?.results?.map { item ->
+                    LocationModel(
+                        id = item.id,
+                        name = item.name,
+                        country = item.country ?: "",
+                        admin1 = item.admin1,
+                        latitude = item.latitude,
+                        longitude = item.longitude,
+                        timezone = item.timezone ?: "auto"
+                    )
+                } ?: emptyList()
+            }
+
+            // Об'єднуємо результати з дедуплікацією за координатами
+            val combined = (networkCities + localMatches).distinctBy { "${it.latitude.toInt()},${it.longitude.toInt()}" }
+            if (combined.isNotEmpty()) {
+                return Result.success(combined)
             }
         }
 
-        // Мок-фолбек пошук по локальній базі міст
-        val filtered = mockCities.filter { city ->
-            city.name.contains(cleanQuery, ignoreCase = true) ||
-                    city.country.contains(cleanQuery, ignoreCase = true) ||
-                    (city.admin1?.contains(cleanQuery, ignoreCase = true) == true)
-        }
-
-        return Result.success(filtered)
+        return Result.success(localMatches)
     }
 }
