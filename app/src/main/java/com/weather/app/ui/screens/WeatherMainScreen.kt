@@ -111,24 +111,71 @@ fun WeatherMainScreen(
     val determineGpsLocation = {
         try {
             val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-            val lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
-            val lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
-            val bestLocation = lastGps ?: lastNetwork
+            val providers = listOf("fused", LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+            var bestLocation: android.location.Location? = null
+
+            for (provider in providers) {
+                try {
+                    val loc = locationManager.getLastKnownLocation(provider)
+                    if (loc != null) {
+                        if (bestLocation == null || loc.accuracy < bestLocation.accuracy) {
+                            bestLocation = loc
+                        }
+                    }
+                } catch (e: SecurityException) {
+                    // ігноруємо відсутність дозволу для окремого провайдера
+                } catch (e: IllegalArgumentException) {
+                    // провайдер не підтримується на цьому пристрої
+                }
+            }
 
             if (bestLocation != null) {
-                viewModel.onGpsLocationAcquired(bestLocation.latitude, bestLocation.longitude)
+                viewModel.onGpsLocationAcquired(context, bestLocation.latitude, bestLocation.longitude)
                 scope.launch {
-                    snackbarHostState.showSnackbar("Локацію визначено успішно")
+                    snackbarHostState.showSnackbar("Визначаємо населений пункт за GPS...")
                 }
-            } else {
+            }
+
+            // Сучасний Android API для отримання свіжих координат
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                try {
+                    val activeProvider = when {
+                        locationManager.isProviderEnabled("fused") -> "fused"
+                        locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+                        else -> LocationManager.NETWORK_PROVIDER
+                    }
+                    locationManager.getCurrentLocation(
+                        activeProvider,
+                        null,
+                        ContextCompat.getMainExecutor(context)
+                    ) { freshLoc ->
+                        if (freshLoc != null) {
+                            viewModel.onGpsLocationAcquired(context, freshLoc.latitude, freshLoc.longitude)
+                        }
+                    }
+                } catch (e: Exception) {
+                    // безпечний фолбек
+                }
+            }
+
+            if (bestLocation == null && android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R) {
                 scope.launch {
-                    snackbarHostState.showSnackbar("Не вдалося отримати точні координати GPS. Спробуйте на вулиці або виберіть місто зі списку.")
+                    snackbarHostState.showSnackbar("Не вдалося отримати координати GPS. Спробуйте на вулиці або виберіть місто зі списку.")
                 }
             }
         } catch (e: Exception) {
             scope.launch {
                 snackbarHostState.showSnackbar("Помилка доступу до сервісу геопозиції")
             }
+        }
+    }
+
+    // Якщо дозвіл уже надано раніше, автоматично визначаємо локацію при запуску
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        if (hasFine || hasCoarse) {
+            determineGpsLocation()
         }
     }
 
