@@ -1,4 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Погода</string>
+    <string name="widget_name">Погода на робочому столі</string>
+    <string name="widget_description">Швидкий прогноз поточної погоди та найближчих годин</string>
 </resources>
