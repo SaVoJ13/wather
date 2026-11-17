@@ -186,7 +186,7 @@ sealed interface WeatherUiState {
 | Агент | Дозволені директорії для запису | Заборонено редагувати |
 |---|---|---|
 | **product-ux** | `docs/ux/**`, `docs/design/**` | `app/**`, `docs/governance/**` |
-| **weather-location** | `app/src/main/java/.../data/**`, `.../domain/**` | `app/src/main/java/.../ui/**`, `.../widget/**` |
+| **weather-location** | `app/src/main/java/.../data/**`, `.../domain/**`, `.../core/**` | `app/src/main/java/.../ui/**`, `.../widget/**` |
 | **android-ui** | `app/src/main/java/.../ui/**`, `.../widget/**`, `app/src/main/res/**` | `app/src/main/java/.../data/remote/**` |
 | **qa-privacy** | `docs/tasks/**` (розділ QA), `docs/qa/**`, тести верифікації | Виправляти продуктовий код самостійно без повернення автору |
 | **Agent 0** | `docs/governance/**`, `docs/tasks/**`, кореневі gradle-файли | Не ставить `QA Verified` на власний код |
