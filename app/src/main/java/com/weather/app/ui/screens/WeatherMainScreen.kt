@@ -1,6 +1,13 @@
 ﻿package com.weather.app.ui.screens
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.LocationManager
 import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -50,6 +57,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.weather.app.domain.model.DailyForecastItem
 import com.weather.app.domain.model.FullWeatherForecast
@@ -59,6 +67,7 @@ import com.weather.app.ui.components.CurrentWeatherHero
 import com.weather.app.ui.components.DailyForecastList
 import com.weather.app.ui.components.DayDetailsBottomSheet
 import com.weather.app.ui.components.HourlyForecastRow
+import com.weather.app.ui.components.SearchCityBottomSheet
 import com.weather.app.ui.components.WeatherMetricsGrid
 import com.weather.app.ui.components.WeatherTopBar
 import com.weather.app.ui.state.WeatherUiState
@@ -67,15 +76,19 @@ import com.weather.app.ui.theme.LocalWeatherPalette
 import com.weather.app.ui.theme.WeatherTheme
 import com.weather.app.ui.viewmodel.WeatherViewModel
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
 
+@SuppressLint("MissingPermission")
 @Composable
 fun WeatherMainScreen(
     viewModel: WeatherViewModel = viewModel(),
-    onSearchClick: () -> Unit = {},
-    onLocationClick: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    var isSearchSheetOpen by remember { mutableStateOf(false) }
+
     val isSystemReducedMotion = remember {
         try {
             val animScale = Settings.Global.getFloat(
@@ -94,6 +107,63 @@ fun WeatherMainScreen(
         }
     }
 
+    // Функція визначення локації
+    val determineGpsLocation = {
+        try {
+            val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val lastGps = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            val lastNetwork = locationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER)
+            val bestLocation = lastGps ?: lastNetwork
+
+            if (bestLocation != null) {
+                viewModel.onGpsLocationAcquired(bestLocation.latitude, bestLocation.longitude)
+                scope.launch {
+                    snackbarHostState.showSnackbar("Локацію визначено успішно")
+                }
+            } else {
+                scope.launch {
+                    snackbarHostState.showSnackbar("Не вдалося отримати точні координати GPS. Спробуйте на вулиці або виберіть місто зі списку.")
+                }
+            }
+        } catch (e: Exception) {
+            scope.launch {
+                snackbarHostState.showSnackbar("Помилка доступу до сервісу геопозиції")
+            }
+        }
+    }
+
+    // Системний лаунчер запиту дозволів на геолокацію
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
+        val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+
+        if (fineGranted || coarseGranted) {
+            determineGpsLocation()
+        } else {
+            scope.launch {
+                snackbarHostState.showSnackbar("Дозвіл на доступ до геопозиції відхилено. Ви можете вибрати місто вручну через пошук.")
+            }
+        }
+    }
+
+    val onLocationClick: () -> Unit = {
+        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        if (hasFine || hasCoarse) {
+            determineGpsLocation()
+        } else {
+            locationPermissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
+        }
+    }
+
     val uiState by viewModel.uiState.collectAsState()
     val condition = when (val state = uiState) {
         is WeatherUiState.Success -> state.forecast.current.condition
@@ -107,16 +177,33 @@ fun WeatherMainScreen(
     ) {
         WeatherMainScreenContent(
             uiState = uiState,
+            snackbarHostState = snackbarHostState,
             onRefresh = { viewModel.refresh() },
-            onSearchClick = onSearchClick,
-            onLocationClick = onLocationClick
+            onSearchClick = { isSearchSheetOpen = true },
+            onLocationClick = onLocationClick,
+            modifier = modifier
         )
+
+        // Модальне вікно пошуку міст
+        if (isSearchSheetOpen) {
+            SearchCityBottomSheet(
+                onDismissRequest = { isSearchSheetOpen = false },
+                onCitySelected = { city ->
+                    viewModel.selectLocation(city)
+                },
+                onSearchQuery = { query ->
+                    viewModel.searchCities(query)
+                },
+                popularCities = viewModel.popularCities
+            )
+        }
     }
 }
 
 @Composable
 fun WeatherMainScreenContent(
     uiState: WeatherUiState,
+    snackbarHostState: SnackbarHostState,
     onRefresh: () -> Unit,
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
@@ -124,8 +211,6 @@ fun WeatherMainScreenContent(
 ) {
     val palette = LocalWeatherPalette.current
     val reducedMotion = LocalReducedMotion.current
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     var selectedDayForDetails by remember { mutableStateOf<DailyForecastItem?>(null) }
 
     val backgroundBrush = remember(palette.gradientColors) {
@@ -156,18 +241,12 @@ fun WeatherMainScreenContent(
                         isOffline = state.isOffline,
                         onRefresh = onRefresh,
                         onSearchClick = onSearchClick,
-                        onLocationClick = {
-                            scope.launch {
-                                snackbarHostState.showSnackbar("Запит геолокації (ADR-004)")
-                            }
-                            onLocationClick()
-                        },
+                        onLocationClick = onLocationClick,
                         onDayClick = { selectedDayForDetails = it }
                     )
                 }
                 is WeatherUiState.Error -> {
                     if (state.lastCachedForecast != null) {
-                        // Якщо є старий кеш, показуємо його з попередженням про помилку оновлення
                         WeatherSuccessContent(
                             forecast = state.lastCachedForecast,
                             isRefreshing = false,
@@ -206,23 +285,17 @@ private fun WeatherSuccessContent(
     onRefresh: () -> Unit,
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
-    onDayClick: (DailyForecastItem) -> Unit,
-    modifier: Modifier = Modifier
+    onDayClick: (DailyForecastItem) -> Unit
 ) {
     val palette = LocalWeatherPalette.current
     val scrollState = rememberScrollState()
-    val todayForecast = forecast.daily14Days.firstOrNull()
 
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .verticalScroll(scrollState)
-            .semantics {
-                contentDescription = "Погода в місті : " +
-                        "°C, "
-            }
     ) {
-        // Верхня панель дій
+        // Верхня панель (місто, пошук, геолокація)
         WeatherTopBar(
             location = forecast.location,
             currentTime = forecast.current.time,
@@ -230,66 +303,33 @@ private fun WeatherSuccessContent(
             onLocationClick = onLocationClick
         )
 
-        // Офлайн-банер / індикатор застарілих даних
-        if (isOffline || forecast.isStale) {
-            val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-            val staleTime = forecast.updatedAt.format(timeFormatter)
-            Row(
+        // Попередження про офлайн / старі дані
+        if (isOffline) {
+            OfflineWarningBanner(onRetry = onRefresh)
+        }
+
+        // Індикатор фонового оновлення
+        if (isRefreshing) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 6.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(Color.Black.copy(alpha = 0.25f))
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(vertical = 4.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CloudOff,
-                        contentDescription = "Офлайн-режим",
-                        tint = Color.White,
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Офлайн-режим. Показано прогноз від ",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color.White
-                    )
-                }
-
-                IconButton(
-                    onClick = onRefresh,
-                    modifier = Modifier.sizeIn(minWidth = 36.dp, minHeight = 36.dp)
-                ) {
-                    if (isRefreshing) {
-                        CircularProgressIndicator(
-                            color = Color.White,
-                            strokeWidth = 2.dp,
-                            modifier = Modifier.size(16.dp)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Refresh,
-                            contentDescription = "Спробувати оновити",
-                            tint = Color.White,
-                            modifier = Modifier.size(18.dp)
-                        )
-                    }
-                }
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    color = palette.textColor,
+                    strokeWidth = 2.dp
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        // Головна картка поточної погоди
+        // Головний блок поточної погоди
         CurrentWeatherHero(
             current = forecast.current,
-            todayForecast = todayForecast,
+            todayForecast = forecast.daily14Days.firstOrNull(),
             updatedAt = forecast.updatedAt,
             isStale = forecast.isStale,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -297,15 +337,7 @@ private fun WeatherSuccessContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Погодинна стрічка (24 години)
-        HourlyForecastRow(
-            hourlyItems = forecast.hourly24h,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Сітка з 4 параметрів погоди (вітер, вологість, тиск, UV)
+        // Сітка метрик 2x2
         WeatherMetricsGrid(
             current = forecast.current,
             modifier = Modifier.padding(horizontal = 16.dp)
@@ -313,7 +345,15 @@ private fun WeatherSuccessContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Список прогнозу на 14 днів
+        // Погодинний прогноз (24 год)
+        HourlyForecastRow(
+            hourlyItems = forecast.hourly24h,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Прогноз на 14 днів
         DailyForecastList(
             dailyItems = forecast.daily14Days,
             onDayClick = onDayClick,
@@ -322,70 +362,82 @@ private fun WeatherSuccessContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Рекламний банерний слот (AdMob Slot)
-        AdBannerPlaceholder()
+        // Рекламний блок
+        AdBannerPlaceholder(
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
         Spacer(modifier = Modifier.navigationBarsPadding())
     }
 }
 
 @Composable
-private fun WeatherLoadingSkeleton(
-    modifier: Modifier = Modifier
+private fun OfflineWarningBanner(
+    onRetry: () -> Unit
 ) {
-    val palette = LocalWeatherPalette.current
-
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(16.dp)
-            .semantics { contentDescription = "Завантаження погодних даних" },
-        horizontalAlignment = Alignment.CenterHorizontally
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xFFFFF3E0))
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Spacer(modifier = Modifier.height(32.dp))
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.weight(1f)
+        ) {
+            Icon(
+                imageVector = Icons.Default.CloudOff,
+                contentDescription = null,
+                tint = Color(0xFFE65100),
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Офлайн-режим. Показано збережені дані.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color(0xFFE65100)
+            )
+        }
 
-        // Скелетон заголовка
-        Box(
-            modifier = Modifier
-                .width(160.dp)
-                .height(32.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(palette.surfaceTint)
-        )
+        IconButton(
+            onClick = onRetry,
+            modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = "Оновити дані погоди",
+                tint = Color(0xFFE65100)
+            )
+        }
+    }
+}
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Скелетон Hero-картки
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(220.dp)
-                .clip(RoundedCornerShape(24.dp))
-                .background(palette.surfaceTint)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Скелетон погодинного ряду
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(130.dp)
-                .clip(RoundedCornerShape(20.dp))
-                .background(palette.surfaceTint)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Скелетон карток метрик
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(180.dp)
-                .clip(RoundedCornerShape(16.dp))
-                .background(palette.surfaceTint)
-        )
+@Composable
+private fun WeatherLoadingSkeleton() {
+    val palette = LocalWeatherPalette.current
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .semantics { contentDescription = "Завантаження погодних даних" },
+        contentAlignment = Alignment.Center
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            CircularProgressIndicator(
+                color = palette.textColor,
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Завантаження погоди...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = palette.textColor
+            )
+        }
     }
 }
 
@@ -393,65 +445,58 @@ private fun WeatherLoadingSkeleton(
 private fun WeatherErrorScreen(
     message: String,
     canRetry: Boolean,
-    onRetry: () -> Unit,
-    modifier: Modifier = Modifier
+    onRetry: () -> Unit
 ) {
     val palette = LocalWeatherPalette.current
-
-    Column(
-        modifier = modifier
+    Box(
+        modifier = Modifier
             .fillMaxSize()
-            .padding(32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Icon(
-            imageVector = Icons.Default.CloudOff,
-            contentDescription = null,
-            tint = palette.textColor,
-            modifier = Modifier.size(64.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "Немає з'єднання",
-            style = MaterialTheme.typography.headlineSmall,
-            color = palette.textColor,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.textColor.copy(alpha = 0.85f),
-            textAlign = TextAlign.Center
-        )
-
-        if (canRetry) {
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Button(
-                onClick = onRetry,
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = palette.textColor,
-                    contentColor = palette.gradientColors.first()
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier.sizeIn(minWidth = 160.dp, minHeight = 48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Refresh,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Спробувати знову",
-                    style = MaterialTheme.typography.labelLarge
-                )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CloudOff,
+                contentDescription = "Помилка",
+                tint = palette.textColor,
+                modifier = Modifier.size(64.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Не вдалося отримати погоду",
+                style = MaterialTheme.typography.titleLarge,
+                color = palette.textColor,
+                textAlign = TextAlign.Center
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = message,
+                style = MaterialTheme.typography.bodyMedium,
+                color = palette.textColor.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center
+            )
+            if (canRetry) {
+                Spacer(modifier = Modifier.height(24.dp))
+                Button(
+                    onClick = onRetry,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = palette.textColor,
+                        contentColor = palette.surfaceTint
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.sizeIn(minHeight = 48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Спробувати знову")
+                }
             }
         }
     }

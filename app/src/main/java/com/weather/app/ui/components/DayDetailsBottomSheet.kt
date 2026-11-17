@@ -121,9 +121,10 @@ fun DayDetailsBottomSheet(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
+                    val maxPrefix = if (maxTempInt > 0) "+" else ""
+                    val minPrefix = if (minTempInt > 0) "+" else ""
                     Text(
-                        text = "Вдень до " + (if (maxTempInt > 0) "+" else "") +
-                                "°, вночі від " + (if (minTempInt > 0) "+" else "") + "°",
+                        text = "Вдень до $maxPrefix$maxTempInt°, вночі від $minPrefix$minTempInt°",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -141,8 +142,8 @@ fun DayDetailsBottomSheet(
                     icon = Icons.Default.WaterDrop,
                     iconTint = RainAccent,
                     label = "Опади",
-                    value = " мм",
-                    extra = "Ймовірність %",
+                    value = "${String.format(Locale.US, "%.1f", item.precipitationSumMm)} мм",
+                    extra = "Ймовірність ${item.precipitationProbabilityPercent}%",
                     modifier = Modifier.weight(1f)
                 )
 
@@ -150,7 +151,7 @@ fun DayDetailsBottomSheet(
                     icon = Icons.Default.Air,
                     iconTint = MaterialTheme.colorScheme.primary,
                     label = "Вітер",
-                    value = "до  км/год",
+                    value = "до ${item.maxWindSpeedKmh.roundToInt()} км/год",
                     extra = "Макс. пориви",
                     modifier = Modifier.weight(1f)
                 )
@@ -204,7 +205,7 @@ fun DayDetailsBottomSheet(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "г хв",
+                            text = "${hours}г ${minutes}хв",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )

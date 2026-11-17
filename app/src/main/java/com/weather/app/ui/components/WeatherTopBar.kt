@@ -1,6 +1,7 @@
 ﻿package com.weather.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -73,7 +74,11 @@ fun WeatherTopBar(
 
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { onSearchClick() }
+                    .padding(vertical = 4.dp)
             ) {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,

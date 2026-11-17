@@ -2,6 +2,7 @@
 
 import com.weather.app.data.mapper.WeatherMapper
 import com.weather.app.data.mock.MockWeatherRepository
+import com.weather.app.data.remote.OpenMeteoHttpClient
 import com.weather.app.data.remote.dto.OpenMeteoForecastResponse
 import com.weather.app.domain.model.FullWeatherForecast
 import com.weather.app.domain.model.LocationModel
@@ -21,7 +22,9 @@ import java.util.concurrent.ConcurrentHashMap
  * Для релізу з рекламою потрібна комерційна підписка або комерційний постачальник.
  */
 class WeatherRepositoryImpl(
-    private val fetchForecastApi: (suspend (latitude: Double, longitude: Double, timezone: String) -> Result<OpenMeteoForecastResponse>)? = null,
+    private val fetchForecastApi: (suspend (latitude: Double, longitude: Double, timezone: String) -> Result<OpenMeteoForecastResponse>)? = { lat, lon, tz ->
+        OpenMeteoHttpClient.fetchForecast(lat, lon, tz)
+    },
     private val cacheTtlMinutes: Long = 30L
 ) : WeatherRepository {
 

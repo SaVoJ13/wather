@@ -81,8 +81,9 @@ fun HourlyForecastRow(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
+                    val tempPrefix = if (tempInt > 0) "+" else ""
                     Text(
-                        text = (if (tempInt > 0) "+" else "") + "°",
+                        text = "$tempPrefix$tempInt°",
                         style = MaterialTheme.typography.titleMedium,
                         color = palette.textColor
                     )
@@ -102,7 +103,7 @@ fun HourlyForecastRow(
                             )
                             Spacer(modifier = Modifier.width(2.dp))
                             Text(
-                                text = "%",
+                                text = "${item.precipitationProbabilityPercent}%",
                                 style = MaterialTheme.typography.labelSmall,
                                 color = RainAccent
                             )

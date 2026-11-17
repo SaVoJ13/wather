@@ -3,4 +3,14 @@
     <string name="app_name">Погода</string>
     <string name="widget_name">Погода на робочому столі</string>
     <string name="widget_description">Швидкий прогноз поточної погоди та найближчих годин</string>
+    <string name="city_selection">Вибір міста</string>
+    <string name="search_placeholder">Введіть назву міста (наприклад: Львів)</string>
+    <string name="quick_select">Швидкий вибір:</string>
+    <string name="search_results">Результати пошуку:</string>
+    <string name="city_not_found">Місто не знайдено. Перевірте написання.</string>
+    <string name="hourly_forecast_title">Погодинний прогноз (24 год)</string>
+    <string name="daily_forecast_title">Прогноз на 14 днів</string>
+    <string name="ad_label">Реклама</string>
+    <string name="retry">Спробувати знову</string>
+    <string name="offline_warning">Офлайн-режим. Показано збережені дані.</string>
 </resources>

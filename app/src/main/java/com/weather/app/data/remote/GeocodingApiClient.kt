@@ -11,7 +11,9 @@ import com.weather.app.domain.model.LocationModel
  * Ліцензія: CC BY 4.0.
  */
 class GeocodingApiClient(
-    private val networkSearch: (suspend (query: String, language: String) -> Result<GeocodingResponse>)? = null
+    private val networkSearch: (suspend (query: String, language: String) -> Result<GeocodingResponse>)? = { query, lang ->
+        OpenMeteoHttpClient.searchCities(query, lang)
+    }
 ) {
 
     private val mockCities = listOf(

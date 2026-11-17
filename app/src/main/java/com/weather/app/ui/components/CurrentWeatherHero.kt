@@ -72,15 +72,17 @@ fun CurrentWeatherHero(
         Spacer(modifier = Modifier.height(8.dp))
 
         // Головна температура (DisplayLarge, 68sp)
+        val tempPrefix = if (tempInt > 0) "+" else ""
         Text(
-            text = (if (tempInt > 0) "+" else "") + "°",
+            text = "$tempPrefix$tempInt°",
             style = MaterialTheme.typography.displayLarge,
             color = palette.textColor
         )
 
         // Відчувається як
+        val feelsPrefix = if (feelsLikeInt > 0) "+" else ""
         Text(
-            text = "Відчувається як " + (if (feelsLikeInt > 0) "+" else "") + "°",
+            text = "Відчувається як $feelsPrefix$feelsLikeInt°",
             style = MaterialTheme.typography.bodyLarge,
             color = palette.textColor.copy(alpha = 0.9f)
         )
@@ -89,9 +91,11 @@ fun CurrentWeatherHero(
         if (todayForecast != null) {
             val minToday = todayForecast.minTemperatureCelsius.roundToInt()
             val maxToday = todayForecast.maxTemperatureCelsius.roundToInt()
+            val maxPrefix = if (maxToday > 0) "+" else ""
+            val minPrefix = if (minToday > 0) "+" else ""
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "↑ °   ↓ °",
+                text = "↑ $maxPrefix$maxToday°   ↓ $minPrefix$minToday°",
                 style = MaterialTheme.typography.bodyMedium,
                 color = palette.textColor.copy(alpha = 0.85f)
             )
@@ -116,15 +120,15 @@ fun CurrentWeatherHero(
                 )
                 Spacer(modifier = Modifier.size(6.dp))
                 Text(
-                    text = "Дані від  (можуть бути застарілі)",
+                    text = "Дані від $updateTimeFormatted (можуть бути застарілі)",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
                     color = StaleBadgeText
                 )
             }
         } else {
             Text(
-                text = "Оновлено сьогодні о ",
-                style = MaterialTheme.typography.labelSmall,
+                text = "Оновлено о $updateTimeFormatted",
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
                 color = palette.textColor.copy(alpha = 0.7f)
             )
         }

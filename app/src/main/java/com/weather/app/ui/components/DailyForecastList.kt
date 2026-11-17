@@ -151,7 +151,7 @@ private fun DailyForecastRow(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "%",
+                        text = "${item.precipitationProbabilityPercent}%",
                         style = MaterialTheme.typography.labelSmall,
                         color = RainAccent
                     )
@@ -162,8 +162,9 @@ private fun DailyForecastRow(
         Spacer(modifier = Modifier.width(8.dp))
 
         // Мінімальна температура
+        val minPrefix = if (minInt > 0) "+" else ""
         Text(
-            text = (if (minInt > 0) "+" else "") + "°",
+            text = "$minPrefix$minInt°",
             style = MaterialTheme.typography.bodyMedium,
             color = palette.textColor.copy(alpha = 0.75f),
             modifier = Modifier.width(34.dp)
@@ -182,8 +183,9 @@ private fun DailyForecastRow(
         )
 
         // Максимальна температура
+        val maxPrefix = if (maxInt > 0) "+" else ""
         Text(
-            text = (if (maxInt > 0) "+" else "") + "°",
+            text = "$maxPrefix$maxInt°",
             style = MaterialTheme.typography.bodyLarge,
             color = palette.textColor,
             modifier = Modifier.width(36.dp)

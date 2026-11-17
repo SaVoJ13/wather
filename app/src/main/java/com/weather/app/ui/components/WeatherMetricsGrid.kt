@@ -60,14 +60,14 @@ fun WeatherMetricsGrid(
             MetricCard(
                 icon = Icons.Default.WaterDrop,
                 title = "Вологість",
-                value = "%",
+                value = "${current.relativeHumidityPercent}%",
                 subtitle = humidityComfort,
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 icon = Icons.Default.Air,
                 title = "Вітер",
-                value = " км/год",
+                value = "${current.windSpeedKmh.roundToInt()} км/год",
                 subtitle = "Швидкість",
                 modifier = Modifier.weight(1f)
             )
@@ -80,8 +80,8 @@ fun WeatherMetricsGrid(
             MetricCard(
                 icon = Icons.Default.Compress,
                 title = "Тиск",
-                value = " гПа",
-                subtitle = " мм рт. ст.",
+                value = "${current.surfacePressureHpa.roundToInt()} гПа",
+                subtitle = "$pressureMmHg мм рт. ст.",
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
