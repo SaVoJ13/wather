@@ -54,4 +54,12 @@ class WeatherGlanceWidgetTest {
         val widget = WeatherGlanceWidget()
         assertNotNull(widget.sizeMode)
     }
+
+    @Test
+    fun testWidgetSizes() {
+        assertEquals(120.0f, WeatherGlanceWidget.COMPACT_SIZE.width.value, 0.01f)
+        assertEquals(100.0f, WeatherGlanceWidget.COMPACT_SIZE.height.value, 0.01f)
+        assertEquals(220.0f, WeatherGlanceWidget.EXPANDED_SIZE.width.value, 0.01f)
+        assertEquals(100.0f, WeatherGlanceWidget.EXPANDED_SIZE.height.value, 0.01f)
+    }
 }
