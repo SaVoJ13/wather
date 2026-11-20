@@ -130,4 +130,35 @@ class WeatherViewModelTest {
         assertNotNull("Last cached forecast must be preserved", error.lastCachedForecast)
         assertEquals("Київ", error.lastCachedForecast?.location?.name)
     }
+
+    @Test
+    fun testSelectLocationUpdatesSelectedCities() = runTest(testDispatcher) {
+        val mockRepo = MockWeatherRepository()
+        val viewModel = WeatherViewModel(mockRepo)
+        advanceUntilIdle()
+
+        val warsaw = MockWeatherRepository.createWarsawLocation()
+        viewModel.selectLocation(warsaw)
+        advanceUntilIdle()
+
+        val cities = viewModel.selectedCities.value
+        assertTrue("Selected cities should contain Warsaw", cities.any { it.name == "Варшава" })
+        assertEquals("Варшава", cities.first().name)
+    }
+
+    @Test
+    fun testRemoveSelectedCityRemovesCityFromList() = runTest(testDispatcher) {
+        val mockRepo = MockWeatherRepository()
+        val viewModel = WeatherViewModel(mockRepo)
+        advanceUntilIdle()
+
+        val warsaw = MockWeatherRepository.createWarsawLocation()
+        viewModel.selectLocation(warsaw)
+        advanceUntilIdle()
+        assertTrue(viewModel.selectedCities.value.any { it.name == "Варшава" })
+
+        viewModel.removeSelectedCity(null, warsaw)
+        advanceUntilIdle()
+        assertTrue(viewModel.selectedCities.value.none { it.name == "Варшава" })
+    }
 }

@@ -30,6 +30,17 @@ object WeatherLocalCache {
     private const val KEY_LOCATION_TZ = "loc_tz"
     private const val KEY_LOCATION_IS_GPS = "loc_is_gps"
     private const val KEY_FORECAST_JSON = "forecast_json"
+    private const val KEY_SELECTED_CITIES = "selected_cities_json"
+
+    val DEFAULT_LOCATION = LocationModel(
+        id = 3088006L,
+        name = "Пшецлав (Przecław)",
+        country = "Польща",
+        admin1 = "Західнопоморське воєводство (передмістя Щецина)",
+        latitude = 53.3745,
+        longitude = 14.4725,
+        timezone = "Europe/Warsaw"
+    )
 
     private val isoFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
@@ -214,5 +225,102 @@ object WeatherLocalCache {
         } catch (e: Exception) {
             null
         }
+    }
+
+    /**
+     * Зберігає список вибраних міст користувача.
+     */
+    fun saveSelectedCities(context: Context, cities: List<LocationModel>) {
+        try {
+            val arr = JSONArray()
+            cities.forEach { city ->
+                val obj = JSONObject().apply {
+                    put("id", city.id)
+                    put("name", city.name)
+                    put("country", city.country)
+                    city.admin1?.let { put("admin1", it) }
+                    put("lat", city.latitude)
+                    put("lon", city.longitude)
+                    put("tz", city.timezone)
+                    put("isGps", city.isCurrentLocation)
+                }
+                arr.put(obj)
+            }
+            getPrefs(context).edit().putString(KEY_SELECTED_CITIES, arr.toString()).apply()
+        } catch (e: Exception) {
+            // ігноруємо помилки серіалізації
+        }
+    }
+
+    /**
+     * Завантажує список вибраних міст користувача.
+     * Якщо список порожній, ініціалізує його поточною збереженою локацією (або Пшецлав за замовчуванням).
+     */
+    fun loadSelectedCities(context: Context): List<LocationModel> {
+        val prefs = getPrefs(context)
+        val jsonStr = prefs.getString(KEY_SELECTED_CITIES, null)
+
+        val defaultInitialList by lazy {
+            val active = loadActiveLocation(context) ?: DEFAULT_LOCATION
+            val initial = listOf(active)
+            saveSelectedCities(context, initial)
+            initial
+        }
+
+        if (jsonStr.isNullOrBlank()) {
+            return defaultInitialList
+        }
+
+        return try {
+            val arr = JSONArray(jsonStr)
+            val list = mutableListOf<LocationModel>()
+            for (i in 0 until arr.length()) {
+                val obj = arr.getJSONObject(i)
+                list.add(
+                    LocationModel(
+                        id = obj.optLong("id", 0L),
+                        name = obj.getString("name"),
+                        country = obj.optString("country", ""),
+                        admin1 = if (obj.has("admin1") && !obj.isNull("admin1")) obj.getString("admin1") else null,
+                        latitude = obj.getDouble("lat"),
+                        longitude = obj.getDouble("lon"),
+                        timezone = obj.optString("tz", "auto"),
+                        isCurrentLocation = obj.optBoolean("isGps", false)
+                    )
+                )
+            }
+            if (list.isEmpty()) defaultInitialList else list
+        } catch (e: Exception) {
+            defaultInitialList
+        }
+    }
+
+    /**
+     * Додає або оновлює місто у списку вибраних (переміщує на першу позицію, запобігає дублікатам).
+     */
+    fun addSelectedCity(context: Context, city: LocationModel) {
+        val current = loadSelectedCities(context).toMutableList()
+        current.removeAll { isSameCity(it, city) }
+        current.add(0, city)
+        saveSelectedCities(context, current)
+    }
+
+    /**
+     * Видаляє місто зі списку вибраних.
+     */
+    fun removeSelectedCity(context: Context, city: LocationModel) {
+        val current = loadSelectedCities(context).toMutableList()
+        current.removeAll { isSameCity(it, city) }
+        saveSelectedCities(context, current)
+    }
+
+    private fun isSameCity(a: LocationModel, b: LocationModel): Boolean {
+        if (a.id != 0L && a.id == b.id) return true
+        if (a.name.equals(b.name, ignoreCase = true) &&
+            Math.abs(a.latitude - b.latitude) < 0.05 &&
+            Math.abs(a.longitude - b.longitude) < 0.05) {
+            return true
+        }
+        return false
     }
 }

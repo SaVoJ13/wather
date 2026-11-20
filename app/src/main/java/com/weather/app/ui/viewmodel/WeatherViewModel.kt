@@ -31,6 +31,9 @@ class WeatherViewModel(
     private val _uiState = MutableStateFlow<WeatherUiState>(WeatherUiState.Loading)
     val uiState: StateFlow<WeatherUiState> = _uiState.asStateFlow()
 
+    private val _selectedCities = MutableStateFlow<List<LocationModel>>(emptyList())
+    val selectedCities: StateFlow<List<LocationModel>> = _selectedCities.asStateFlow()
+
     val popularCities: List<LocationModel> = listOf(
         LocationModel(
             id = 703448L,
@@ -169,7 +172,35 @@ class WeatherViewModel(
         loadForecast(currentLocation, forceRefresh = true, onLoaded = onLoaded)
     }
 
-    fun selectLocation(location: LocationModel, onLoaded: ((FullWeatherForecast) -> Unit)? = null) {
+    fun loadSelectedCities(context: Context) {
+        _selectedCities.value = WeatherLocalCache.loadSelectedCities(context)
+    }
+
+    fun removeSelectedCity(context: Context?, city: LocationModel) {
+        if (context != null) {
+            WeatherLocalCache.removeSelectedCity(context, city)
+            _selectedCities.value = WeatherLocalCache.loadSelectedCities(context)
+        } else {
+            val currentList = _selectedCities.value.toMutableList()
+            currentList.removeAll { (it.id != 0L && it.id == city.id) || it.name.equals(city.name, ignoreCase = true) }
+            _selectedCities.value = currentList
+        }
+    }
+
+    fun selectLocation(
+        location: LocationModel,
+        context: Context? = null,
+        onLoaded: ((FullWeatherForecast) -> Unit)? = null
+    ) {
+        if (context != null) {
+            WeatherLocalCache.addSelectedCity(context, location)
+            _selectedCities.value = WeatherLocalCache.loadSelectedCities(context)
+        } else {
+            val currentList = _selectedCities.value.toMutableList()
+            currentList.removeAll { (it.id != 0L && it.id == location.id) || it.name.equals(location.name, ignoreCase = true) }
+            currentList.add(0, location)
+            _selectedCities.value = currentList
+        }
         loadForecast(location, forceRefresh = false, onLoaded = onLoaded)
     }
 
@@ -187,7 +218,9 @@ class WeatherViewModel(
             _uiState.value = WeatherUiState.Loading
             val resolvedLocation = ReverseGeocoder.resolveLocation(context, latitude, longitude)
             WeatherLocalCache.saveActiveLocation(context, resolvedLocation)
-            selectLocation(resolvedLocation, onLoaded = { forecast ->
+            WeatherLocalCache.addSelectedCity(context, resolvedLocation)
+            _selectedCities.value = WeatherLocalCache.loadSelectedCities(context)
+            selectLocation(resolvedLocation, context = context, onLoaded = { forecast ->
                 WeatherWidgetScheduler.updateWidgetNow(context, forecast)
             })
         }

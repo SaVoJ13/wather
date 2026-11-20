@@ -10,6 +10,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
+import java.time.temporal.ChronoUnit
 
 /**
  * Мапер даних між Open-Meteo DTO та чистими доменними моделями.
@@ -65,13 +66,14 @@ object WeatherMapper {
         val hourlyList = mutableListOf<HourlyForecastItem>()
         val hourlyDto = response.hourly
         if (hourlyDto != null && hourlyDto.time.isNotEmpty()) {
-            val count = minOf(24, hourlyDto.time.size)
-            for (i in 0 until count) {
+            val allHourlyItems = mutableListOf<HourlyForecastItem>()
+            val totalSize = hourlyDto.time.size
+            for (i in 0 until totalSize) {
                 val timeParsed = parseDateTime(hourlyDto.time.getOrNull(i)) ?: updatedAt.plusHours(i.toLong())
                 val temp = hourlyDto.temperature_2m.getOrNull(i) ?: 0.0
                 val wCode = hourlyDto.weather_code.getOrNull(i)
                 val pop = hourlyDto.precipitation_probability?.getOrNull(i) ?: 0
-                hourlyList.add(
+                allHourlyItems.add(
                     HourlyForecastItem(
                         time = timeParsed,
                         temperatureCelsius = temp,
@@ -80,6 +82,15 @@ object WeatherMapper {
                     )
                 )
             }
+
+            val currentHour = updatedAt.truncatedTo(ChronoUnit.HOURS)
+            val startIndex = allHourlyItems.indexOfFirst { !it.time.isBefore(currentHour) }
+            val selectedItems = if (startIndex != -1) {
+                allHourlyItems.drop(startIndex).take(24)
+            } else {
+                allHourlyItems.take(24)
+            }
+            hourlyList.addAll(selectedItems)
         }
 
         val dailyList = mutableListOf<DailyForecastItem>()

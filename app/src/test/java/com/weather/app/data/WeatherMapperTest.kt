@@ -99,4 +99,44 @@ class WeatherMapperTest {
         assertEquals(4.5, domain.daily14Days[1].precipitationSumMm, 0.001)
         assertNotNull(domain.daily14Days[0].sunrise)
     }
+
+    @Test
+    fun toDomain_hourlyForecastStartsFromCurrentHourNotMidnight() {
+        val location = MockWeatherRepository.createKyivLocation()
+        // Зараз 14:35 17 листопада 2026
+        val fixedNow = LocalDateTime.of(2026, 11, 17, 14, 35)
+
+        // Open-Meteo повертає масив від 00:00 17 листопада до 23:00 18 листопада (48 годин)
+        val times = (0 until 48).map { i ->
+            val dt = LocalDateTime.of(2026, 11, 17, 0, 0).plusHours(i.toLong())
+            dt.toString()
+        }
+        val temps = (0 until 48).map { i -> 10.0 + i * 0.2 }
+        val codes = (0 until 48).map { 1 }
+
+        val response = OpenMeteoForecastResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            utc_offset_seconds = 7200,
+            timezone = "Europe/Kyiv",
+            current = null,
+            hourly = OpenMeteoHourlyDto(
+                time = times,
+                temperature_2m = temps,
+                weather_code = codes
+            ),
+            daily = null
+        )
+
+        val domain = WeatherMapper.toDomain(response, location, fixedNow)
+
+        // Повинно бути рівно 24 години
+        assertEquals(24, domain.hourly24h.size)
+        // Перший елемент повинен відповідати поточній годині (14:00)
+        assertEquals(14, domain.hourly24h[0].time.hour)
+        assertEquals(17, domain.hourly24h[0].time.dayOfMonth)
+        // Останній 24-й елемент повинен бути через 23 години (13:00 наступного дня 18 листопада)
+        assertEquals(13, domain.hourly24h[23].time.hour)
+        assertEquals(18, domain.hourly24h[23].time.dayOfMonth)
+    }
 }

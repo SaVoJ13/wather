@@ -173,9 +173,10 @@ fun WeatherMainScreen(
 
     // Завантажуємо збережену локацію або визначаємо поточну за GPS
     androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.loadSelectedCities(context)
         val savedLoc = com.weather.app.data.local.WeatherLocalCache.loadActiveLocation(context)
         if (savedLoc != null) {
-            viewModel.selectLocation(savedLoc, onLoaded = { forecast ->
+            viewModel.selectLocation(savedLoc, context = context, onLoaded = { forecast ->
                 com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
             })
         }
@@ -220,6 +221,7 @@ fun WeatherMainScreen(
     }
 
     val uiState by viewModel.uiState.collectAsState()
+    val selectedCities by viewModel.selectedCities.collectAsState()
     val condition = when (val state = uiState) {
         is WeatherUiState.Success -> state.forecast.current.condition
         is WeatherUiState.Error -> state.lastCachedForecast?.current?.condition ?: WeatherCondition.CLEAR_SKY
@@ -249,14 +251,17 @@ fun WeatherMainScreen(
                 onDismissRequest = { isSearchSheetOpen = false },
                 onCitySelected = { city ->
                     com.weather.app.data.local.WeatherLocalCache.saveActiveLocation(context, city)
-                    viewModel.selectLocation(city, onLoaded = { forecast ->
+                    viewModel.selectLocation(city, context = context, onLoaded = { forecast ->
                         com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
                     })
+                },
+                onRemoveCity = { city ->
+                    viewModel.removeSelectedCity(context, city)
                 },
                 onSearchQuery = { query ->
                     viewModel.searchCities(query)
                 },
-                popularCities = viewModel.popularCities
+                selectedCities = selectedCities
             )
         }
     }
@@ -399,6 +404,14 @@ private fun WeatherSuccessContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Погодинний прогноз (24 год)
+        HourlyForecastRow(
+            hourlyItems = forecast.hourly24h,
+            modifier = Modifier.padding(horizontal = 16.dp)
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Сітка метрик 2x2
         WeatherMetricsGrid(
             current = forecast.current,
@@ -411,14 +424,6 @@ private fun WeatherSuccessContent(
         SunriseSunsetCard(
             todayForecast = forecast.daily14Days.firstOrNull(),
             currentTime = forecast.current.time,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Погодинний прогноз (24 год)
-        HourlyForecastRow(
-            hourlyItems = forecast.hourly24h,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
