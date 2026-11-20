@@ -23,6 +23,7 @@
 | **TASK-011** | Анімований схід/захід сонця, погодний радар, вилучення GPS-снікбару | Фаза 3/4 | android-ui | QA_VERIFIED | ✅ 2026-11-18 |
 | **TASK-012** | Погодинний прогноз від поточної години та збереження вибраних міст | Фаза 3/4 | android-ui / weather-location | QA_VERIFIED | ✅ 2026-11-20 |
 | **TASK-013** | Преміум-редизайн домашнього віджета (Glassmorphism & Balanced Layout) | Фаза 4 | android-ui | QA_VERIFIED | ✅ 2026-11-20 |
+| **TASK-014** | Підготовка продукту до закритого тестування в Google Play Console | Фаза 5 | Agent 0 / qa-privacy | QA_VERIFIED | ✅ 2026-11-20 |
 
 ---
 
