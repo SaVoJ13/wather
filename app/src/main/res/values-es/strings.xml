@@ -91,6 +91,7 @@
     <string name="lang_ru">Русский</string>
     <string name="lang_es">Español</string>
     <string name="lang_it">Italiano</string>
+    <string name="lang_pl">Polski</string>
 
     <!-- Condiciones meteorológicas WMO -->
     <string name="condition_clear_sky">Despejado</string>
@@ -107,4 +108,22 @@
 
     <!-- Widget -->
     <string name="widget_updated_short">Act. %s</string>
+
+    <!-- Additional UI & TalkBack -->
+    <string name="gps_error">No se pudieron obtener las coordenadas GPS. Inténtelo al aire libre o elija una ciudad de la lista.</string>
+    <string name="location_service_error">Error de acceso al servicio de ubicación</string>
+    <string name="location_permission_denied">Permiso de ubicación denegado. Puede seleccionar una ciudad manualmente a través de la búsqueda.</string>
+    <string name="refresh_weather_desc">Actualizar datos meteorológicos</string>
+    <string name="loading_weather">Cargando clima…</string>
+    <string name="loading_weather_desc">Cargando datos meteorológicos</string>
+    <string name="failed_to_load_weather">No se pudo obtener el clima</string>
+    <string name="radar_play">Reproducir animación de radar</string>
+    <string name="radar_pause">Pausar animación de radar</string>
+    <string name="compass_north">N</string>
+    <string name="compass_south">S</string>
+    <string name="compass_west">O</string>
+    <string name="compass_east">E</string>
+    <string name="distance_km">%d km</string>
+    <string name="unit_mm">mm</string>
+    <string name="remove_city_desc">Eliminar %s</string>
 </resources>

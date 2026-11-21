@@ -91,6 +91,7 @@
     <string name="lang_ru">Русский</string>
     <string name="lang_es">Español</string>
     <string name="lang_it">Italiano</string>
+    <string name="lang_pl">Polski</string>
 
     <!-- Погодные условия (WMO) -->
     <string name="condition_clear_sky">Ясно</string>
@@ -107,4 +108,22 @@
 
     <!-- Виджет -->
     <string name="widget_updated_short">Обновл. %s</string>
+
+    <!-- Дополнительные строки UI и TalkBack -->
+    <string name="gps_error">Не удалось получить координаты GPS. Попробуйте на улице или выберите город из списка.</string>
+    <string name="location_service_error">Ошибка доступа к службе геолокации</string>
+    <string name="location_permission_denied">В разрешении на доступ к геолокации отказано. Вы можете выбрать город вручную через поиск.</string>
+    <string name="refresh_weather_desc">Обновить данные о погоде</string>
+    <string name="loading_weather">Загрузка погоды…</string>
+    <string name="loading_weather_desc">Загрузка погодных данных</string>
+    <string name="failed_to_load_weather">Не удалось получить погоду</string>
+    <string name="radar_play">Воспроизвести радар</string>
+    <string name="radar_pause">Приостановить радар</string>
+    <string name="compass_north">С</string>
+    <string name="compass_south">Ю</string>
+    <string name="compass_west">З</string>
+    <string name="compass_east">В</string>
+    <string name="distance_km">%d км</string>
+    <string name="unit_mm">мм</string>
+    <string name="remove_city_desc">Удалить %s</string>
 </resources>

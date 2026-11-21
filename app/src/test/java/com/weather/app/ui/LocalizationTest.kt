@@ -32,7 +32,7 @@ class LocalizationTest {
     @Test
     fun supportedLanguagesContainsAllRequiredLocales() {
         val codes = supportedLanguages.map { it.code }
-        val required = listOf("", "uk", "en", "de", "ru", "es", "it")
+        val required = listOf("", "uk", "pl", "en", "de", "ru", "es", "it")
         for (req in required) {
             assertTrue("Supported languages must include code '$req'", codes.contains(req))
         }
@@ -43,6 +43,7 @@ class LocalizationTest {
         val days = DayOfWeek.values()
         val locales = listOf(
             Locale("uk", "UA"),
+            Locale("pl", "PL"),
             Locale.ENGLISH,
             Locale.GERMAN,
             Locale("es", "ES"),
@@ -57,6 +58,15 @@ class LocalizationTest {
                 assertTrue("Day format for $day in $locale should not be empty", formatted.isNotEmpty())
             }
         }
+
+        // Test explicit Polish short names
+        assertEquals("pn", WeatherGlanceWidget.formatDayOfWeek(DayOfWeek.MONDAY, Locale("pl", "PL")))
+        assertEquals("wt", WeatherGlanceWidget.formatDayOfWeek(DayOfWeek.TUESDAY, Locale("pl", "PL")))
+        assertEquals("śr", WeatherGlanceWidget.formatDayOfWeek(DayOfWeek.WEDNESDAY, Locale("pl", "PL")))
+        assertEquals("cz", WeatherGlanceWidget.formatDayOfWeek(DayOfWeek.THURSDAY, Locale("pl", "PL")))
+        assertEquals("pt", WeatherGlanceWidget.formatDayOfWeek(DayOfWeek.FRIDAY, Locale("pl", "PL")))
+        assertEquals("sb", WeatherGlanceWidget.formatDayOfWeek(DayOfWeek.SATURDAY, Locale("pl", "PL")))
+        assertEquals("nd", WeatherGlanceWidget.formatDayOfWeek(DayOfWeek.SUNDAY, Locale("pl", "PL")))
     }
 
     @Test
@@ -65,6 +75,7 @@ class LocalizationTest {
         val targetDirs = listOf(
             "values",
             "values-uk",
+            "values-pl",
             "values-en",
             "values-de",
             "values-ru",
@@ -88,9 +99,26 @@ class LocalizationTest {
             "sunrise_sunset_title",
             "radar_title",
             "select_language",
+            "lang_pl",
             "condition_clear_sky",
             "condition_rain",
-            "condition_snow"
+            "condition_snow",
+            "gps_error",
+            "location_service_error",
+            "location_permission_denied",
+            "refresh_weather_desc",
+            "loading_weather",
+            "loading_weather_desc",
+            "failed_to_load_weather",
+            "radar_play",
+            "radar_pause",
+            "compass_north",
+            "compass_south",
+            "compass_west",
+            "compass_east",
+            "distance_km",
+            "unit_mm",
+            "remove_city_desc"
         )
 
         val dbFactory = DocumentBuilderFactory.newInstance()

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pogoda</string>
+    <string name="widget_name">Pogoda na ekranie głównym</string>
+    <string name="widget_description">Szybki podgląd bieżącej pogody i prognoza na najbliższe godziny</string>
+
+    <!-- General actions and status -->
+    <string name="now">Teraz</string>
+    <string name="today">Dzisiaj</string>
+    <string name="tomorrow">Jutro</string>
+    <string name="feels_like">Odczuwalna %s</string>
+    <string name="updated_at">Zaktualizowano o %s</string>
+    <string name="stale_data_warning">Uwaga: dane są nieaktualne</string>
+    <string name="offline_warning">Tryb offline. Wyświetlanie zapisanych danych.</string>
+    <string name="retry">Spróbuj ponownie</string>
+    <string name="loading_error">Błąd wczytywania</string>
+    <string name="ad_label">Reklama</string>
+    <string name="ad_slot_test">Testowe miejsce na reklamę (AdMob)</string>
+    <string name="source_open_meteo">Źródło: Open-Meteo</string>
+    <string name="location_permission_needed">Określ bieżącą lokalizację</string>
+    <string name="search_city_action">Szukaj miejscowości</string>
+    <string name="close">Zamknij</string>
+
+    <!-- City Search -->
+    <string name="city_selection">Wybór miejscowości</string>
+    <string name="search_placeholder">Wpisz nazwę miejscowości (np. Szczecin, Przecław)</string>
+    <string name="selected_cities">Wybrane miejscowości:</string>
+    <string name="no_selected_cities">Tutaj pojawią się Twoje wybrane miejscowości</string>
+    <string name="search_results">Wyniki wyszukiwania:</string>
+    <string name="city_not_found">Nie znaleziono miejscowości. Sprawdź pisownię.</string>
+
+    <!-- Screen sections -->
+    <string name="hourly_forecast_title">Prognoza godzinowa (24 godz.)</string>
+    <string name="daily_forecast_title">Prognoza na 14 dni</string>
+    <string name="precipitation_probability_desc">Prawdopodobieństwo opadów</string>
+
+    <!-- Metrics -->
+    <string name="metric_humidity">Wilgotność</string>
+    <string name="humidity_dry">Sucho</string>
+    <string name="humidity_comfortable">Komfortowo</string>
+    <string name="humidity_humid">Wilgotno</string>
+
+    <string name="metric_wind">Wiatr</string>
+    <string name="wind_unit_kmh">km/h</string>
+    <string name="wind_speed_label">Prędkość</string>
+
+    <string name="metric_pressure">Ciśnienie</string>
+    <string name="pressure_unit_hpa">hPa</string>
+    <string name="pressure_unit_mmhg">mm Hg</string>
+
+    <string name="metric_uv">Indeks UV</string>
+    <string name="uv_low">Niski</string>
+    <string name="uv_moderate">Umiarkowany</string>
+    <string name="uv_high">Wysoki</string>
+    <string name="uv_very_high">Bardzo wysoki</string>
+    <string name="uv_extreme">Ekstremalny</string>
+
+    <!-- Sunrise & Sunset -->
+    <string name="sunrise_sunset_title">Wschód i zachód słońca</string>
+    <string name="sunrise">Wschód</string>
+    <string name="sunset">Zachód</string>
+    <string name="day_duration">Długość dnia</string>
+    <string name="hours_short">godz.</string>
+    <string name="minutes_short">min</string>
+    <string name="sunrise_in">Wschód za %s</string>
+    <string name="sunset_in">Zachód za %s</string>
+    <string name="night_status">Noc • Wschód o %s</string>
+
+    <!-- Radar -->
+    <string name="radar_title">Radar opadów</string>
+    <string name="radar_subtitle">Opady w promieniu 50 km wokół %s</string>
+    <string name="radar_live">NA ŻYWO</string>
+    <string name="intensity_drizzle">Mżawka</string>
+    <string name="intensity_rain">Deszcz</string>
+    <string name="intensity_heavy_rain">Ulewa</string>
+    <string name="intensity_thunderstorm">Burza</string>
+
+    <!-- Day details -->
+    <string name="details_title">Szczegóły prognozy</string>
+    <string name="max_temperature">Temp. maksymalna</string>
+    <string name="min_temperature">Temp. minimalna</string>
+    <string name="precipitation">Opady</string>
+    <string name="max_wind">Maks. wiatr</string>
+
+    <!-- Language selection -->
+    <string name="select_language">Język aplikacji</string>
+    <string name="lang_system">Domyślny język systemu</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_en">English</string>
+    <string name="lang_de">Deutsch</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_pl">Polski</string>
+
+    <!-- WMO Weather conditions -->
+    <string name="condition_clear_sky">Bezchmurnie</string>
+    <string name="condition_mainly_clear">Przeważnie bezchmurnie</string>
+    <string name="condition_partly_cloudy">Częściowe zachmurzenie</string>
+    <string name="condition_overcast">Zachmurzenie całkowite</string>
+    <string name="condition_fog">Mgła</string>
+    <string name="condition_drizzle">Mżawka</string>
+    <string name="condition_rain">Deszcz</string>
+    <string name="condition_heavy_rain">Ulewa</string>
+    <string name="condition_snow">Śnieg</string>
+    <string name="condition_thunderstorm">Burza</string>
+    <string name="condition_unknown">Nieznane</string>
+
+    <!-- Widget -->
+    <string name="widget_updated_short">Akt. %s</string>
+
+    <!-- Additional UI & TalkBack -->
+    <string name="gps_error">Nie udało się uzyskać współrzędnych GPS. Wyjdź na zewnątrz lub wybierz miejscowość z listy.</string>
+    <string name="location_service_error">Błąd dostępu do usługi lokalizacji</string>
+    <string name="location_permission_denied">Odmówiono uprawnień do lokalizacji. Możesz wybrać miasto ręcznie w wyszukiwarce.</string>
+    <string name="refresh_weather_desc">Odśwież dane pogodowe</string>
+    <string name="loading_weather">Wczytywanie pogody…</string>
+    <string name="loading_weather_desc">Pobieranie danych pogodowych</string>
+    <string name="failed_to_load_weather">Nie udało się pobrać pogody</string>
+    <string name="radar_play">Odtwórz animację radaru</string>
+    <string name="radar_pause">Wstrzymaj animację radaru</string>
+    <string name="compass_north">Pn</string>
+    <string name="compass_south">Pd</string>
+    <string name="compass_west">Zach</string>
+    <string name="compass_east">Wsch</string>
+    <string name="distance_km">%d km</string>
+    <string name="unit_mm">mm</string>
+    <string name="remove_city_desc">Usuń %s</string>
+</resources>

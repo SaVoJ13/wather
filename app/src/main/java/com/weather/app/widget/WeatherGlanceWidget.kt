@@ -84,13 +84,47 @@ class WeatherGlanceWidget : GlanceAppWidget() {
             }
         }
 
+        fun formatDayOfWeekPl(dayOfWeek: java.time.DayOfWeek): String {
+            return when (dayOfWeek) {
+                java.time.DayOfWeek.MONDAY -> "pn"
+                java.time.DayOfWeek.TUESDAY -> "wt"
+                java.time.DayOfWeek.WEDNESDAY -> "śr"
+                java.time.DayOfWeek.THURSDAY -> "cz"
+                java.time.DayOfWeek.FRIDAY -> "pt"
+                java.time.DayOfWeek.SATURDAY -> "sb"
+                java.time.DayOfWeek.SUNDAY -> "nd"
+            }
+        }
+
         fun formatDayOfWeek(dayOfWeek: java.time.DayOfWeek, locale: Locale = Locale.getDefault()): String {
-            return if (locale.language == "uk") {
-                formatDayOfWeekUk(dayOfWeek)
-            } else {
-                dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT_STANDALONE, locale)
+            return when (locale.language) {
+                "uk" -> formatDayOfWeekUk(dayOfWeek)
+                "pl" -> formatDayOfWeekPl(dayOfWeek)
+                else -> dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT_STANDALONE, locale)
                     .lowercase(locale)
                     .take(2)
+            }
+        }
+
+        fun getLocalizedContext(context: Context): Context {
+            val appLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
+            if (!appLocales.isEmpty) {
+                val locale = appLocales[0]
+                if (locale != null) {
+                    val config = android.content.res.Configuration(context.resources.configuration)
+                    config.setLocale(locale)
+                    return context.createConfigurationContext(config)
+                }
+            }
+            return context
+        }
+
+        fun getCurrentLocale(): Locale {
+            val appLocales = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
+            return if (!appLocales.isEmpty) {
+                appLocales[0] ?: Locale.getDefault()
+            } else {
+                Locale.getDefault()
             }
         }
     }
@@ -132,7 +166,8 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
     @androidx.compose.runtime.Composable
     private fun CompactWidgetContent(forecast: FullWeatherForecast) {
-        val context = LocalContext.current
+        val rawContext = LocalContext.current
+        val context = getLocalizedContext(rawContext)
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
         val tempString = "$tempInt°"
         val today = forecast.daily14Days.firstOrNull()
@@ -218,7 +253,9 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
     @androidx.compose.runtime.Composable
     private fun ExpandedWidgetContent(forecast: FullWeatherForecast) {
-        val context = LocalContext.current
+        val rawContext = LocalContext.current
+        val context = getLocalizedContext(rawContext)
+        val currentLocale = getCurrentLocale()
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
         val tempString = "$tempInt°"
         val feelsLikeInt = forecast.current.apparentTemperatureCelsius.roundToInt()
@@ -324,7 +361,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 dailyItems.forEachIndexed { index, item ->
                     val max = item.maxTemperatureCelsius.roundToInt()
                     val min = item.minTemperatureCelsius.roundToInt()
-                    val dayLabel = formatDayOfWeek(item.date.dayOfWeek, Locale.getDefault())
+                    val dayLabel = formatDayOfWeek(item.date.dayOfWeek, currentLocale)
                     val pop = item.precipitationProbabilityPercent
                     val itemConditionDesc = context.getString(item.condition.stringRes)
 

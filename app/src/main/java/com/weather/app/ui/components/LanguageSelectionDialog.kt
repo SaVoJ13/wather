@@ -31,7 +31,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.core.os.LocaleListCompat
+import androidx.glance.appwidget.updateAll
 import com.weather.app.R
+import com.weather.app.widget.WeatherGlanceWidget
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 data class SupportedLanguage(
     val code: String, // "" for system, "uk", "en", "de", "ru", "es", "it"
@@ -42,6 +47,7 @@ data class SupportedLanguage(
 val supportedLanguages = listOf(
     SupportedLanguage("", "Системна / System default", "🌐"),
     SupportedLanguage("uk", "Українська", "🇺🇦"),
+    SupportedLanguage("pl", "Polski", "🇵🇱"),
     SupportedLanguage("en", "English", "🇬🇧"),
     SupportedLanguage("de", "Deutsch", "🇩🇪"),
     SupportedLanguage("es", "Español", "🇪🇸"),
@@ -53,8 +59,25 @@ val supportedLanguages = listOf(
 fun LanguageSelectionDialog(
     onDismissRequest: () -> Unit
 ) {
+    val context = LocalContext.current.applicationContext
     val currentLocales = AppCompatDelegate.getApplicationLocales()
     val currentLangCode = if (currentLocales.isEmpty) "" else currentLocales[0]?.language ?: ""
+
+    val selectLanguage: (String) -> Unit = { code ->
+        val localeList = if (code.isEmpty()) {
+            LocaleListCompat.getEmptyLocaleList()
+        } else {
+            LocaleListCompat.forLanguageTags(code)
+        }
+        AppCompatDelegate.setApplicationLocales(localeList)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                WeatherGlanceWidget().updateAll(context)
+            } catch (_: Throwable) {
+            }
+        }
+        onDismissRequest()
+    }
 
     Dialog(onDismissRequest = onDismissRequest) {
         Card(
@@ -106,15 +129,7 @@ fun LanguageSelectionDialog(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable {
-                                val localeList = if (lang.code.isEmpty()) {
-                                    LocaleListCompat.getEmptyLocaleList()
-                                } else {
-                                    LocaleListCompat.forLanguageTags(lang.code)
-                                }
-                                AppCompatDelegate.setApplicationLocales(localeList)
-                                onDismissRequest()
-                            }
+                            .clickable { selectLanguage(lang.code) }
                             .padding(vertical = 10.dp, horizontal = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -128,15 +143,7 @@ fun LanguageSelectionDialog(
                         )
                         RadioButton(
                             selected = isSelected,
-                            onClick = {
-                                val localeList = if (lang.code.isEmpty()) {
-                                    LocaleListCompat.getEmptyLocaleList()
-                                } else {
-                                    LocaleListCompat.forLanguageTags(lang.code)
-                                }
-                                AppCompatDelegate.setApplicationLocales(localeList)
-                                onDismissRequest()
-                            }
+                            onClick = { selectLanguage(lang.code) }
                         )
                     }
                 }
