@@ -1,10 +1,11 @@
-# [TASK-015] Повноцінна підтримка мультимовності (de, ru, en, es, it, uk)
+# [TASK-015] Повноцінна підтримка мультимовності (pl, de, ru, en, es, it, uk)
 
 - **Фаза:** 5 (Локалізація та міжнародна підтримка)
 - **Відповідальний:** android-ui
 - **Статус:** `DONE` (`QA_VERIFIED`)
 - **Файли-власники:**
-  - `app/src/main/res/values/strings.xml` (default: English)
+  - `app/src/main/res/values/strings.xml` (default: English fallback)
+  - `app/src/main/res/values-pl/strings.xml` (Polish)
   - `app/src/main/res/values-en/strings.xml` (English)
   - `app/src/main/res/values-uk/strings.xml` (Ukrainian)
   - `app/src/main/res/values-de/strings.xml` (German)
@@ -23,7 +24,8 @@
 
 ## Критерії приймання (Acceptance Criteria)
 
-1. [x] Створено вичерпні файли ресурсів для всіх 6 мов:
+1. [x] Створено вичерпні файли ресурсів для всіх 7 мов + English fallback:
+   - `pl` (Polish / Польська)
    - `en` (English / Англійська)
    - `de` (German / Німецька)
    - `ru` (Russian / Російська)
@@ -70,3 +72,9 @@
 ### 2026-11-22 00:36 — qa-privacy
 - Зроблено: Проведено незалежний аудит за Червоною лінією №9. Виправлено зауваження (Canvas тексти у радарі, touch target 48dp, AppLocalesMetadataHolderService, локалізація віджета, запис у THIRD_PARTY.md). Усі 59/59 тестів зелені, Privacy-аудит чистий.
 - Вердикт: **QA_VERIFIED**. Завдання успішно виконано.
+
+### 2026-11-22 00:55 — Agent 0 & qa-privacy
+- Зроблено: Додано підтримку польської мови (`pl` / `values-pl/strings.xml`, `locales_config.xml`, `supportedLanguages`, `formatDayOfWeekPl` для віджета з днями "pn", "wt", "śr", "cz", "pt", "sb", "nd").
+- Підтверджено поведінку за замовчуванням: базовий `values/strings.xml` містить англійську мову, тому при виборі невідомої або сторонньої мови системи застосунок автоматично використовує англійську.
+- Зібрано та верифіковано нові пакети: `app-debug.apk`, `app-release.apk` та `app-release.aab`. Усі 59/59 тестів пройдено успішно.
+- Вердикт незалежного QA: **QA_VERIFIED**.
