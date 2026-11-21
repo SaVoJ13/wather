@@ -46,8 +46,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.weather.app.R
 import com.weather.app.domain.model.LocationModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -104,7 +106,7 @@ fun SearchCityBottomSheet(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Вибір міста",
+                    text = stringResource(R.string.city_selection),
                     style = MaterialTheme.typography.headlineSmall,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -115,7 +117,7 @@ fun SearchCityBottomSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Закрити пошук"
+                        contentDescription = stringResource(R.string.close)
                     )
                 }
             }
@@ -127,14 +129,14 @@ fun SearchCityBottomSheet(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Введіть назву міста (наприклад: Львів)") },
+                placeholder = { Text(stringResource(R.string.search_placeholder)) },
                 leadingIcon = {
-                    Icon(imageVector = Icons.Default.Search, contentDescription = "Пошук")
+                    Icon(imageVector = Icons.Default.Search, contentDescription = stringResource(R.string.search_city_action))
                 },
                 trailingIcon = {
                     if (searchQuery.isNotEmpty()) {
                         IconButton(onClick = { searchQuery = "" }) {
-                            Icon(imageVector = Icons.Default.Clear, contentDescription = "Очистити")
+                            Icon(imageVector = Icons.Default.Clear, contentDescription = stringResource(R.string.close))
                         }
                     }
                 },
@@ -147,7 +149,7 @@ fun SearchCityBottomSheet(
             // Вибрані міста
             if (searchQuery.isEmpty()) {
                 Text(
-                    text = "Вибрані міста:",
+                    text = stringResource(R.string.selected_cities),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -155,7 +157,7 @@ fun SearchCityBottomSheet(
 
                 if (selectedCities.isEmpty()) {
                     Text(
-                        text = "Тут зберігатимуться вибрані вами міста",
+                        text = stringResource(R.string.no_selected_cities),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
                         modifier = Modifier.padding(vertical = 12.dp)
@@ -205,7 +207,7 @@ fun SearchCityBottomSheet(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Close,
-                                            contentDescription = "Видалити ${city.name}",
+                                            contentDescription = city.name,
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(16.dp)
                                         )
@@ -231,14 +233,14 @@ fun SearchCityBottomSheet(
                 }
             } else if (searchQuery.isNotEmpty() && searchResults.isEmpty()) {
                 Text(
-                    text = "Місто не знайдено. Перевірте правильність написання.",
+                    text = stringResource(R.string.city_not_found),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = 16.dp)
                 )
             } else if (searchResults.isNotEmpty()) {
                 Text(
-                    text = "Результати пошуку:",
+                    text = stringResource(R.string.search_results),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

@@ -24,6 +24,7 @@
 | **Kotlin Standard Library & Coroutines** | `org.jetbrains.kotlinx:kotlinx-coroutines-android` | Apache 2.0 | Схвалено | https://github.com/Kotlin/kotlinx.coroutines |
 | **KotlinX Serialization JSON** | Серіалізація та парсинг погодних DTO | Apache 2.0 | Схвалено | https://github.com/Kotlin/kotlinx.serialization |
 | **AndroidX Core KTX** | `androidx.core:core-ktx` | Apache 2.0 | Схвалено | https://developer.android.com/jetpack/androidx/releases/core |
+| **AndroidX AppCompat** | `androidx.appcompat:appcompat:1.7.0` (підтримка мовного перемикання на Android < 13 та теми DayNight) | Apache 2.0 | Схвалено | https://developer.android.com/jetpack/androidx/releases/appcompat |
 | **Jetpack Compose BOM & UI** | `androidx.compose.ui`, `material3`, `foundation` | Apache 2.0 | Схвалено | https://developer.android.com/jetpack/compose |
 | **Jetpack Lifecycle & ViewModel** | `androidx.lifecycle:lifecycle-viewmodel-compose` | Apache 2.0 | Схвалено | https://developer.android.com/jetpack/androidx/releases/lifecycle |
 | **Jetpack Glance (AppWidget)** | `androidx.glance:glance-appwidget`, `androidx.glance:glance-material3` | Apache 2.0 | Схвалено | https://developer.android.com/jetpack/androidx/releases/glance |

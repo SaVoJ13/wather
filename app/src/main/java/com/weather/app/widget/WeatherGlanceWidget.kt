@@ -10,6 +10,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
@@ -39,6 +40,7 @@ import com.weather.app.domain.model.FullWeatherForecast
 import com.weather.app.domain.model.WeatherCondition
 import com.weather.app.ui.MainActivity
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
@@ -81,6 +83,16 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 java.time.DayOfWeek.SUNDAY -> "нд"
             }
         }
+
+        fun formatDayOfWeek(dayOfWeek: java.time.DayOfWeek, locale: Locale = Locale.getDefault()): String {
+            return if (locale.language == "uk") {
+                formatDayOfWeekUk(dayOfWeek)
+            } else {
+                dayOfWeek.getDisplayName(java.time.format.TextStyle.SHORT_STANDALONE, locale)
+                    .lowercase(locale)
+                    .take(2)
+            }
+        }
     }
 
     override val sizeMode = SizeMode.Responsive(setOf(COMPACT_SIZE, EXPANDED_SIZE))
@@ -120,6 +132,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
     @androidx.compose.runtime.Composable
     private fun CompactWidgetContent(forecast: FullWeatherForecast) {
+        val context = LocalContext.current
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
         val tempString = "$tempInt°"
         val today = forecast.daily14Days.firstOrNull()
@@ -127,6 +140,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
         val maxToday = today?.maxTemperatureCelsius?.roundToInt() ?: 0
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
         val updateTime = forecast.updatedAt.format(timeFormatter)
+        val conditionDesc = context.getString(forecast.current.condition.stringRes)
 
         Column(
             modifier = GlanceModifier.fillMaxSize(),
@@ -154,7 +168,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 )
                 Image(
                     provider = ImageProvider(weatherConditionDrawableRes(forecast.current.condition)),
-                    contentDescription = forecast.current.condition.descriptionUk,
+                    contentDescription = conditionDesc,
                     modifier = GlanceModifier.size(24.dp)
                 )
             }
@@ -171,7 +185,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
             )
 
             Text(
-                text = forecast.current.condition.descriptionUk,
+                text = conditionDesc,
                 style = TextStyle(
                     color = ColorProvider(Color(0xFFF1F5F9)),
                     fontSize = 12.sp,
@@ -193,7 +207,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
             Spacer(modifier = GlanceModifier.height(2.dp))
 
             Text(
-                text = "Оновл. $updateTime",
+                text = context.getString(R.string.widget_updated_short, updateTime),
                 style = TextStyle(
                     color = ColorProvider(Color(0x9994A3B8)),
                     fontSize = 9.sp
@@ -204,6 +218,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
     @androidx.compose.runtime.Composable
     private fun ExpandedWidgetContent(forecast: FullWeatherForecast) {
+        val context = LocalContext.current
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
         val tempString = "$tempInt°"
         val feelsLikeInt = forecast.current.apparentTemperatureCelsius.roundToInt()
@@ -214,6 +229,9 @@ class WeatherGlanceWidget : GlanceAppWidget() {
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
         val updateTime = forecast.updatedAt.format(timeFormatter)
         val dailyItems = forecast.daily14Days.take(4)
+        val conditionDesc = context.getString(forecast.current.condition.stringRes)
+        val feelsLikeLabel = context.getString(R.string.feels_like, feelsLikeString)
+        val windUnit = context.getString(R.string.wind_unit_kmh)
 
         Row(
             modifier = GlanceModifier.fillMaxSize(),
@@ -226,7 +244,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
             ) {
                 Image(
                     provider = ImageProvider(weatherConditionDrawableRes(forecast.current.condition)),
-                    contentDescription = forecast.current.condition.descriptionUk,
+                    contentDescription = conditionDesc,
                     modifier = GlanceModifier.size(48.dp)
                 )
 
@@ -242,7 +260,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 )
 
                 Text(
-                    text = forecast.current.condition.descriptionUk,
+                    text = conditionDesc,
                     style = TextStyle(
                         color = ColorProvider(Color(0xFFF1F5F9)),
                         fontSize = 13.sp,
@@ -254,7 +272,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 Spacer(modifier = GlanceModifier.height(2.dp))
 
                 Text(
-                    text = "Відчувається як $feelsLikeString • ↑${maxToday}° / ↓${minToday}°",
+                    text = "$feelsLikeLabel • ↑${maxToday}° / ↓${minToday}°",
                     style = TextStyle(
                         color = ColorProvider(Color(0xFF94A3B8)),
                         fontSize = 11.sp
@@ -265,7 +283,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 Spacer(modifier = GlanceModifier.height(2.dp))
 
                 Text(
-                    text = "💧 ${forecast.current.relativeHumidityPercent}%  💨 ${forecast.current.windSpeedKmh.roundToInt()} км/год",
+                    text = "💧 ${forecast.current.relativeHumidityPercent}%  💨 ${forecast.current.windSpeedKmh.roundToInt()} $windUnit",
                     style = TextStyle(
                         color = ColorProvider(Color(0xFFCBD5E1)),
                         fontSize = 11.sp,
@@ -306,8 +324,9 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 dailyItems.forEachIndexed { index, item ->
                     val max = item.maxTemperatureCelsius.roundToInt()
                     val min = item.minTemperatureCelsius.roundToInt()
-                    val dayLabel = formatDayOfWeekUk(item.date.dayOfWeek)
+                    val dayLabel = formatDayOfWeek(item.date.dayOfWeek, Locale.getDefault())
                     val pop = item.precipitationProbabilityPercent
+                    val itemConditionDesc = context.getString(item.condition.stringRes)
 
                     Row(
                         modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
@@ -330,7 +349,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                         ) {
                             Image(
                                 provider = ImageProvider(weatherConditionDrawableRes(item.condition)),
-                                contentDescription = item.condition.descriptionUk,
+                                contentDescription = itemConditionDesc,
                                 modifier = GlanceModifier.size(22.dp)
                             )
                             if (pop > 15) {

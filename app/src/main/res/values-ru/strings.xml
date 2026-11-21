@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Погода</string>
+    <string name="widget_name">Погода на главном экране</string>
+    <string name="widget_description">Быстрый прогноз текущей погоды и ближайших часов</string>
+
+    <!-- Общие действия и статус -->
+    <string name="now">Сейчас</string>
+    <string name="today">Сегодня</string>
+    <string name="tomorrow">Завтра</string>
+    <string name="feels_like">Ощущается как %s</string>
+    <string name="updated_at">Обновлено в %s</string>
+    <string name="stale_data_warning">Внимание, данные устарели</string>
+    <string name="offline_warning">Офлайн-режим. Показаны сохраненные данные.</string>
+    <string name="retry">Попробовать снова</string>
+    <string name="loading_error">Ошибка загрузки</string>
+    <string name="ad_label">Реклама</string>
+    <string name="ad_slot_test">Тестовое рекламное место (AdMob)</string>
+    <string name="source_open_meteo">Источник: Open-Meteo</string>
+    <string name="location_permission_needed">Определить текущее местоположение</string>
+    <string name="search_city_action">Поиск города</string>
+    <string name="close">Закрыть</string>
+
+    <!-- Поиск города -->
+    <string name="city_selection">Выбор города</string>
+    <string name="search_placeholder">Введите название города (например: Киев)</string>
+    <string name="selected_cities">Выбранные города:</string>
+    <string name="no_selected_cities">Здесь будут сохраняться выбранные вами города</string>
+    <string name="search_results">Результаты поиска:</string>
+    <string name="city_not_found">Город не найден. Проверьте правильность написания.</string>
+
+    <!-- Разделы экрана -->
+    <string name="hourly_forecast_title">Почасовой прогноз (24 ч)</string>
+    <string name="daily_forecast_title">Прогноз на 14 дней</string>
+    <string name="precipitation_probability_desc">Вероятность осадков</string>
+
+    <!-- Метрики -->
+    <string name="metric_humidity">Влажность</string>
+    <string name="humidity_dry">Сухой воздух</string>
+    <string name="humidity_comfortable">Комфортно</string>
+    <string name="humidity_humid">Влажно</string>
+
+    <string name="metric_wind">Ветер</string>
+    <string name="wind_unit_kmh">км/ч</string>
+    <string name="wind_speed_label">Скорость</string>
+
+    <string name="metric_pressure">Давление</string>
+    <string name="pressure_unit_hpa">гПа</string>
+    <string name="pressure_unit_mmhg">мм рт. ст.</string>
+
+    <string name="metric_uv">УФ-индекс</string>
+    <string name="uv_low">Низкий</string>
+    <string name="uv_moderate">Умеренный</string>
+    <string name="uv_high">Высокий</string>
+    <string name="uv_very_high">Очень высокий</string>
+    <string name="uv_extreme">Экстремальный</string>
+
+    <!-- Восход и закат -->
+    <string name="sunrise_sunset_title">Восход и закат солнца</string>
+    <string name="sunrise">Восход</string>
+    <string name="sunset">Закат</string>
+    <string name="day_duration">Длительность дня</string>
+    <string name="hours_short">ч</string>
+    <string name="minutes_short">мин</string>
+    <string name="sunrise_in">Восход через %s</string>
+    <string name="sunset_in">Закат через %s</string>
+    <string name="night_status">Ночь • Восход в %s</string>
+
+    <!-- Радар -->
+    <string name="radar_title">Погодный радар</string>
+    <string name="radar_subtitle">Осадки в радиусе 50 км вокруг %s</string>
+    <string name="radar_live">LIVE</string>
+    <string name="intensity_drizzle">Морось</string>
+    <string name="intensity_rain">Дождь</string>
+    <string name="intensity_heavy_rain">Ливень</string>
+    <string name="intensity_thunderstorm">Гроза</string>
+
+    <!-- Детали дня -->
+    <string name="details_title">Детали прогноза</string>
+    <string name="max_temperature">Макс. температура</string>
+    <string name="min_temperature">Мин. температура</string>
+    <string name="precipitation">Осадки</string>
+    <string name="max_wind">Макс. ветер</string>
+
+    <!-- Выбор языка -->
+    <string name="select_language">Язык приложения</string>
+    <string name="lang_system">Системный по умолчанию</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_en">English</string>
+    <string name="lang_de">Deutsch</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_it">Italiano</string>
+
+    <!-- Погодные условия (WMO) -->
+    <string name="condition_clear_sky">Ясно</string>
+    <string name="condition_mainly_clear">В основном ясно</string>
+    <string name="condition_partly_cloudy">Переменная облачность</string>
+    <string name="condition_overcast">Пасмурно</string>
+    <string name="condition_fog">Туман</string>
+    <string name="condition_drizzle">Морось</string>
+    <string name="condition_rain">Дождь</string>
+    <string name="condition_heavy_rain">Сильный дождь</string>
+    <string name="condition_snow">Снег</string>
+    <string name="condition_thunderstorm">Гроза</string>
+    <string name="condition_unknown">Неизвестно</string>
+
+    <!-- Виджет -->
+    <string name="widget_updated_short">Обновл. %s</string>
+</resources>

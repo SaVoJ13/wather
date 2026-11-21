@@ -32,8 +32,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.weather.app.R
 import com.weather.app.domain.model.DailyForecastItem
 import com.weather.app.ui.theme.RainAccent
 import com.weather.app.ui.theme.SunAccent
@@ -52,11 +54,11 @@ fun DayDetailsBottomSheet(
     if (item == null) return
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val ukLocale = Locale("uk", "UA")
-    val titleFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", ukLocale)
+    val currentLocale = Locale.getDefault()
+    val titleFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", currentLocale)
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
-    val formattedDate = item.date.format(titleFormatter).replaceFirstChar { it.uppercase(ukLocale) }
+    val formattedDate = item.date.format(titleFormatter).replaceFirstChar { it.uppercase(currentLocale) }
     val minTempInt = item.minTemperatureCelsius.roundToInt()
     val maxTempInt = item.maxTemperatureCelsius.roundToInt()
 
@@ -91,7 +93,7 @@ fun DayDetailsBottomSheet(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Close,
-                        contentDescription = "Закрити деталі дня"
+                        contentDescription = stringResource(R.string.close)
                     )
                 }
             }
@@ -116,7 +118,7 @@ fun DayDetailsBottomSheet(
 
                 Column {
                     Text(
-                        text = item.condition.descriptionUk,
+                        text = stringResource(item.condition.stringRes),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )
@@ -124,7 +126,7 @@ fun DayDetailsBottomSheet(
                     val maxPrefix = if (maxTempInt > 0) "+" else ""
                     val minPrefix = if (minTempInt > 0) "+" else ""
                     Text(
-                        text = "Вдень до $maxPrefix$maxTempInt°, вночі від $minPrefix$minTempInt°",
+                        text = "↑ $maxPrefix$maxTempInt°   ↓ $minPrefix$minTempInt°",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -141,18 +143,18 @@ fun DayDetailsBottomSheet(
                 DetailMetricCard(
                     icon = Icons.Default.WaterDrop,
                     iconTint = RainAccent,
-                    label = "Опади",
-                    value = "${String.format(Locale.US, "%.1f", item.precipitationSumMm)} мм",
-                    extra = "Ймовірність ${item.precipitationProbabilityPercent}%",
+                    label = stringResource(R.string.precipitation),
+                    value = "${String.format(Locale.US, "%.1f", item.precipitationSumMm)} mm",
+                    extra = "${stringResource(R.string.precipitation_probability_desc)}: ${item.precipitationProbabilityPercent}%",
                     modifier = Modifier.weight(1f)
                 )
 
                 DetailMetricCard(
                     icon = Icons.Default.Air,
                     iconTint = MaterialTheme.colorScheme.primary,
-                    label = "Вітер",
-                    value = "до ${item.maxWindSpeedKmh.roundToInt()} км/год",
-                    extra = "Макс. пориви",
+                    label = stringResource(R.string.metric_wind),
+                    value = "${item.maxWindSpeedKmh.roundToInt()} ${stringResource(R.string.wind_unit_kmh)}",
+                    extra = stringResource(R.string.max_wind),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -186,7 +188,7 @@ fun DayDetailsBottomSheet(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Схід сонця",
+                                text = stringResource(R.string.sunrise),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -200,12 +202,12 @@ fun DayDetailsBottomSheet(
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "Світловий день",
+                            text = stringResource(R.string.day_duration),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "${hours}г ${minutes}хв",
+                            text = "$hours${stringResource(R.string.hours_short)} $minutes${stringResource(R.string.minutes_short)}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurface
                         )
@@ -221,7 +223,7 @@ fun DayDetailsBottomSheet(
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(
-                                text = "Захід сонця",
+                                text = stringResource(R.string.sunset),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )

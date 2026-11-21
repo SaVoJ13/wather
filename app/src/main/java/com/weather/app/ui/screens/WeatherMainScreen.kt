@@ -53,6 +53,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import com.weather.app.R
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -67,6 +69,7 @@ import com.weather.app.ui.components.CurrentWeatherHero
 import com.weather.app.ui.components.DailyForecastList
 import com.weather.app.ui.components.DayDetailsBottomSheet
 import com.weather.app.ui.components.HourlyForecastRow
+import com.weather.app.ui.components.LanguageSelectionDialog
 import com.weather.app.ui.components.SearchCityBottomSheet
 import com.weather.app.ui.components.SunriseSunsetCard
 import com.weather.app.ui.components.WeatherMetricsGrid
@@ -90,6 +93,7 @@ fun WeatherMainScreen(
     val snackbarHostState = remember { SnackbarHostState() }
 
     var isSearchSheetOpen by remember { mutableStateOf(false) }
+    var isLanguageDialogOpen by remember { mutableStateOf(false) }
 
     val isSystemReducedMotion = remember {
         try {
@@ -242,8 +246,16 @@ fun WeatherMainScreen(
             },
             onSearchClick = { isSearchSheetOpen = true },
             onLocationClick = onLocationClick,
+            onLanguageClick = { isLanguageDialogOpen = true },
             modifier = modifier
         )
+
+        // Модальне вікно вибору мови
+        if (isLanguageDialogOpen) {
+            LanguageSelectionDialog(
+                onDismissRequest = { isLanguageDialogOpen = false }
+            )
+        }
 
         // Модальне вікно пошуку міст
         if (isSearchSheetOpen) {
@@ -274,6 +286,7 @@ fun WeatherMainScreenContent(
     onRefresh: () -> Unit,
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
+    onLanguageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = LocalWeatherPalette.current
@@ -309,6 +322,7 @@ fun WeatherMainScreenContent(
                         onRefresh = onRefresh,
                         onSearchClick = onSearchClick,
                         onLocationClick = onLocationClick,
+                        onLanguageClick = onLanguageClick,
                         onDayClick = { selectedDayForDetails = it }
                     )
                 }
@@ -321,6 +335,7 @@ fun WeatherMainScreenContent(
                             onRefresh = onRefresh,
                             onSearchClick = onSearchClick,
                             onLocationClick = onLocationClick,
+                            onLanguageClick = onLanguageClick,
                             onDayClick = { selectedDayForDetails = it }
                         )
                     } else {
@@ -352,6 +367,7 @@ private fun WeatherSuccessContent(
     onRefresh: () -> Unit,
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
+    onLanguageClick: () -> Unit,
     onDayClick: (DailyForecastItem) -> Unit
 ) {
     val palette = LocalWeatherPalette.current
@@ -362,12 +378,13 @@ private fun WeatherSuccessContent(
             .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
-        // Верхня панель (місто, пошук, геолокація)
+        // Верхня панель (місто, пошук, мова, геолокація)
         WeatherTopBar(
             location = forecast.location,
             currentTime = forecast.current.time,
             onSearchClick = onSearchClick,
-            onLocationClick = onLocationClick
+            onLocationClick = onLocationClick,
+            onLanguageClick = onLanguageClick
         )
 
         // Попередження про офлайн / старі дані
@@ -482,7 +499,7 @@ private fun OfflineWarningBanner(
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
-                text = "Офлайн-режим. Показано збережені дані.",
+                text = stringResource(R.string.offline_warning),
                 style = MaterialTheme.typography.bodySmall,
                 color = Color(0xFFE65100)
             )
@@ -579,7 +596,7 @@ private fun WeatherErrorScreen(
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Спробувати знову")
+                    Text(stringResource(R.string.retry))
                 }
             }
         }

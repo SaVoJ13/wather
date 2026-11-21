@@ -23,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.weather.app.R
 import com.weather.app.domain.model.CurrentWeather
 import com.weather.app.ui.theme.LocalWeatherPalette
 import kotlin.math.roundToInt
@@ -34,17 +36,17 @@ fun WeatherMetricsGrid(
     modifier: Modifier = Modifier
 ) {
     val humidityComfort = when {
-        current.relativeHumidityPercent < 35 -> "Сухе повітря"
-        current.relativeHumidityPercent in 35..65 -> "Комфортно"
-        else -> "Волого"
+        current.relativeHumidityPercent < 35 -> stringResource(R.string.humidity_dry)
+        current.relativeHumidityPercent in 35..65 -> stringResource(R.string.humidity_comfortable)
+        else -> stringResource(R.string.humidity_humid)
     }
 
     val uvLevel = when (current.uvIndex.roundToInt()) {
-        in 0..2 -> "Низький"
-        in 3..5 -> "Помірний"
-        in 6..7 -> "Високий"
-        in 8..10 -> "Дуже високий"
-        else -> "Екстремальний"
+        in 0..2 -> stringResource(R.string.uv_low)
+        in 3..5 -> stringResource(R.string.uv_moderate)
+        in 6..7 -> stringResource(R.string.uv_high)
+        in 8..10 -> stringResource(R.string.uv_very_high)
+        else -> stringResource(R.string.uv_extreme)
     }
 
     val pressureMmHg = (current.surfacePressureHpa * 0.750062).roundToInt()
@@ -59,16 +61,16 @@ fun WeatherMetricsGrid(
         ) {
             MetricCard(
                 icon = Icons.Default.WaterDrop,
-                title = "Вологість",
+                title = stringResource(R.string.metric_humidity),
                 value = "${current.relativeHumidityPercent}%",
                 subtitle = humidityComfort,
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 icon = Icons.Default.Air,
-                title = "Вітер",
-                value = "${current.windSpeedKmh.roundToInt()} км/год",
-                subtitle = "Швидкість",
+                title = stringResource(R.string.metric_wind),
+                value = "${current.windSpeedKmh.roundToInt()} ${stringResource(R.string.wind_unit_kmh)}",
+                subtitle = stringResource(R.string.wind_speed_label),
                 modifier = Modifier.weight(1f)
             )
         }
@@ -79,14 +81,14 @@ fun WeatherMetricsGrid(
         ) {
             MetricCard(
                 icon = Icons.Default.Compress,
-                title = "Тиск",
-                value = "${current.surfacePressureHpa.roundToInt()} гПа",
-                subtitle = "$pressureMmHg мм рт. ст.",
+                title = stringResource(R.string.metric_pressure),
+                value = "${current.surfacePressureHpa.roundToInt()} ${stringResource(R.string.pressure_unit_hpa)}",
+                subtitle = "$pressureMmHg ${stringResource(R.string.pressure_unit_mmhg)}",
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 icon = Icons.Default.WbSunny,
-                title = "УФ-індекс",
+                title = stringResource(R.string.metric_uv),
                 value = String.format("%.1f", current.uvIndex),
                 subtitle = uvLevel,
                 modifier = Modifier.weight(1f)

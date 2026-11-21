@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.NearMe
@@ -27,10 +28,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.weather.app.R
 import com.weather.app.domain.model.LocationModel
 import com.weather.app.ui.theme.LocalWeatherPalette
 import java.time.LocalDateTime
@@ -43,12 +45,13 @@ fun WeatherTopBar(
     currentTime: LocalDateTime,
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
+    onLanguageClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val palette = LocalWeatherPalette.current
-    val ukLocale = Locale("uk", "UA")
-    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", ukLocale)
-    val formattedDate = currentTime.format(dateFormatter).replaceFirstChar { it.uppercase(ukLocale) }
+    val currentLocale = Locale.getDefault()
+    val dateFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", currentLocale)
+    val formattedDate = currentTime.format(dateFormatter).replaceFirstChar { it.uppercase(currentLocale) }
 
     Column(
         modifier = modifier
@@ -67,7 +70,7 @@ fun WeatherTopBar(
             ) {
                 Icon(
                     imageVector = Icons.Default.Search,
-                    contentDescription = "Список міст та пошук",
+                    contentDescription = stringResource(R.string.search_city_action),
                     tint = palette.textColor
                 )
             }
@@ -86,7 +89,11 @@ fun WeatherTopBar(
                 ) {
                     Icon(
                         imageVector = if (location.isCurrentLocation) Icons.Default.NearMe else Icons.Default.LocationOn,
-                        contentDescription = if (location.isCurrentLocation) "Поточне місцезнаходження за GPS" else "Вибране місто",
+                        contentDescription = if (location.isCurrentLocation) {
+                            stringResource(R.string.location_permission_needed)
+                        } else {
+                            stringResource(R.string.city_selection)
+                        },
                         tint = palette.textColor,
                         modifier = Modifier.size(18.dp)
                     )
@@ -108,15 +115,28 @@ fun WeatherTopBar(
                 )
             }
 
-            IconButton(
-                onClick = onLocationClick,
-                modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.MyLocation,
-                    contentDescription = "Визначити погоду за моїм місцезнаходженням",
-                    tint = palette.textColor
-                )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(
+                    onClick = onLanguageClick,
+                    modifier = Modifier.sizeIn(minWidth = 44.dp, minHeight = 48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Language,
+                        contentDescription = stringResource(R.string.select_language),
+                        tint = palette.textColor
+                    )
+                }
+
+                IconButton(
+                    onClick = onLocationClick,
+                    modifier = Modifier.sizeIn(minWidth = 44.dp, minHeight = 48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MyLocation,
+                        contentDescription = stringResource(R.string.location_permission_needed),
+                        tint = palette.textColor
+                    )
+                }
             }
         }
 
@@ -135,7 +155,7 @@ fun WeatherTopBar(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "Джерело: Open-Meteo",
+                    text = stringResource(R.string.source_open_meteo),
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                     color = palette.textColor.copy(alpha = 0.75f)
                 )

@@ -22,8 +22,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.weather.app.R
 import com.weather.app.ui.theme.LocalWeatherPalette
 
 /**
@@ -50,7 +52,7 @@ fun AdBannerPlaceholder(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Реклама",
+                text = stringResource(R.string.ad_label),
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                 color = Color.White.copy(alpha = 0.8f)
             )
@@ -81,7 +83,7 @@ fun AdBannerPlaceholder(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Тестове рекламне місце (AdMob Slot)",
+                    text = stringResource(R.string.ad_slot_test),
                     style = MaterialTheme.typography.bodyMedium,
                     color = palette.textColor.copy(alpha = 0.7f)
                 )

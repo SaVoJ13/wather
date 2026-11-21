@@ -31,7 +31,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.weather.app.R
 import com.weather.app.domain.model.DailyForecastItem
 import com.weather.app.ui.theme.LocalWeatherPalette
 import com.weather.app.ui.theme.RainAccent
@@ -63,7 +65,7 @@ fun DailyForecastList(
             .padding(vertical = 16.dp)
     ) {
         Text(
-            text = "Прогноз на 14 днів",
+            text = stringResource(R.string.daily_forecast_title),
             style = MaterialTheme.typography.titleMedium,
             color = palette.textColor,
             modifier = Modifier.padding(horizontal = 20.dp)
@@ -100,13 +102,13 @@ private fun DailyForecastRow(
     onClick: () -> Unit
 ) {
     val palette = LocalWeatherPalette.current
-    val ukLocale = Locale("uk", "UA")
-    val dayFormatter = DateTimeFormatter.ofPattern("EE, d MMM", ukLocale)
+    val currentLocale = Locale.getDefault()
+    val dayFormatter = DateTimeFormatter.ofPattern("EE, d MMM", currentLocale)
 
     val dayTitle = when (index) {
-        0 -> "Сьогодні"
-        1 -> "Завтра"
-        else -> item.date.format(dayFormatter).replaceFirstChar { it.uppercase(ukLocale) }
+        0 -> stringResource(R.string.today)
+        1 -> stringResource(R.string.tomorrow)
+        else -> item.date.format(dayFormatter).replaceFirstChar { it.uppercase(currentLocale) }
     }
 
     val minInt = item.minTemperatureCelsius.roundToInt()
@@ -145,7 +147,7 @@ private fun DailyForecastRow(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.WaterDrop,
-                        contentDescription = "Опади",
+                        contentDescription = stringResource(R.string.precipitation),
                         tint = RainAccent,
                         modifier = Modifier.size(10.dp)
                     )
@@ -161,32 +163,35 @@ private fun DailyForecastRow(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        // Мінімальна температура
+        // Мін температура
         val minPrefix = if (minInt > 0) "+" else ""
         Text(
             text = "$minPrefix$minInt°",
             style = MaterialTheme.typography.bodyMedium,
-            color = palette.textColor.copy(alpha = 0.75f),
-            modifier = Modifier.width(34.dp)
+            color = palette.textColor.copy(alpha = 0.65f),
+            modifier = Modifier.width(36.dp)
         )
 
-        // Графічна смужка діапазону дня (Range Bar)
+        Spacer(modifier = Modifier.width(6.dp))
+
+        // Градієнтна температурна смуга (горизонтальний bar)
         TemperatureRangeBar(
-            dayMin = item.minTemperatureCelsius,
-            dayMax = item.maxTemperatureCelsius,
+            min = item.minTemperatureCelsius,
+            max = item.maxTemperatureCelsius,
             globalMin = globalMin,
             globalMax = globalMax,
             modifier = Modifier
                 .weight(1f)
                 .height(6.dp)
-                .padding(horizontal = 6.dp)
         )
 
-        // Максимальна температура
+        Spacer(modifier = Modifier.width(6.dp))
+
+        // Макс температура
         val maxPrefix = if (maxInt > 0) "+" else ""
         Text(
             text = "$maxPrefix$maxInt°",
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = palette.textColor,
             modifier = Modifier.width(36.dp)
         )
@@ -194,55 +199,53 @@ private fun DailyForecastRow(
 }
 
 @Composable
-fun TemperatureRangeBar(
-    dayMin: Double,
-    dayMax: Double,
+private fun TemperatureRangeBar(
+    min: Double,
+    max: Double,
     globalMin: Double,
     globalMax: Double,
     modifier: Modifier = Modifier
 ) {
     val totalRange = (globalMax - globalMin).coerceAtLeast(1.0)
-    val startFraction = ((dayMin - globalMin) / totalRange).coerceIn(0.0, 1.0).toFloat()
-    val endFraction = ((dayMax - globalMin) / totalRange).coerceIn(0.0, 1.0).toFloat()
+    val startFraction = ((min - globalMin) / totalRange).coerceIn(0.0, 1.0).toFloat()
+    val endFraction = ((max - globalMin) / totalRange).coerceIn(0.0, 1.0).toFloat()
 
-    val startColor = when {
-        dayMin < 0 -> TempBarCold
-        dayMin < 18 -> TempBarModerate
-        else -> TempBarWarm
-    }
-    val endColor = when {
-        dayMax < 5 -> TempBarCold
-        dayMax < 22 -> TempBarModerate
-        dayMax < 28 -> TempBarWarm
-        else -> TempBarHot
-    }
+    val barBrush = Brush.horizontalGradient(
+        colors = listOf(
+            tempToColor(min),
+            tempToColor(max)
+        )
+    )
 
     Canvas(modifier = modifier) {
-        val width = size.width
-        val height = size.height
-        val cornerRadius = CornerRadius(height / 2f, height / 2f)
+        val barHeight = size.height
+        val totalWidth = size.width
 
-        // Базовий фоновий трек
+        // Сірий фоновий трек
         drawRoundRect(
-            color = Color.White.copy(alpha = 0.2f),
-            topLeft = Offset(0f, 0f),
-            size = Size(width, height),
-            cornerRadius = cornerRadius
+            color = Color.White.copy(alpha = 0.15f),
+            size = Size(totalWidth, barHeight),
+            cornerRadius = CornerRadius(barHeight / 2, barHeight / 2)
         )
 
-        // Активний діапазон дня
-        val activeStart = width * startFraction
-        val activeWidth = (width * (endFraction - startFraction)).coerceAtLeast(height)
+        // Активна ділянка діапазону дня
+        val left = totalWidth * startFraction
+        val width = (totalWidth * (endFraction - startFraction)).coerceAtLeast(barHeight)
 
         drawRoundRect(
-            brush = Brush.horizontalGradient(
-                colors = listOf(startColor, endColor),
-                startX = activeStart,
-                endX = activeStart + activeWidth
-            ),
-            topLeft = Offset(activeStart, 0f),
-            size = Size(activeWidth, height),
-            cornerRadius = cornerRadius
+            brush = barBrush,
+            topLeft = Offset(left, 0f),
+            size = Size(width, barHeight),
+            cornerRadius = CornerRadius(barHeight / 2, barHeight / 2)
         )
+    }
+}
+
+private fun tempToColor(temp: Double): Color {
+    return when {
+        temp <= 0 -> TempBarCold
+        temp in 0.1..15.0 -> TempBarModerate
+        temp in 15.1..25.0 -> TempBarWarm
+        else -> TempBarHot
     }
 }

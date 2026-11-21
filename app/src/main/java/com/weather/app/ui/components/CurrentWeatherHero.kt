@@ -19,8 +19,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.weather.app.R
 import com.weather.app.domain.model.CurrentWeather
 import com.weather.app.domain.model.DailyForecastItem
 import com.weather.app.ui.theme.LocalWeatherPalette
@@ -52,7 +54,7 @@ fun CurrentWeatherHero(
             .padding(horizontal = 24.dp, vertical = 20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Погодна іконка та назва стану
+        // Погодна іконка та назва стану (локалізована)
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -63,7 +65,7 @@ fun CurrentWeatherHero(
             )
             Spacer(modifier = Modifier.size(12.dp))
             Text(
-                text = current.condition.descriptionUk,
+                text = stringResource(current.condition.stringRes),
                 style = MaterialTheme.typography.titleLarge,
                 color = palette.textColor
             )
@@ -82,7 +84,7 @@ fun CurrentWeatherHero(
         // Відчувається як
         val feelsPrefix = if (feelsLikeInt > 0) "+" else ""
         Text(
-            text = "Відчувається як $feelsPrefix$feelsLikeInt°",
+            text = stringResource(R.string.feels_like, "$feelsPrefix$feelsLikeInt°"),
             style = MaterialTheme.typography.bodyLarge,
             color = palette.textColor.copy(alpha = 0.9f)
         )
@@ -114,20 +116,20 @@ fun CurrentWeatherHero(
             ) {
                 Icon(
                     imageVector = Icons.Default.Schedule,
-                    contentDescription = "Увага, дані застарілі",
+                    contentDescription = stringResource(R.string.stale_data_warning),
                     tint = StaleBadgeText,
                     modifier = Modifier.size(16.dp)
                 )
                 Spacer(modifier = Modifier.size(6.dp))
                 Text(
-                    text = "Дані від $updateTimeFormatted (можуть бути застарілі)",
+                    text = "${stringResource(R.string.updated_at, updateTimeFormatted)} (${stringResource(R.string.stale_data_warning)})",
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
                     color = StaleBadgeText
                 )
             }
         } else {
             Text(
-                text = "Оновлено о $updateTimeFormatted",
+                text = stringResource(R.string.updated_at, updateTimeFormatted),
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
                 color = palette.textColor.copy(alpha = 0.7f)
             )

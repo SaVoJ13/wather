@@ -34,6 +34,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.weather.app.R
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -74,17 +76,22 @@ object SunriseSunsetCalculator {
         return (elapsedSecs.toFloat() / totalSecs.toFloat()).coerceIn(0f, 1f)
     }
 
-    fun formatDuration(sunrise: LocalDateTime, sunset: LocalDateTime): String {
+    fun formatDuration(sunrise: LocalDateTime, sunset: LocalDateTime, hShort: String = "год", mShort: String = "хв"): String {
         val duration = Duration.between(sunrise, sunset)
         val hours = duration.toHours()
         val minutes = duration.toMinutes() % 60
-        return "$hours год $minutes хв"
+        return "$hours $hShort $minutes $mShort"
     }
 
     fun calculateStatus(
         currentTime: LocalDateTime,
         sunrise: LocalDateTime,
-        sunset: LocalDateTime
+        sunset: LocalDateTime,
+        sunriseInPattern: String? = null,
+        sunsetInPattern: String? = null,
+        nightPattern: String? = null,
+        hShort: String = "год",
+        mShort: String = "хв"
     ): String {
         val timeFmt = DateTimeFormatter.ofPattern("HH:mm")
         return when {
@@ -92,16 +99,30 @@ object SunriseSunsetCalculator {
                 val diff = Duration.between(currentTime, sunrise)
                 val h = diff.toHours()
                 val m = diff.toMinutes() % 60
-                if (h > 0) "Схід через $h год $m хв" else "Схід через $m хв"
+                val timeStr = if (h > 0) "$h $hShort $m $mShort" else "$m $mShort"
+                if (sunriseInPattern != null) {
+                    java.lang.String.format(sunriseInPattern, timeStr)
+                } else {
+                    if (h > 0) "Схід через $h год $m хв" else "Схід через $m хв"
+                }
             }
             currentTime.isAfter(sunset) -> {
-                "Ніч • Схід о ${sunrise.format(timeFmt)}"
+                if (nightPattern != null) {
+                    java.lang.String.format(nightPattern, sunrise.format(timeFmt))
+                } else {
+                    "Ніч • Схід о ${sunrise.format(timeFmt)}"
+                }
             }
             else -> {
                 val diff = Duration.between(currentTime, sunset)
                 val h = diff.toHours()
                 val m = diff.toMinutes() % 60
-                if (h > 0) "Захід через $h год $m хв" else "Захід через $m хв"
+                val timeStr = if (h > 0) "$h $hShort $m $mShort" else "$m $mShort"
+                if (sunsetInPattern != null) {
+                    java.lang.String.format(sunsetInPattern, timeStr)
+                } else {
+                    if (h > 0) "Захід через $h год $m хв" else "Захід через $m хв"
+                }
             }
         }
     }
@@ -142,11 +163,25 @@ fun SunriseSunsetCard(
     }
 
     val isDay = currentTime.isAfter(sunrise) && currentTime.isBefore(sunset)
-    val dayDurationText = remember(sunrise, sunset) {
-        SunriseSunsetCalculator.formatDuration(sunrise, sunset)
+    val hShort = stringResource(R.string.hours_short)
+    val mShort = stringResource(R.string.minutes_short)
+    val dayDurationText = remember(sunrise, sunset, hShort, mShort) {
+        SunriseSunsetCalculator.formatDuration(sunrise, sunset, hShort, mShort)
     }
-    val statusText = remember(currentTime, sunrise, sunset) {
-        SunriseSunsetCalculator.calculateStatus(currentTime, sunrise, sunset)
+    val sunriseInPattern = stringResource(R.string.sunrise_in)
+    val sunsetInPattern = stringResource(R.string.sunset_in)
+    val nightPattern = stringResource(R.string.night_status)
+    val statusText = remember(currentTime, sunrise, sunset, sunriseInPattern, sunsetInPattern, nightPattern, hShort, mShort) {
+        SunriseSunsetCalculator.calculateStatus(
+            currentTime = currentTime,
+            sunrise = sunrise,
+            sunset = sunset,
+            sunriseInPattern = sunriseInPattern,
+            sunsetInPattern = sunsetInPattern,
+            nightPattern = nightPattern,
+            hShort = hShort,
+            mShort = mShort
+        )
     }
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
@@ -172,7 +207,7 @@ fun SunriseSunsetCard(
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Схід і захід сонця",
+                    text = stringResource(R.string.sunrise_sunset_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = palette.textColor
                 )
@@ -338,7 +373,7 @@ fun SunriseSunsetCard(
                     )
                     Spacer(modifier = Modifier.width(2.dp))
                     Text(
-                        text = "Схід",
+                        text = stringResource(R.string.sunrise),
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.textColor.copy(alpha = 0.7f)
                     )
@@ -352,7 +387,7 @@ fun SunriseSunsetCard(
 
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Тривалість дня",
+                    text = stringResource(R.string.day_duration),
                     style = MaterialTheme.typography.labelSmall,
                     color = palette.textColor.copy(alpha = 0.7f)
                 )
@@ -366,7 +401,7 @@ fun SunriseSunsetCard(
             Column(horizontalAlignment = Alignment.End) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = "Захід",
+                        text = stringResource(R.string.sunset),
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.textColor.copy(alpha = 0.7f)
                     )

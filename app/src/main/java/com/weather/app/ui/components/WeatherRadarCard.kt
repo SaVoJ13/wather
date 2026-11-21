@@ -42,6 +42,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.stringResource
+import com.weather.app.R
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -158,12 +160,12 @@ fun WeatherRadarCard(
                 Spacer(modifier = Modifier.width(8.dp))
                 Column {
                     Text(
-                        text = "Погодний радар",
+                        text = stringResource(R.string.radar_title),
                         style = MaterialTheme.typography.titleMedium,
                         color = palette.textColor
                     )
                     Text(
-                        text = "Опади у радіусі 50 км навколо $cityName",
+                        text = stringResource(R.string.radar_subtitle, cityName),
                         style = MaterialTheme.typography.bodySmall,
                         color = palette.textColor.copy(alpha = 0.7f)
                     )
@@ -186,7 +188,7 @@ fun WeatherRadarCard(
                 )
                 Spacer(modifier = Modifier.width(5.dp))
                 Text(
-                    text = "LIVE",
+                    text = stringResource(R.string.radar_live),
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFF00E676)
                 )
@@ -413,7 +415,8 @@ fun WeatherRadarCard(
                 )
             }
 
-            val steps = listOf("-30 хв", "Зараз", "+30 хв", "+60 хв")
+            val minShort = stringResource(R.string.minutes_short)
+            val steps = listOf("-30 $minShort", stringResource(R.string.now), "+30 $minShort", "+60 $minShort")
             Row(
                 modifier = Modifier.weight(1f),
                 horizontalArrangement = Arrangement.spacedBy(6.dp)
@@ -453,10 +456,10 @@ fun WeatherRadarCard(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            RadarLegendItem(color = Color(0xFF4CAF50), label = "Мряка", textColor = palette.textColor)
-            RadarLegendItem(color = Color(0xFFFFEB3B), label = "Дощ", textColor = palette.textColor)
-            RadarLegendItem(color = Color(0xFFFF9800), label = "Злива", textColor = palette.textColor)
-            RadarLegendItem(color = Color(0xFFF44336), label = "Гроза", textColor = palette.textColor)
+            RadarLegendItem(color = Color(0xFF4CAF50), label = stringResource(R.string.intensity_drizzle), textColor = palette.textColor)
+            RadarLegendItem(color = Color(0xFFFFEB3B), label = stringResource(R.string.intensity_rain), textColor = palette.textColor)
+            RadarLegendItem(color = Color(0xFFFF9800), label = stringResource(R.string.intensity_heavy_rain), textColor = palette.textColor)
+            RadarLegendItem(color = Color(0xFFF44336), label = stringResource(R.string.intensity_thunderstorm), textColor = palette.textColor)
         }
     }
 }

@@ -3,14 +3,108 @@
     <string name="app_name">Погода</string>
     <string name="widget_name">Погода на робочому столі</string>
     <string name="widget_description">Швидкий прогноз поточної погоди та найближчих годин</string>
+
+    <!-- Загальні дії та статус -->
+    <string name="now">Зараз</string>
+    <string name="today">Сьогодні</string>
+    <string name="tomorrow">Завтра</string>
+    <string name="feels_like">Відчувається як %s</string>
+    <string name="updated_at">Оновлено о %s</string>
+    <string name="stale_data_warning">Увага, дані застарілі</string>
+    <string name="offline_warning">Офлайн-режим. Показано збережені дані.</string>
+    <string name="retry">Спробувати знову</string>
+    <string name="loading_error">Помилка завантаження</string>
+    <string name="ad_label">Реклама</string>
+    <string name="ad_slot_test">Тестове рекламне місце (AdMob Slot)</string>
+    <string name="source_open_meteo">Джерело: Open-Meteo</string>
+    <string name="location_permission_needed">Визначити поточне місцезнаходження</string>
+    <string name="search_city_action">Пошук міста</string>
+    <string name="close">Закрити</string>
+
+    <!-- Пошук міста -->
     <string name="city_selection">Вибір міста</string>
     <string name="search_placeholder">Введіть назву міста (наприклад: Львів)</string>
-    <string name="quick_select">Швидкий вибір:</string>
+    <string name="selected_cities">Вибрані міста:</string>
+    <string name="no_selected_cities">Тут зберігатимуться вибрані вами міста</string>
     <string name="search_results">Результати пошуку:</string>
-    <string name="city_not_found">Місто не знайдено. Перевірте написання.</string>
+    <string name="city_not_found">Місто не знайдено. Перевірте правильність написання.</string>
+
+    <!-- Секції екрана -->
     <string name="hourly_forecast_title">Погодинний прогноз (24 год)</string>
     <string name="daily_forecast_title">Прогноз на 14 днів</string>
-    <string name="ad_label">Реклама</string>
-    <string name="retry">Спробувати знову</string>
-    <string name="offline_warning">Офлайн-режим. Показано збережені дані.</string>
+    <string name="precipitation_probability_desc">Ймовірність опадів</string>
+
+    <!-- Метрики -->
+    <string name="metric_humidity">Вологість</string>
+    <string name="humidity_dry">Сухе повітря</string>
+    <string name="humidity_comfortable">Комфортно</string>
+    <string name="humidity_humid">Волого</string>
+
+    <string name="metric_wind">Вітер</string>
+    <string name="wind_unit_kmh">км/год</string>
+    <string name="wind_speed_label">Швидкість</string>
+
+    <string name="metric_pressure">Тиск</string>
+    <string name="pressure_unit_hpa">гПа</string>
+    <string name="pressure_unit_mmhg">мм рт. ст.</string>
+
+    <string name="metric_uv">УФ-індекс</string>
+    <string name="uv_low">Низький</string>
+    <string name="uv_moderate">Помірний</string>
+    <string name="uv_high">Високий</string>
+    <string name="uv_very_high">Дуже високий</string>
+    <string name="uv_extreme">Екстремальний</string>
+
+    <!-- Схід і захід сонця -->
+    <string name="sunrise_sunset_title">Схід і захід сонця</string>
+    <string name="sunrise">Схід</string>
+    <string name="sunset">Захід</string>
+    <string name="day_duration">Тривалість дня</string>
+    <string name="hours_short">год</string>
+    <string name="minutes_short">хв</string>
+    <string name="sunrise_in">Схід через %s</string>
+    <string name="sunset_in">Захід через %s</string>
+    <string name="night_status">Ніч • Схід о %s</string>
+
+    <!-- Радар -->
+    <string name="radar_title">Погодний радар</string>
+    <string name="radar_subtitle">Опади у радіусі 50 км навколо %s</string>
+    <string name="radar_live">LIVE</string>
+    <string name="intensity_drizzle">Мряка</string>
+    <string name="intensity_rain">Дощ</string>
+    <string name="intensity_heavy_rain">Злива</string>
+    <string name="intensity_thunderstorm">Гроза</string>
+
+    <!-- Деталі дня -->
+    <string name="details_title">Деталі прогнозу</string>
+    <string name="max_temperature">Макс. температура</string>
+    <string name="min_temperature">Мін. температура</string>
+    <string name="precipitation">Опади</string>
+    <string name="max_wind">Макс. вітер</string>
+
+    <!-- Вибір мови -->
+    <string name="select_language">Мова застосунку</string>
+    <string name="lang_system">Системна за замовчуванням</string>
+    <string name="lang_uk">Українська</string>
+    <string name="lang_en">English</string>
+    <string name="lang_de">Deutsch</string>
+    <string name="lang_ru">Русский</string>
+    <string name="lang_es">Español</string>
+    <string name="lang_it">Italiano</string>
+
+    <!-- Погодні умови (WMO) -->
+    <string name="condition_clear_sky">Ясно</string>
+    <string name="condition_mainly_clear">Здебільшого ясно</string>
+    <string name="condition_partly_cloudy">Мінлива хмарність</string>
+    <string name="condition_overcast">Хмарно</string>
+    <string name="condition_fog">Туман</string>
+    <string name="condition_drizzle">Мряка</string>
+    <string name="condition_rain">Дощ</string>
+    <string name="condition_heavy_rain">Сильний дощ</string>
+    <string name="condition_snow">Сніг</string>
+    <string name="condition_thunderstorm">Гроза</string>
+    <string name="condition_unknown">Невідомо</string>
+
+    <!-- Віджет -->
+    <string name="widget_updated_short">Оновл. %s</string>
 </resources>
