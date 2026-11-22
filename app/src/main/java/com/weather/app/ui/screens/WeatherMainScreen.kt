@@ -462,9 +462,15 @@ private fun WeatherSuccessContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Атрибуція джерела погодних даних згідно з ліцензійними вимогами
+        // Динамічна атрибуція фактичного джерела погодних даних згідно з ліцензійними вимогами
+        val attributionText = when (forecast.dataSource) {
+            com.weather.app.domain.model.WeatherDataSource.OPEN_METEO -> stringResource(R.string.source_open_meteo)
+            com.weather.app.domain.model.WeatherDataSource.WEATHER_METRO -> stringResource(R.string.source_weather_metro)
+            com.weather.app.domain.model.WeatherDataSource.VISUAL_CROSSING -> stringResource(R.string.source_visual_crossing)
+            com.weather.app.domain.model.WeatherDataSource.MOCK -> stringResource(R.string.source_mock)
+        }
         Text(
-            text = stringResource(R.string.source_open_meteo),
+            text = attributionText,
             style = MaterialTheme.typography.bodySmall,
             color = palette.textColor.copy(alpha = 0.7f),
             textAlign = TextAlign.Center,

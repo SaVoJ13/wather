@@ -17,6 +17,9 @@
     <string name="ad_label">Реклама</string>
     <string name="ad_slot_test">Тестове рекламне місце (AdMob Slot)</string>
     <string name="source_open_meteo">Джерело: Open-Meteo</string>
+    <string name="source_weather_metro">Погодні дані: WeatherMetro</string>
+    <string name="source_visual_crossing">Погодні дані: Visual Crossing</string>
+    <string name="source_mock">Джерело: Тестові дані (Mock)</string>
     <string name="location_permission_needed">Визначити поточне місцезнаходження</string>
     <string name="search_city_action">Пошук міста</string>
     <string name="close">Закрити</string>

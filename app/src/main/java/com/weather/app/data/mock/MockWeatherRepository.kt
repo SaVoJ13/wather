@@ -152,7 +152,8 @@ class MockWeatherRepository : WeatherRepository {
                 hourly24h = hourly,
                 daily14Days = daily,
                 updatedAt = now,
-                isStale = false
+                isStale = false,
+                dataSource = com.weather.app.domain.model.WeatherDataSource.MOCK
             )
         }
 
@@ -248,7 +249,8 @@ class MockWeatherRepository : WeatherRepository {
                 hourly24h = hourly,
                 daily14Days = daily,
                 updatedAt = now,
-                isStale = false
+                isStale = false,
+                dataSource = com.weather.app.domain.model.WeatherDataSource.MOCK
             )
         }
 

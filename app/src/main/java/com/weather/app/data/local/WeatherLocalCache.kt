@@ -97,6 +97,7 @@ object WeatherLocalCache {
             val root = JSONObject().apply {
                 put("updatedAt", forecast.updatedAt.format(isoFormatter))
                 put("isStale", forecast.isStale)
+                put("dataSource", forecast.dataSource.name)
 
                 // Current
                 val cur = JSONObject().apply {
@@ -214,13 +215,18 @@ object WeatherLocalCache {
                 )
             }
 
+            val dsName = root.optString("dataSource", com.weather.app.domain.model.WeatherDataSource.OPEN_METEO.name)
+            val dataSource = runCatching { com.weather.app.domain.model.WeatherDataSource.valueOf(dsName) }
+                .getOrDefault(com.weather.app.domain.model.WeatherDataSource.OPEN_METEO)
+
             FullWeatherForecast(
                 location = location,
                 current = current,
                 hourly24h = hourlyList,
                 daily14Days = dailyList,
                 updatedAt = updatedAt,
-                isStale = isStale
+                isStale = isStale,
+                dataSource = dataSource
             )
         } catch (e: Exception) {
             null

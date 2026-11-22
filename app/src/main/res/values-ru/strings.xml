@@ -17,6 +17,9 @@
     <string name="ad_label">Реклама</string>
     <string name="ad_slot_test">Тестовое рекламное место (AdMob)</string>
     <string name="source_open_meteo">Источник: Open-Meteo</string>
+    <string name="source_weather_metro">Данные о погоде: WeatherMetro</string>
+    <string name="source_visual_crossing">Данные о погоде: Visual Crossing</string>
+    <string name="source_mock">Источник: Тестовые данные (Mock)</string>
     <string name="location_permission_needed">Определить текущее местоположение</string>
     <string name="search_city_action">Поиск города</string>
     <string name="close">Закрыть</string>

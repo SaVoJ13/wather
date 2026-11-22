@@ -17,6 +17,9 @@
     <string name="ad_label">Anzeige</string>
     <string name="ad_slot_test">Test-Werbeplatz (AdMob)</string>
     <string name="source_open_meteo">Quelle: Open-Meteo</string>
+    <string name="source_weather_metro">Wetterdaten von WeatherMetro</string>
+    <string name="source_visual_crossing">Wetterdaten bereitgestellt von Visual Crossing</string>
+    <string name="source_mock">Quelle: Testdaten (Mock)</string>
     <string name="location_permission_needed">Aktuellen Standort bestimmen</string>
     <string name="search_city_action">Stadt suchen</string>
     <string name="close">Schließen</string>

@@ -12,5 +12,6 @@ data class FullWeatherForecast(
     val hourly24h: List<HourlyForecastItem>,
     val daily14Days: List<DailyForecastItem>,
     val updatedAt: LocalDateTime,
-    val isStale: Boolean = false
+    val isStale: Boolean = false,
+    val dataSource: WeatherDataSource = WeatherDataSource.OPEN_METEO
 )
