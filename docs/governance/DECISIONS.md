@@ -93,3 +93,32 @@
   2. **Повна незалежність пошуку:** Пошук міст через онлайн-геокодування та вибір міста зі списку працює абсолютно автономно і не потребує жодних дозволів геолокації. Якщо користувач відхиляє запит на доступ до GPS, застосунок штатно функціонує з вибраним вручну містом.
   3. **Сувора заборона фонової локації:** Дозвіл `ACCESS_BACKGROUND_LOCATION` не оголошується в `AndroidManifest.xml` і ніколи не запитується.
   4. **Конфіденційність даних:** Координати користувача ніколи не передаються стороннім аналітичним службам і не записуються в персистентні логи.
+
+---
+
+## [ADR-007] Прийняття оновленої структури фаз ROADMAP 2.0 (Фази 0–9) та ролей 6 агентів
+- **Дата:** 2026-11-22
+- **Статус:** Прийнято (рішення Керівника за делегуванням у межах Phase 0)
+- **Контекст:** Отримано новий MASTER PROMPT із запитом структурувати розвиток за схемою ROADMAP 2.0 (10 послідовних фаз від Phase 0 до Phase 9) та виділити 6 спеціалізованих ролей агентів.
+- **Рішення:**
+  1. Зафіксовано 10 фаз:
+     - Phase 0: Audit & Product Definition
+     - Phase 1: UX/UI Design
+     - Phase 2: Architecture & Foundation
+     - Phase 3: Weather API & Location
+     - Phase 4: Main Android Interface
+     - Phase 5: Widgets & Animation
+     - Phase 6: Optimization
+     - Phase 7: Monetization & Privacy
+     - Phase 8: Testing & Google Play
+     - Phase 9: Post-launch Development
+  2. Зафіксовано склад 6 агентів:
+     - Agent 0 — Project Lead / Architect
+     - Agent 1 — Product & UX Designer
+     - Agent 2 — Android UI Engineer
+     - Agent 3 — Weather & Data Engineer
+     - Agent 4 — Widget & Monetization Engineer
+     - Agent 5 — QA / Security / Release Engineer
+  3. Створено та зареєстровано конфігурацію `.agents/agents/widget-monetization.md` для Agent 4.
+  4. Підготовлено повний комплект архітектурних та продуктових специфікацій: `PRODUCT_SPECIFICATION.md`, `ROADMAP.md`, `UI_SPECIFICATION.md`, `DESIGN_SYSTEM.md`, `ARCHITECTURE.md`, `API_EVALUATION.md`, `TEST_PLAN.md`, `RISK_REGISTER.md`.
+- **Наслідки:** Чітка прозорість відповідальності, усунення ризиків самоверифікації (Red Line #9), готовність до масштабування комерційного продукту після схвалення Власником.
