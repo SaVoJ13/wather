@@ -40,7 +40,7 @@
 
 | Бібліотека / SDK | Опис та модуль | Ліцензія | Статус перевірки | Першоджерело |
 |---|---|---|---|---|
-| **org.json** | org.json:json:20240303 (автономна JVM-емуляція JSON для тестів кешу без емулятора/Android runtime) | JSON License (Apache 2.0 compatible) | Схвалено для testImplementation (0 байт у релізі) | https://github.com/stleary/JSON-java |
+| **org.json** | `org.json:json:20240303` (автономна чиста JVM-реалізація org.json для локальних unit-тестів без Android framework runtime) | **Public Domain** (офіційно в Maven Central metadata `pom.xml` та LICENSE файлі; історичний перехід від JSON License до вільного суспільного надбання) | Схвалено для testImplementation (строго 0 байт у релізі, $0) | https://github.com/stleary/JSON-java |
 ---
 
 ## 3. Заборонені компоненти
