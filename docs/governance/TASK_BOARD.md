@@ -25,6 +25,9 @@
 | **TASK-013** | Преміум-редизайн домашнього віджета (Glassmorphism & Balanced Layout) | Фаза 4 | android-ui | QA_VERIFIED | ✅ 2026-11-20 |
 | **TASK-014** | Підготовка продукту до закритого тестування в Google Play Console | Фаза 5 | Agent 0 / qa-privacy | QA_VERIFIED | ✅ 2026-11-20 |
 | **TASK-015** | Повноцінна підтримка мультимовності (pl, de, ru, en, es, it, uk) | Фаза 5 | android-ui / qa-privacy | QA_VERIFIED | ✅ 2026-11-22 |
+| **TASK-016** | UX-архітектура, 3 розділи навігації та детальні сценарії (USER_FLOWS.md) | Phase 1 | product-ux | QA_VERIFIED | ✅ 2026-11-22 |
+| **TASK-017** | Преміум дизайн-система, погодні фони та специфікація UI (DESIGN_SYSTEM & UI_SPEC) | Phase 1 | android-ui | QA_VERIFIED | ✅ 2026-11-22 |
+| **TASK-018** | Незалежний аудит доступності (WCAG AA), логіки станів та вимог Phase 1 | Phase 1 | qa-privacy | QA_VERIFIED | ✅ 2026-11-22 |
 
 ---
 
