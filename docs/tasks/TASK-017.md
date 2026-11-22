@@ -2,7 +2,7 @@
 
 - **Фаза:** Phase 1 (UX/UI Design)
 - **Відповідальний:** android-ui (Agent 2)
-- **Статус:** `QA_VERIFIED`
+- **Статус:** `READY_FOR_REVIEW`
 - **Файли-власники:**
   - `docs/ux/DESIGN_SYSTEM.md`
   - `docs/ux/UI_SPECIFICATION.md`
@@ -68,3 +68,24 @@
   - Підтверджено успішне виконання 62/62 unit-тестів проєкту (100% PASS, 0 помилок).
   - Оформлено підсумковий звіт у docs/qa/PHASE_1_UX_AUDIT_REPORT.md.
   - Статус завдання переведено в QA_VERIFIED [PASS].
+- **2026-11-22 18:25:** Agent 2 (Android UI Engineer) — Виконання коригувань Власника (Phase 1 Design Corrections):
+  - Оновлено `docs/ux/DESIGN_SYSTEM.md` (версія 2.2) та `docs/ux/UI_SPECIFICATION.md` (версія 2.2):
+    1. **Повноцінні візуальні ASCII/Markdown макети трьох головних вкладок:**
+       - Вкладка 1 «Зараз» (Hero 84sp, 24h погодинний ряд, сітка 2x2, сонце на Canvas, ліцензія Open-Meteo CC BY 4.0, Anchored Adaptive Banner).
+       - Вкладка 2 «Прогноз» (Canvas-графік сплайнів мін/макс з інтерактивним візиром-скраббінгом, стовпчики опадів, перемикач вітру/тиску, список 16 днів із відносними Temperature Range Bars).
+       - Вкладка 3 «Місця» (Список збережених локацій, бейдж `АКТИВНЕ`, Swipe-to-Dismiss із Snackbar Undo, швидкий пошук, кнопка GPS за явним кліком).
+    2. **Окремий екран налаштувань (`SettingsScreen`):** доступний за шестернею у TopBar (одиниці виміру, 8 мов, юридична інформація).
+    3. **Світла та темна теми:** детальні колірні схеми та візуальні макети обох тем для всіх трьох вкладок з реальними метеоданими (Київ, Варшава).
+    4. **Макети додаткових компонентів:** модальний аркуш деталей дня `DayDetailsBottomSheet`, модальний аркуш пошуку `SearchCityBottomSheet` (із Empty State), домашні віджети Glance 2x2 та 4x2 зі скляною фаскою 135°.
+    5. **Виключення псевдорадара:** радар перенесено в Post-MVP, усі макети базуються на реальних фізичних метеопоказниках.
+    6. **Google AdMob Anchored Adaptive Banner:** стандарт `AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize` з динамічною висотою (50–90dp) і попереднім резервуванням слота в Compose для нульового зсуву макета (Zero CLS). Відсутність реклами у віджетах.
+    7. **Доступність шрифтів Dynamic Type до 200% та Window Size Classes:** `wrapContentHeight()`, гнучкі сітки, без фіксованої висоти блоків; класи вікон Compact (<600dp), Medium (600–840dp), Expanded (>840dp).
+  - Бюджет: строго $0. Код API та бізнес-логіки не змінювався.
+  - Статус завдання переведено в `READY_FOR_REVIEW`. Передається на незалежну перевірку QA-інженеру згідно з п. 2.1 Конституції (самоверифікація заборонена).
+- **2026-11-22 18:40:** Agent 5 (QA / Security / Release Engineer):
+  - **Незалежна QA верифікація виправлень дизайну Phase 1 (Phase 1 Design Corrections):**
+    1. Підтверджено повний комплект візуальних ASCII/Markdown макетів для Світлої та Темної тем 3-х головних вкладок («Зараз», «Прогноз», «Місця») з реальними метеоданими (Київ, Варшава).
+    2. Підтверджено макети DayDetailsBottomSheet, SearchCityBottomSheet (з Empty State), окремого екрана SettingsScreen та домашніх віджетів Glance 2x2 та 4x2 (скляна фаска 135°, нуль реклами).
+    3. Підтверджено AdMob Anchored Adaptive Banner (50–90dp) із резервуванням для Zero CLS, доступність Dynamic Type до 200% (wrapContentHeight, sp) та класи вікон Compact, Medium, Expanded.
+    4. Автоматизовані тести: 62/62 PASS (100%).
+  - **Статус завдання:** переведено в QA_VERIFIED [PASS].
