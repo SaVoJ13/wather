@@ -35,6 +35,12 @@
 | **AndroidX DataStore** | Локальне збереження обраних міст та налаштувань | Apache 2.0 | Схвалено | https://developer.android.com/topic/libraries/architecture/datastore |
 | **Google Mobile Ads Lite SDK (AdMob)** | Показ банерної реклами (компонент комерційної моделі) | Google Play Services SDK License | Схвалено для розробки з тестовими Ad Unit ID. Бойові ключі — лише Власник перед релізом. | https://developers.google.com/admob/android/quick-start |
 
+
+### 2.1 Тестові залежності (testImplementation, 0 байт у релізному APK)
+
+| Бібліотека / SDK | Опис та модуль | Ліцензія | Статус перевірки | Першоджерело |
+|---|---|---|---|---|
+| **org.json** | org.json:json:20240303 (автономна JVM-емуляція JSON для тестів кешу без емулятора/Android runtime) | JSON License (Apache 2.0 compatible) | Схвалено для testImplementation (0 байт у релізі) | https://github.com/stleary/JSON-java |
 ---
 
 ## 3. Заборонені компоненти
@@ -43,3 +49,4 @@
 2. Будь-які неавторизовані рекламні SDK (Unity Ads, AppLovin тощо, крім офіційно схваленого Власником Google AdMob згідно з ADR-009).
 3. Сторонні crash-репортери, що надсилають системні логи на зовнішні сервери без явного рішення Власника.
 4. Будь-які платні API або API з обов'язковою прив'язкою банківської картки (порушення ZERO BUDGET POLICY).
+

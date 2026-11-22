@@ -24,9 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Refresh
@@ -36,6 +34,9 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -54,25 +55,21 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import com.weather.app.R
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.weather.app.R
 import com.weather.app.domain.model.DailyForecastItem
 import com.weather.app.domain.model.FullWeatherForecast
+import com.weather.app.domain.model.LocationModel
 import com.weather.app.domain.model.WeatherCondition
-import com.weather.app.ui.components.CurrentWeatherHero
-import com.weather.app.ui.components.DailyForecastList
+import com.weather.app.ui.components.AdBannerPlaceholder
 import com.weather.app.ui.components.DayDetailsBottomSheet
-import com.weather.app.ui.components.HourlyForecastRow
 import com.weather.app.ui.components.LanguageSelectionDialog
 import com.weather.app.ui.components.SearchCityBottomSheet
-import com.weather.app.ui.components.SunriseSunsetCard
-import com.weather.app.ui.components.WeatherMetricsGrid
-import com.weather.app.ui.components.WeatherRadarCard
 import com.weather.app.ui.components.WeatherTopBar
 import com.weather.app.ui.state.WeatherUiState
 import com.weather.app.ui.theme.LocalReducedMotion
@@ -246,6 +243,16 @@ fun WeatherMainScreen(
             onSearchClick = { isSearchSheetOpen = true },
             onLocationClick = onLocationClick,
             onLanguageClick = { isLanguageDialogOpen = true },
+            selectedCities = selectedCities,
+            onCitySelected = { city ->
+                com.weather.app.data.local.WeatherLocalCache.saveActiveLocation(context, city)
+                viewModel.selectLocation(city, context = context, onLoaded = { forecast ->
+                    com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+                })
+            },
+            onCityRemoved = { city ->
+                viewModel.removeSelectedCity(context, city)
+            },
             modifier = modifier
         )
 
@@ -286,10 +293,15 @@ fun WeatherMainScreenContent(
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
     onLanguageClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    selectedCities: List<LocationModel> = emptyList(),
+    onCitySelected: (LocationModel) -> Unit = {},
+    onCityRemoved: (LocationModel) -> Unit = {}
 ) {
     val palette = LocalWeatherPalette.current
     val reducedMotion = LocalReducedMotion.current
+    var selectedTab by remember { mutableStateOf(WeatherNavTab.NOW) }
+    var isSettingsOpen by remember { mutableStateOf(false) }
     var selectedDayForDetails by remember { mutableStateOf<DailyForecastItem?>(null) }
 
     val backgroundBrush = remember(palette.gradientColors) {
@@ -299,50 +311,112 @@ fun WeatherMainScreenContent(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         containerColor = Color.Transparent,
+        bottomBar = {
+            if (!isSettingsOpen) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .navigationBarsPadding()
+                ) {
+                    // Рекламний контейнер AdMob Anchored Adaptive Banner (Zero CLS)
+                    AdBannerPlaceholder(bannerHeight = 60.dp)
+
+                    // Нижня панель навігації на 3 вкладки
+                    NavigationBar(
+                        containerColor = palette.surfaceTint.copy(alpha = 0.95f),
+                        tonalElevation = 8.dp,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        WeatherNavTab.values().forEach { tab ->
+                            NavigationBarItem(
+                                selected = selectedTab == tab,
+                                onClick = { selectedTab = tab },
+                                icon = {
+                                    Icon(
+                                        imageVector = tab.icon,
+                                        contentDescription = tab.contentDescription,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                },
+                                label = {
+                                    Text(
+                                        text = stringResource(tab.titleRes),
+                                        style = MaterialTheme.typography.labelSmall
+                                    )
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = palette.accentColor,
+                                    selectedTextColor = palette.accentColor,
+                                    indicatorColor = palette.surfaceTint,
+                                    unselectedIconColor = palette.textColor.copy(alpha = 0.6f),
+                                    unselectedTextColor = palette.textColor.copy(alpha = 0.6f)
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        },
         modifier = modifier
             .fillMaxSize()
             .background(backgroundBrush)
     ) { paddingValues ->
-        Crossfade(
-            targetState = uiState,
-            animationSpec = tween(durationMillis = if (reducedMotion) 100 else 250),
-            label = "ScreenStateCrossfade",
-            modifier = Modifier.padding(paddingValues)
-        ) { state ->
-            when (state) {
-                is WeatherUiState.Loading -> {
-                    WeatherLoadingSkeleton()
-                }
-                is WeatherUiState.Success -> {
-                    WeatherSuccessContent(
-                        forecast = state.forecast,
-                        isRefreshing = state.isRefreshing,
-                        isOffline = state.isOffline,
-                        onRefresh = onRefresh,
-                        onSearchClick = onSearchClick,
-                        onLocationClick = onLocationClick,
-                        onLanguageClick = onLanguageClick,
-                        onDayClick = { selectedDayForDetails = it }
-                    )
-                }
-                is WeatherUiState.Error -> {
-                    if (state.lastCachedForecast != null) {
-                        WeatherSuccessContent(
-                            forecast = state.lastCachedForecast,
-                            isRefreshing = false,
-                            isOffline = true,
+        if (isSettingsOpen) {
+            SettingsScreen(
+                onBackClick = { isSettingsOpen = false },
+                onLanguageClick = onLanguageClick,
+                modifier = Modifier.padding(paddingValues)
+            )
+        } else {
+            Crossfade(
+                targetState = uiState,
+                animationSpec = tween(durationMillis = if (reducedMotion) 100 else 250),
+                label = "ScreenStateCrossfade",
+                modifier = Modifier.padding(paddingValues)
+            ) { state ->
+                when (state) {
+                    is WeatherUiState.Loading -> {
+                        WeatherLoadingSkeleton()
+                    }
+                    is WeatherUiState.Success -> {
+                        WeatherTabContent(
+                            forecast = state.forecast,
+                            selectedTab = selectedTab,
+                            isRefreshing = state.isRefreshing,
+                            isOffline = state.isOffline,
+                            selectedCities = selectedCities,
                             onRefresh = onRefresh,
                             onSearchClick = onSearchClick,
                             onLocationClick = onLocationClick,
-                            onLanguageClick = onLanguageClick,
+                            onSettingsClick = { isSettingsOpen = true },
+                            onCitySelected = onCitySelected,
+                            onCityRemoved = onCityRemoved,
                             onDayClick = { selectedDayForDetails = it }
                         )
-                    } else {
-                        WeatherErrorScreen(
-                            message = state.message,
-                            canRetry = state.canRetry,
-                            onRetry = onRefresh
-                        )
+                    }
+                    is WeatherUiState.Error -> {
+                        if (state.lastCachedForecast != null) {
+                            WeatherTabContent(
+                                forecast = state.lastCachedForecast,
+                                selectedTab = selectedTab,
+                                isRefreshing = false,
+                                isOffline = true,
+                                selectedCities = selectedCities,
+                                onRefresh = onRefresh,
+                                onSearchClick = onSearchClick,
+                                onLocationClick = onLocationClick,
+                                onSettingsClick = { isSettingsOpen = true },
+                                onCitySelected = onCitySelected,
+                                onCityRemoved = onCityRemoved,
+                                onDayClick = { selectedDayForDetails = it }
+                            )
+                        } else {
+                            WeatherErrorScreen(
+                                message = state.message,
+                                canRetry = state.canRetry,
+                                onRetry = onRefresh
+                            )
+                        }
                     }
                 }
             }
@@ -359,31 +433,31 @@ fun WeatherMainScreenContent(
 }
 
 @Composable
-private fun WeatherSuccessContent(
+private fun WeatherTabContent(
     forecast: FullWeatherForecast,
+    selectedTab: WeatherNavTab,
     isRefreshing: Boolean,
     isOffline: Boolean,
+    selectedCities: List<LocationModel>,
     onRefresh: () -> Unit,
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
-    onLanguageClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onCitySelected: (LocationModel) -> Unit,
+    onCityRemoved: (LocationModel) -> Unit,
     onDayClick: (DailyForecastItem) -> Unit
 ) {
     val palette = LocalWeatherPalette.current
-    val scrollState = rememberScrollState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-    ) {
-        // Верхня панель (місто, пошук, мова, геолокація)
+    Column(modifier = Modifier.fillMaxSize()) {
+        // Верхня панель (місто, пошук, геолокація, шестерня налаштувань)
         WeatherTopBar(
             location = forecast.location,
             currentTime = forecast.current.time,
             onSearchClick = onSearchClick,
             onLocationClick = onLocationClick,
-            onLanguageClick = onLanguageClick
+            onLanguageClick = onSettingsClick,
+            onSettingsClick = onSettingsClick
         )
 
         // Попередження про офлайн / старі дані
@@ -407,80 +481,34 @@ private fun WeatherSuccessContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Головний блок поточної погоди
-        CurrentWeatherHero(
-            current = forecast.current,
-            todayForecast = forecast.daily14Days.firstOrNull(),
-            updatedAt = forecast.updatedAt,
-            isStale = forecast.isStale,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Погодинний прогноз (24 год)
-        HourlyForecastRow(
-            hourlyItems = forecast.hourly24h,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Сітка метрик 2x2
-        WeatherMetricsGrid(
-            current = forecast.current,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Схід і захід сонця
-        SunriseSunsetCard(
-            todayForecast = forecast.daily14Days.firstOrNull(),
-            currentTime = forecast.current.time,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Прогноз на 14 днів
-        DailyForecastList(
-            dailyItems = forecast.daily14Days,
-            onDayClick = onDayClick,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Погодний радар
-        WeatherRadarCard(
-            cityName = forecast.location.name,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Динамічна атрибуція фактичного джерела погодних даних згідно з ліцензійними вимогами
-        val attributionText = when (forecast.dataSource) {
-            com.weather.app.domain.model.WeatherDataSource.OPEN_METEO -> stringResource(R.string.source_open_meteo)
-            com.weather.app.domain.model.WeatherDataSource.WEATHER_METRO -> stringResource(R.string.source_weather_metro)
-            com.weather.app.domain.model.WeatherDataSource.VISUAL_CROSSING -> stringResource(R.string.source_visual_crossing)
-            com.weather.app.domain.model.WeatherDataSource.MOCK -> stringResource(R.string.source_mock)
+        // Вміст активної вкладки
+        Crossfade(
+            targetState = selectedTab,
+            label = "TabContentCrossfade",
+            modifier = Modifier.weight(1f)
+        ) { tab ->
+            when (tab) {
+                WeatherNavTab.NOW -> {
+                    NowScreen(forecast = forecast)
+                }
+                WeatherNavTab.FORECAST -> {
+                    ForecastScreen(
+                        forecast = forecast,
+                        onDayClick = onDayClick
+                    )
+                }
+                WeatherNavTab.LOCATIONS -> {
+                    LocationsScreen(
+                        currentLocation = forecast.location,
+                        savedCities = selectedCities,
+                        onCitySelected = onCitySelected,
+                        onCityRemoved = onCityRemoved,
+                        onSearchClick = onSearchClick,
+                        onGpsClick = onLocationClick
+                    )
+                }
+            }
         }
-        Text(
-            text = attributionText,
-            style = MaterialTheme.typography.bodySmall,
-            color = palette.textColor.copy(alpha = 0.7f),
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-        Spacer(modifier = Modifier.navigationBarsPadding())
     }
 }
 

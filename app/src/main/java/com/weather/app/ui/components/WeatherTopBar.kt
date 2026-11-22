@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.NearMe
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -30,10 +31,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.core.os.ConfigurationCompat
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.os.ConfigurationCompat
 import com.weather.app.R
 import com.weather.app.domain.model.LocationModel
 import com.weather.app.ui.theme.LocalWeatherPalette
@@ -48,7 +49,8 @@ fun WeatherTopBar(
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
     onLanguageClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onSettingsClick: (() -> Unit)? = null
 ) {
     val palette = LocalWeatherPalette.current
     val configuration = LocalConfiguration.current
@@ -119,15 +121,28 @@ fun WeatherTopBar(
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = onLanguageClick,
-                    modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Language,
-                        contentDescription = stringResource(R.string.select_language),
-                        tint = palette.textColor
-                    )
+                if (onSettingsClick != null) {
+                    IconButton(
+                        onClick = onSettingsClick,
+                        modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "Відкрити екран налаштувань",
+                            tint = palette.textColor
+                        )
+                    }
+                } else {
+                    IconButton(
+                        onClick = onLanguageClick,
+                        modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Language,
+                            contentDescription = stringResource(R.string.select_language),
+                            tint = palette.textColor
+                        )
+                    }
                 }
 
                 IconButton(
@@ -140,28 +155,6 @@ fun WeatherTopBar(
                         tint = palette.textColor
                     )
                 }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        // Бейдж джерела даних згідно з вимогами ліцензії CC BY 4.0
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Row(
-                modifier = Modifier
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(palette.surfaceTint)
-                    .padding(horizontal = 8.dp, vertical = 2.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = stringResource(R.string.source_open_meteo),
-                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                    color = palette.textColor.copy(alpha = 0.75f)
-                )
             }
         }
     }

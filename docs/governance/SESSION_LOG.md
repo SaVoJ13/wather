@@ -70,3 +70,14 @@
   10. Тестування: ./gradlew testReleaseUnitTest --rerun-tasks — 62 з 62 unit-тестів успішні (100% PASS, 0 failures, 0 errors, 0 skipped).
 - Створено підсумковий звіт docs/qa/PHASE_1_UX_AUDIT_REPORT.md.
 - Статуси завдань TASK-016, TASK-017 та TASK-018 офіційно переведено в QA_VERIFIED ✅.
+
+### 2026-11-22 20:35 — Виконання Phase 2: Architecture & Foundation (Команда 6 агентів)
+- Власник надав офіційне схвалення переходу від Phase 1 до Phase 2 (`Owner Approved`, ADR-011).
+- Виконано завдання Phase 2 (TASK-019 – TASK-024):
+  1. Agent 0: проведено Baseline Audit (`PHASE_2_BASELINE_AUDIT.md`), прийнято ADR-011 та ADR-012, затверджено `PHASE_2_EXECUTION_PLAN.md` та оновлено `ARCHITECTURE.md` (v2.1).
+  2. Agent 1: сформовано матрицю 11 UI-станів (`UI_STATE_CONTRACT.md`), правила доступності (WCAG AA, TalkBack, 200% font scaling, Reduced Motion) та 3-табову навігацію + Settings.
+  3. Agent 2: реалізовано модульні екрани Compose (`NowScreen.kt`, `ForecastScreen.kt`, `LocationsScreen.kt`, `SettingsScreen.kt`, `WeatherNavTab.kt`, оновлено `WeatherMainScreen.kt` та `WeatherTopBar.kt`).
+  4. Agent 3: розроблено `DATA_CONTRACTS.md`, `CACHE_STRATEGY.md`, розширено `WeatherLocalCache.kt` (24h/16d, multi-city кеш, Corrupted Cache Recovery), створено шар `WeatherRemoteDataSource.kt` (`WeatherMetroRemoteDataSource`, `OpenMeteoRemoteDataSource`), реалізовано дедуплікацію запитів та 60с бекофф для HTTP 429/5xx із поверненням закешованого прогнозу з прапорцем `isStale = true`.
+  5. Agent 4: розроблено `WIDGET_AD_CONTRACTS.md`, адаптовано `AdBannerPlaceholder.kt` під Anchored Adaptive Banner (50..90 dp, Zero CLS, 0% реклами у віджетах).
+  6. Agent 5: розширено тестову базу до 74 тестів (`ArchitectureContractTest`, `WeatherRepositoryPhase2Test`, `WeatherLocalCacheTest`, `NavigationAndStateTest`), 100% тестів успішні (74/74 PASS), верифіковано збірку `assembleDebug` APK (21.8 МБ), підтверджено суворе дотримання політики $0, відсутність `ACCESS_BACKGROUND_LOCATION` та секретів у коді.
+- Складено звіт закриття воріт `docs/reports/PHASE_GATE_2.md`. Всі матеріали підготовлено до схвалення Власником (`Owner Approved`) для переходу до Phase 3.

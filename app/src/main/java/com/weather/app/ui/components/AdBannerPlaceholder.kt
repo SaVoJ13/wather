@@ -23,25 +23,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.weather.app.R
 import com.weather.app.ui.theme.LocalWeatherPalette
 
 /**
- * Рекламний блок із фіксованою висотою (CLS = 0) згідно з ADR-005 та docs/ux/UX_SPEC.md.
- * Не спричиняє стрибків макета та містить обов'язкове маркування «Реклама».
+ * Рекламний контейнер Google AdMob Anchored Adaptive Banner згідно з ADR-005, ADR-011 та WIDGET_AD_CONTRACTS.md.
+ * 
+ * Ключові властивості:
+ * - Попереднє резервування слота динамічної висоти (50–90dp) для гарантії Zero CLS (нульового зсуву макета);
+ * - Візуальне маркування тестового слота (AdMob Test Ad Unit);
+ * - Сувора відсутність бойових рекламних ID на етапі Phase 2;
+ * - 0% реклами у домашньому віджеті Glance.
  */
 @Composable
 fun AdBannerPlaceholder(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    bannerHeight: Dp = 60.dp
 ) {
     val palette = LocalWeatherPalette.current
 
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 6.dp)
     ) {
         // Обов'язкова мікроплашка Google AdMob
         Row(
@@ -58,11 +65,11 @@ fun AdBannerPlaceholder(
             )
         }
 
-        // Контейнер банера з фіксованою висотою 60dp (CLS = 0)
+        // Контейнер адаптивного банера із зарезервованою висотою (Zero CLS)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(60.dp)
+                .height(bannerHeight.coerceIn(50.dp, 90.dp))
                 .clip(RoundedCornerShape(bottomStart = 12.dp, bottomEnd = 12.dp, topEnd = 12.dp))
                 .background(palette.surfaceTint)
                 .border(

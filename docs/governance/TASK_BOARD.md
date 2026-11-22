@@ -28,6 +28,12 @@
 | **TASK-016** | UX-архітектура, 3 розділи навігації та детальні сценарії (USER_FLOWS.md) | Phase 1 | product-ux | QA_VERIFIED | ✅ 2026-11-22 |
 | **TASK-017** | Преміум дизайн-система, погодні фони та специфікація UI (DESIGN_SYSTEM & UI_SPEC) | Phase 1 | android-ui | QA_VERIFIED | ✅ 2026-11-22 |
 | **TASK-018** | Незалежний аудит доступності (WCAG AA), логіки станів та вимог Phase 1 | Phase 1 | qa-privacy | QA_VERIFIED | ✅ 2026-11-22 |
+| **TASK-019** | Baseline Audit, інвентаризація кодової бази та початкова верифікація | Phase 2 | Agent 0 / qa-privacy | DONE | ✅ 2026-11-22 |
+| **TASK-020** | Архітектурні контракти даних, ADR та стратегія кешування (DATA_CONTRACTS & CACHE_STRATEGY) | Phase 2 | Agent 0 / weather-location | DONE | ✅ 2026-11-22 |
+| **TASK-021** | Локальне збереження, ізоляція API-провайдерів та захист квот WeatherMetro/Open-Meteo | Phase 2 | weather-location | QA_VERIFIED | ✅ 2026-11-22 |
+| **TASK-022** | Каркас навігації (3 вкладки + Settings), матриця 11 UI-станів та доступність | Phase 2 | product-ux / android-ui | QA_VERIFIED | ✅ 2026-11-22 |
+| **TASK-023** | Контракти віджетів Glance (2x2, 4x2) та AdMob Anchored Adaptive Banner Zero CLS | Phase 2 | widget-monetization | QA_VERIFIED | ✅ 2026-11-22 |
+| **TASK-024** | Комплексний незалежний аудит Phase 2, архітектурні тести та безпека (PHASE_2_QA_REPORT) | Phase 2 | qa-privacy | QA_VERIFIED | ✅ 2026-11-22 |
 
 ---
 
@@ -38,3 +44,4 @@
 - QA_VERIFIED — Незалежний QA перевірив фактичні докази та підтвердив відповідність DoD.
 - DONE — Зміни влито в main, документацію та картку оновлено.
 - BLOCKED — Робота зупинена через блокер (зафіксовано в CURRENT_STATE.md).
+

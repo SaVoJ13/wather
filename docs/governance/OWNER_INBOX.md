@@ -53,9 +53,14 @@
 
 ---
 
-## ❓ Питання 7 (Phase 1 — ROADMAP 2.0): Затвердження комплекту специфікацій UX/UI Design
-- **Контекст:** Команда розробляє комплект матеріалів Phase 1: `USER_FLOWS.md`, `DESIGN_SYSTEM.md`, `UI_SPECIFICATION.md` та прототипи 3 основних розділів.
-- **Потрібне рішення Власника:** Після завершення розробки та аудиту Agent 5 — затвердити дизайн-систему та надати Owner Approved для переходу до Phase 2 (Architecture & Foundation).
+## ❓ Питання 7 (Phase 1 — ROADMAP 2.0): Затвердження результатів Phase 1: UX/UI Design та старт Phase 2
+- **Контекст:** Роботу над Phase 1 завершено у повному обсязі:
+  1. Створено 8 фізичних графічних макетів високої чіткості у `docs/design/previews/` (тривкладкова навігація, екран налаштувань через TopBar, нуль псевдорадару, нуль реклами у віджетах, банер AdMob 50-90dp Zero CLS).
+  2. Проведено правовий аудит ліцензій у `docs/governance/DATA_PROVIDER_LICENSING_AUDIT.md` (знято CC BY 4.0 з WeatherMetro, Open-Meteo Free обмежено некомерційним використанням, підтверджено динамічну матрицю атрибуції).
+  3. Незалежний аудитор **Agent 5 (qa-privacy)** підтвердив повну відповідність у звіті `docs/qa/PHASE_1_FINAL_DESIGN_GATE_QA.md` зі статусом **QA VERIFIED ✅**.
+  4. Запущено повний сьют із **62 unit-тестів (100% PASS)**.
+  5. Підготовлено вичерпний план робіт: `docs/architecture/PHASE_2_EXECUTION_PLAN.md`.
+- **Потрібне рішення Власника:** Надати офіційний статус **`Owner Approved`** для Phase 1 (UX/UI Design) та дозволити старт реалізації **Phase 2 (Architecture & Foundation)**.
 
 ---
 
