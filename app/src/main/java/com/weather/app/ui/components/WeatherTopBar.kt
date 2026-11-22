@@ -28,7 +28,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.core.os.ConfigurationCompat
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,7 +51,8 @@ fun WeatherTopBar(
     modifier: Modifier = Modifier
 ) {
     val palette = LocalWeatherPalette.current
-    val currentLocale = Locale.getDefault()
+    val configuration = LocalConfiguration.current
+    val currentLocale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
     val dateFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", currentLocale)
     val formattedDate = currentTime.format(dateFormatter).replaceFirstChar { it.uppercase(currentLocale) }
 
@@ -118,7 +121,7 @@ fun WeatherTopBar(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = onLanguageClick,
-                    modifier = Modifier.sizeIn(minWidth = 44.dp, minHeight = 48.dp)
+                    modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Language,
@@ -129,7 +132,7 @@ fun WeatherTopBar(
 
                 IconButton(
                     onClick = onLocationClick,
-                    modifier = Modifier.sizeIn(minWidth = 44.dp, minHeight = 48.dp)
+                    modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.MyLocation,

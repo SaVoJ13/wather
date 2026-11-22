@@ -31,7 +31,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.core.os.ConfigurationCompat
 import androidx.compose.ui.unit.dp
 import com.weather.app.R
 import com.weather.app.domain.model.DailyForecastItem
@@ -102,7 +104,8 @@ private fun DailyForecastRow(
     onClick: () -> Unit
 ) {
     val palette = LocalWeatherPalette.current
-    val currentLocale = Locale.getDefault()
+    val configuration = LocalConfiguration.current
+    val currentLocale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
     val dayFormatter = DateTimeFormatter.ofPattern("EE, d MMM", currentLocale)
 
     val dayTitle = when (index) {

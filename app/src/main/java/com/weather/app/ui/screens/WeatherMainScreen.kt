@@ -460,6 +460,19 @@ private fun WeatherSuccessContent(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Атрибуція джерела погодних даних згідно з ліцензійними вимогами
+        Text(
+            text = stringResource(R.string.source_open_meteo),
+            style = MaterialTheme.typography.bodySmall,
+            color = palette.textColor.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        )
+
         Spacer(modifier = Modifier.height(24.dp))
         Spacer(modifier = Modifier.navigationBarsPadding())
     }

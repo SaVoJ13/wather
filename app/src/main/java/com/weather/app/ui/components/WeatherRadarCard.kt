@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -197,6 +198,14 @@ fun WeatherRadarCard(
 
         Spacer(modifier = Modifier.height(14.dp))
 
+        val northLabel = stringResource(R.string.compass_north)
+        val southLabel = stringResource(R.string.compass_south)
+        val westLabel = stringResource(R.string.compass_west)
+        val eastLabel = stringResource(R.string.compass_east)
+        val dist15 = stringResource(R.string.distance_km, 15)
+        val dist30 = stringResource(R.string.distance_km, 30)
+        val dist50 = stringResource(R.string.distance_km, 50)
+
         // Радарний Canvas
         Box(
             modifier = Modifier
@@ -360,14 +369,14 @@ fun WeatherRadarCard(
                             isAntiAlias = true
                         }
 
-                        drawText("Пн", center.x, center.y - radarRadius + 14.dp.toPx(), compassPaint)
-                        drawText("Пд", center.x, center.y + radarRadius - 6.dp.toPx(), compassPaint)
-                        drawText("Зх", center.x - radarRadius + 12.dp.toPx(), center.y + 4.dp.toPx(), compassPaint)
-                        drawText("Сх", center.x + radarRadius - 12.dp.toPx(), center.y + 4.dp.toPx(), compassPaint)
+                        drawText(northLabel, center.x, center.y - radarRadius + 14.dp.toPx(), compassPaint)
+                        drawText(southLabel, center.x, center.y + radarRadius - 6.dp.toPx(), compassPaint)
+                        drawText(westLabel, center.x - radarRadius + 12.dp.toPx(), center.y + 4.dp.toPx(), compassPaint)
+                        drawText(eastLabel, center.x + radarRadius - 12.dp.toPx(), center.y + 4.dp.toPx(), compassPaint)
 
-                        drawText("15 км", center.x + 4.dp.toPx(), center.y - radarRadius * 0.30f - 2.dp.toPx(), distPaint)
-                        drawText("30 км", center.x + 4.dp.toPx(), center.y - radarRadius * 0.60f - 2.dp.toPx(), distPaint)
-                        drawText("50 км", center.x + 4.dp.toPx(), center.y - radarRadius * 0.98f + 11.dp.toPx(), distPaint)
+                        drawText(dist15, center.x + 4.dp.toPx(), center.y - radarRadius * 0.30f - 2.dp.toPx(), distPaint)
+                        drawText(dist30, center.x + 4.dp.toPx(), center.y - radarRadius * 0.60f - 2.dp.toPx(), distPaint)
+                        drawText(dist50, center.x + 4.dp.toPx(), center.y - radarRadius * 0.98f + 11.dp.toPx(), distPaint)
                     }
 
                     // 6. Центральна мітка користувача з пульсуючим колом
@@ -402,17 +411,22 @@ fun WeatherRadarCard(
         ) {
             IconButton(
                 onClick = { isPlaying = !isPlaying },
-                modifier = Modifier
-                    .size(36.dp)
-                    .clip(CircleShape)
-                    .background(if (isPlaying) palette.accentColor else palette.textColor.copy(alpha = 0.15f))
+                modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
             ) {
-                Icon(
-                    imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                    contentDescription = if (isPlaying) "Призупинити радар" else "Відтворити радар",
-                    tint = if (isPlaying) Color.Black else palette.textColor,
-                    modifier = Modifier.size(20.dp)
-                )
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(if (isPlaying) palette.accentColor else palette.textColor.copy(alpha = 0.15f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) stringResource(R.string.radar_pause) else stringResource(R.string.radar_play),
+                        tint = if (isPlaying) Color.Black else palette.textColor,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
             }
 
             val minShort = stringResource(R.string.minutes_short)

@@ -32,7 +32,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
+import androidx.core.os.ConfigurationCompat
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.weather.app.R
@@ -54,7 +56,8 @@ fun DayDetailsBottomSheet(
     if (item == null) return
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val currentLocale = Locale.getDefault()
+    val configuration = LocalConfiguration.current
+    val currentLocale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
     val titleFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", currentLocale)
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
@@ -144,7 +147,7 @@ fun DayDetailsBottomSheet(
                     icon = Icons.Default.WaterDrop,
                     iconTint = RainAccent,
                     label = stringResource(R.string.precipitation),
-                    value = "${String.format(Locale.US, "%.1f", item.precipitationSumMm)} mm",
+                    value = "${String.format(Locale.US, "%.1f", item.precipitationSumMm)} ${stringResource(R.string.unit_mm)}",
                     extra = "${stringResource(R.string.precipitation_probability_desc)}: ${item.precipitationProbabilityPercent}%",
                     modifier = Modifier.weight(1f)
                 )

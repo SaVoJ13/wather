@@ -203,11 +203,11 @@ fun SearchCityBottomSheet(
                                     Spacer(modifier = Modifier.width(4.dp))
                                     IconButton(
                                         onClick = { onRemoveCity(city) },
-                                        modifier = Modifier.size(28.dp)
+                                        modifier = Modifier.sizeIn(minWidth = 48.dp, minHeight = 48.dp)
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Close,
-                                            contentDescription = city.name,
+                                            contentDescription = stringResource(R.string.remove_city_desc, city.name),
                                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                             modifier = Modifier.size(16.dp)
                                         )

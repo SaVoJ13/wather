@@ -14,6 +14,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import com.weather.app.domain.model.WeatherCondition
 import com.weather.app.ui.theme.SunAccent
 
@@ -55,7 +56,7 @@ fun WeatherConditionIcon(
 
     Icon(
         imageVector = icon,
-        contentDescription = description,
+        contentDescription = stringResource(condition.stringRes),
         modifier = modifier,
         tint = finalTint
     )
