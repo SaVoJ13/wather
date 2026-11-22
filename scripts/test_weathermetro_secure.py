@@ -54,7 +54,7 @@ def main():
             f"{base_url}?lat={lat}&lng={lng}"
             f"&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode"
             f"&hourly=temperature_2m,precipitation_probability,weathercode"
-            f"&forecast_days=16"
+            f"&days=16"
             f"&timezone=auto"
             f"&api_key={api_key}"
         )
