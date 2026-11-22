@@ -64,7 +64,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.weather.app.domain.model.DailyForecastItem
 import com.weather.app.domain.model.FullWeatherForecast
 import com.weather.app.domain.model.WeatherCondition
-import com.weather.app.ui.components.AdBannerPlaceholder
 import com.weather.app.ui.components.CurrentWeatherHero
 import com.weather.app.ui.components.DailyForecastList
 import com.weather.app.ui.components.DayDetailsBottomSheet
@@ -165,12 +164,12 @@ fun WeatherMainScreen(
 
             if (bestLocation == null && android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.R) {
                 scope.launch {
-                    snackbarHostState.showSnackbar("Не вдалося отримати координати GPS. Спробуйте на вулиці або виберіть місто зі списку.")
+                    snackbarHostState.showSnackbar(context.getString(R.string.gps_error))
                 }
             }
         } catch (e: Exception) {
             scope.launch {
-                snackbarHostState.showSnackbar("Помилка доступу до сервісу геопозиції")
+                snackbarHostState.showSnackbar(context.getString(R.string.location_service_error))
             }
         }
     }
@@ -203,7 +202,7 @@ fun WeatherMainScreen(
             determineGpsLocation()
         } else {
             scope.launch {
-                snackbarHostState.showSnackbar("Дозвіл на доступ до геопозиції відхилено. Ви можете вибрати місто вручну через пошук.")
+                snackbarHostState.showSnackbar(context.getString(R.string.location_permission_denied))
             }
         }
     }
@@ -461,13 +460,6 @@ private fun WeatherSuccessContent(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Рекламний блок
-        AdBannerPlaceholder(
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-
         Spacer(modifier = Modifier.height(24.dp))
         Spacer(modifier = Modifier.navigationBarsPadding())
     }
@@ -511,7 +503,7 @@ private fun OfflineWarningBanner(
         ) {
             Icon(
                 imageVector = Icons.Default.Refresh,
-                contentDescription = "Оновити дані погоди",
+                contentDescription = stringResource(R.string.refresh_weather_desc),
                 tint = Color(0xFFE65100)
             )
         }
@@ -521,10 +513,11 @@ private fun OfflineWarningBanner(
 @Composable
 private fun WeatherLoadingSkeleton() {
     val palette = LocalWeatherPalette.current
+    val loadingDesc = stringResource(R.string.loading_weather_desc)
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .semantics { contentDescription = "Завантаження погодних даних" },
+            .semantics { contentDescription = loadingDesc },
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -534,7 +527,7 @@ private fun WeatherLoadingSkeleton() {
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Завантаження погоди...",
+                text = stringResource(R.string.loading_weather),
                 style = MaterialTheme.typography.bodyLarge,
                 color = palette.textColor
             )
@@ -561,13 +554,13 @@ private fun WeatherErrorScreen(
         ) {
             Icon(
                 imageVector = Icons.Default.CloudOff,
-                contentDescription = "Помилка",
+                contentDescription = stringResource(R.string.loading_error),
                 tint = palette.textColor,
                 modifier = Modifier.size(64.dp)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = "Не вдалося отримати погоду",
+                text = stringResource(R.string.failed_to_load_weather),
                 style = MaterialTheme.typography.titleLarge,
                 color = palette.textColor,
                 textAlign = TextAlign.Center
