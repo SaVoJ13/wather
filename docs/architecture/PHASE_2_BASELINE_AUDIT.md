@@ -13,7 +13,7 @@
 
 - **URL репозиторію:** `https://github.com/SaVoJ13/wather.git`
 - **Активна гілка:** `main`
-- **Останній зафіксований коміт на початку Phase 2:** `1f345f8` (*feat(design): deliver real PNG mockups, licensing audit, and independent QA verification for Phase 1 Final Design Gate*)
+- **Останній зафіксований коміт на початку Phase 2:** `1f345f862b40958481f4019bfd42fd4dd65a3d3a` (*feat(design): deliver real PNG mockups, licensing audit, and independent QA verification for Phase 1 Final Design Gate*)
 - **Стан робочого дерева:** Чисте (clean working tree), невідстежуваних секретів чи тимчасових бінарних артефактів немає.
 - **Підключений тестовий пристрій:** Samsung Galaxy S24 Ultra (`RZCX326349A`).
 

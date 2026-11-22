@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import com.weather.app.R
 import com.weather.app.domain.model.CurrentWeather
 import com.weather.app.ui.theme.LocalWeatherPalette
+import java.util.Locale
 import kotlin.math.roundToInt
 
 @Composable
@@ -89,7 +90,7 @@ fun WeatherMetricsGrid(
             MetricCard(
                 icon = Icons.Default.WbSunny,
                 title = stringResource(R.string.metric_uv),
-                value = String.format("%.1f", current.uvIndex),
+                value = String.format(Locale.getDefault(), "%.1f", current.uvIndex),
                 subtitle = uvLevel,
                 modifier = Modifier.weight(1f)
             )

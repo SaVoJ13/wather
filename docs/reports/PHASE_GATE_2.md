@@ -12,12 +12,12 @@
 
 ## 1. Підсумок виконання Phase 2: Architecture & Foundation
 
-Фаза 2 (Architecture & Foundation) успішно виконана всіма 6 профільними агентами відповідно до `PHASE_2_EXECUTION_PLAN.md`, вимог Конституції проєкту (v2.0) та ADR-011 / ADR-012.
+Фаза 2 (Architecture & Foundation) успішно виконана всіма 6 профільними агентами відповідно до `PHASE_2_EXECUTION_PLAN.md`, вимог Конституції проєкту (v2.0), ADR-011 та ADR-012.
 
 ### Ключові досягнення фази:
 1. **Повний Baseline Audit кодової бази (TASK-019 / Завдання A0.1):**
    - Проведено детальний аудит наявного стану репозиторію (`docs/architecture/PHASE_2_BASELINE_AUDIT.md`).
-   - Фіксація вихідного стану: Kotlin 2.0.21, AGP 8.7.2, targetSdk 35, minSdk 26, чисте дерево git `1f345f8`, 62/62 вихідних unit-тести.
+   - Фіксація вихідного стану: Kotlin 2.0.21, AGP 8.7.2, targetSdk 35, minSdk 26, чисте дерево git коміту `1f345f862b40958481f4019bfd42fd4dd65a3d3a`, 62/62 вихідних unit-тести.
 2. **Архітектурні контракти та стандарти (TASK-020 / ADR-012 / Завдання A0.2, A3.2, A3.3):**
    - `docs/architecture/DATA_CONTRACTS.md`: чітка ізоляція між Presentation, Domain і Data шарами. Доменні моделі — чисті POKO Kotlin без фреймворкових залежностей.
    - `docs/architecture/CACHE_STRATEGY.md`: обґрунтовано вибір оптимізованого документо-орієнтованого SharedPreferences/JSON кешу над великим Room SQLite для MVP (0 КБ надлишкового бінарного розміру, $0 витрат, збереження структури агрегату `FullWeatherForecast` із TTL 15–30 хв).
@@ -32,12 +32,18 @@
 5. **Контракти віджетів Glance та реклами без CLS (TASK-023 / Завдання A4.1–A4.3):**
    - `docs/architecture/WIDGET_AD_CONTRACTS.md`: віджети Glance 2x2 та 4x2 читають виключно локальний кеш і ніколи не ініціюють мережеві запити самостійно.
    - `AdBannerPlaceholder.kt`: адаптований під Google AdMob Anchored Adaptive Banner із динамічною висотою (50..90 dp) та строго нульовим зміщенням макета (Zero Cumulative Layout Shift). Політика: **100% відсутність реклами у віджетах**.
-6. **Тестове покриття, компіляція та безпека (TASK-024 / Завдання A5.1–A5.3):**
-   - `testDebugUnitTest`: **74/74 PASS (100%)**.
-   - `testReleaseUnitTest`: **74/74 PASS (100%)**.
-   - `assembleDebug`: **BUILD SUCCESSFUL**, згенеровано валідний APK розміром 21.8 МБ (`app/build/outputs/apk/debug/app-debug.apk`).
-   - `assembleRelease`: **BUILD SUCCESSFUL**, R8 обфускація та оптимізація ресурсів пройшли успішно, згенеровано релізний APK розміром 8.2 МБ (8 606 043 байт, `app/build/outputs/apk/release/app-release.apk`).
-   - **Обмеження Android Lint у середовищі розробки:** Задача `lintDebug` завершується помилкою `IllegalArgumentException: 25.0.4` у методі `LintClient.getJavaLanguageLevel`. Це відоме обмеження плагіна AGP 8.7.2, який розрахований на роботу з JDK <= 21 і не підтримує середовище виконання Java 25 (`JBR 25.0.4`), встановлене в Android Studio. При цьому компіляція (Kotlin 2.0.21 jvmTarget 17), R8/ProGuard та всі 74 тести виконуються бездоганно.
+6. **Середовище розробки, компіляція, Lint та тести (TASK-024 / Завдання A5.1–A5.3):**
+   - **JDK 17 LTS (Eclipse Temurin 17.0.21.1+2):** Розгорнуто у `C:\Users\cocro\.jdks\jdk-17.0.21.1+2` та підключено через `gradle.properties` (`org.gradle.java.home`) та `gradlew.bat` (`JAVA_HOME`) без зміни глобальних системних змінних Windows.
+   - **Android Lint у сумісному середовищі JDK 17:**
+     - `lintDebug`: **BUILD SUCCESSFUL (0 errors, 28 warnings)**.
+     - `lintRelease`: **BUILD SUCCESSFUL (0 errors, 28 warnings)**.
+     - Жодних перевірок лінту не було вимкнено чи послаблено. Виправлено `Locale.getDefault()` у `WeatherMetricsGrid.kt`, вилучено застарілу перевірку `Build.VERSION.SDK_INT >= M` (minSdk 26) у `WeatherWidgetScheduler.kt`, нормалізовано порядок параметрів `modifier` у `WeatherMainScreen.kt`.
+   - **Unit-тести:**
+     - `testDebugUnitTest`: **74/74 PASS (100%)**.
+     - `testReleaseUnitTest`: **74/74 PASS (100%)**.
+   - **Збірки APK:**
+     - `assembleDebug`: **BUILD SUCCESSFUL**, згенеровано валідний APK розміром 21.8 МБ (`app/build/outputs/apk/debug/app-debug.apk`).
+     - `assembleRelease`: **BUILD SUCCESSFUL**, R8 обфускація та оптимізація ресурсів пройшли успішно, згенеровано релізний APK розміром 8.2 МБ (8 606 043 байти, `app/build/outputs/apk/release/app-release.apk`).
    - Незалежний аудит безпеки підтвердив: повна відсутність `ACCESS_BACKGROUND_LOCATION`, відсутність ключів/секретів у репозиторії, 0 викликів Log з координатами, точна динамічна атрибуція джерел.
 
 ---
@@ -57,24 +63,26 @@
 
 ## 3. Дотримання Червоних Ліній та Політик
 
-1. **ZERO BUDGET POLICY ($0.00 витрат):** Повністю дотримано. Єдина нова залежність `org.json:json:20240303` знаходиться у відкритому суспільному надбанні (**Public Domain**, перевірено в Maven Central POM та LICENSE), додана суворо до `testImplementation` (0 байт у релізі, $0 витрат).
+1. **ZERO BUDGET POLICY ($0.00 витрат):** Повністю дотримано. Залежність `org.json:json:20240303` знаходиться у відкритому суспільному надбанні (**Public Domain**, перевірено в Maven Central POM та LICENSE), додана суворо до `testImplementation` (0 байт у релізі, $0 витрат).
 2. **Конфіденційність геолокації:** Дозвіл `ACCESS_BACKGROUND_LOCATION` суворо відсутній. Пошук міст через геокодування повністю функціональний без обов'язкового дозволу GPS.
-3. **Ізоляція погодного API:** WeatherMetro Free затверджено як основного комерційного кандидата. Open-Meteo Free ізольовано і заборонено до автоматичного перемикання у релізній збірці з AdMob.
+3. **Ізоляція погодного API:** WeatherMetro Free затверджено як основного комерційного кандидата. Visual Crossing Free актуалізовано як Кандидата №2 (`queryCost: 1`, 1 000 запитів прогнозу/добу). Open-Meteo Free ізольовано і заборонено до автоматичного перемикання у релізній збірці з AdMob.
 4. **Заборона самоверифікації (Red Line #9):** Перевірка проведена окремим субагентом `qa-privacy`.
 5. **Безпека секретів:** Жодних ключів API або персональних координат у git або логах не зафіксовано.
 6. **Синхронізація з GitHub:** Зміни відправлено до віддаленого репозиторію `https://github.com/SaVoJ13/wather.git` без `--force` пушу.
 
 ---
 
-## 4. Фіксація в GitHub та посилання
+## 4. Фіксація в GitHub та повні SHA комітів
 
-- **Коміт Phase 2:** `a7aa3a468a67806aa322a6e0512fb5a3bc5c06c7`
-- **Гілка:** `main`
-- **Посилання на коміт у GitHub:** [https://github.com/SaVoJ13/wather/commit/a7aa3a468a67806aa322a6e0512fb5a3bc5c06c7](https://github.com/SaVoJ13/wather/commit/a7aa3a468a67806aa322a6e0512fb5a3bc5c06c7)
+- **Початковий коміт Phase 1 Design Gate:** `1f345f862b40958481f4019bfd42fd4dd65a3d3a`
+- **Коміт Phase 2 Architecture Foundation:** [`a7aa3a468a67806aa322a6e0512fb5a3bc5c06c7`](https://github.com/SaVoJ13/wather/commit/a7aa3a468a67806aa322a6e0512fb5a3bc5c06c7)
+- **Коміт звіту незалежного аудиту QA:** [`df825132b06c769bc6a8906c41e10c2f4e96a08f`](https://github.com/SaVoJ13/wather/commit/df825132b06c769bc6a8906c41e10c2f4e96a08f)
+- **Коміт оновлення ліцензій та етапного звіту:** [`83b0c7d917d0a3eb85e750fec31d61e4082c76b4`](https://github.com/SaVoJ13/wather/commit/83b0c7d917d0a3eb85e750fec31d61e4082c76b4)
+- **Гілка:** `main` (чисте дерево, повна синхронізація з `origin/main`).
 
 ---
 
 ## 5. Готовність до Phase 3: Core Implementation
 
-Архітектурний фундамент, контракти та каркас презентації повністю готові до фази повноцінної реалізації (Phase 3).
+Архітектурний фундамент, перевірка лінту, контракти та каркас презентації повністю готові до фази повноцінної реалізації (Phase 3).
 Відповідно до Конституції проєкту, перехід до Phase 3 потребує формального рішення Власника: **`Owner Approved`**.

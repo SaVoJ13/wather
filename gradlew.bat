@@ -1,5 +1,6 @@
 ﻿@rem Gradle runner for Weather project
 @echo off
+set "JAVA_HOME=C:\Users\cocro\.jdks\jdk-17.0.21.1+2"
 set "GRADLE_OPTS=-Xmx2048m -XX:MaxMetaspaceSize=512m -Dfile.encoding=UTF-8"
 set "GRADLE_BAT=C:\Users\cocro\.gradle\wrapper\dists\gradle-9.6.0-bin\42k10rwplmzkhuboz9kdazi7s\gradle-9.6.0\bin\gradle.bat"
 if exist "%GRADLE_BAT%" (

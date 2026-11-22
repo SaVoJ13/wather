@@ -37,7 +37,7 @@
 
 | Параметр | Фактичний стан у проєкті | Примітки |
 |---|---|---|
-| **Репозиторій Git** | `https://github.com/SaVoJ13/wather.git`, гілка `main` | Останній коміт: `1f345f8` (clean tree) |
+| **Репозиторій Git** | `https://github.com/SaVoJ13/wather.git`, гілка `main` | Останній коміт: `1f345f862b40958481f4019bfd42fd4dd65a3d3a` (clean tree) |
 | **Kotlin версія** | `2.0.21` (з Compose комcompiler plugin) | Сучасний стабільний реліз |
 | **Android Gradle Plugin** | `8.7.2` | Gradle 8.11.1 / 9.6.0 |
 | **Android SDK** | `minSdk = 26`, `compileSdk = 35`, `targetSdk = 35` | Android 15 (повна сумісність із Google Play 2026) |
