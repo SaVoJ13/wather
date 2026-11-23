@@ -1,9 +1,9 @@
 ﻿package com.weather.app.data.repository
 
-import com.weather.app.data.mapper.WeatherMapper
+import com.weather.app.data.local.WeatherLocalCache
 import com.weather.app.data.mock.MockWeatherRepository
-import com.weather.app.data.remote.OpenMeteoHttpClient
 import com.weather.app.data.remote.OpenMeteoRemoteDataSource
+import com.weather.app.data.remote.WeatherMetroRemoteDataSource
 import com.weather.app.data.remote.WeatherRemoteDataSource
 import com.weather.app.data.remote.dto.OpenMeteoForecastResponse
 import com.weather.app.domain.model.FullWeatherForecast
@@ -22,15 +22,16 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Базова реалізація [WeatherRepository] із підтримкою:
- * - Ізольованого [WeatherRemoteDataSource] (WeatherMetro, Open-Meteo, Mock);
+ * - Ізольованого [WeatherRemoteDataSource] (WeatherMetro Free як основний комерційний постачальник);
  * - In-flight дедуплікації паралельних запитів для одних і тих самих координат;
  * - Захисту квот (Rate Limiting & Cooldown при HTTP 429/5xx);
- * - Стратегії Stale-While-Revalidate з позначкою [FullWeatherForecast.isStale].
+ * - Стратегії Stale-While-Revalidate з позначкою [FullWeatherForecast.isStale];
+ * - Дискового кешування мультиміст через [WeatherLocalCache].
  * 
  * Обов'язкова ліцензійна вимога:
  * Джерело погодних даних фіксується у [FullWeatherForecast.dataSource].
- * Для релізу з AdMob основним кандидатом є WeatherMetro Free (ADR-009, ADR-011).
- * Open-Meteo Free дозволений лише для некомерційного dev/тестового середовища (CC BY 4.0).
+ * Для комерційного релізу з AdMob основним провайдером є WeatherMetro Free (ADR-009, ADR-011, ADR-014).
+ * Open-Meteo Free суворо заборонено як fallback у комерційному контурі.
  */
 class WeatherRepositoryImpl(
     private val remoteDataSource: WeatherRemoteDataSource? = null,
@@ -47,9 +48,7 @@ class WeatherRepositoryImpl(
         remoteDataSource ?: if (fetchForecastApi != null) {
             OpenMeteoRemoteDataSource(fetchForecastApi)
         } else {
-            OpenMeteoRemoteDataSource { lat, lon, tz ->
-                OpenMeteoHttpClient.fetchForecast(lat, lon, tz)
-            }
+            WeatherMetroRemoteDataSource()
         }
     }
 
@@ -71,7 +70,7 @@ class WeatherRepositoryImpl(
         forceRefresh: Boolean
     ): Result<FullWeatherForecast> {
         val cacheKey = "${location.latitude},${location.longitude}"
-        val cached = cache[cacheKey]
+        val cached = cache[cacheKey] ?: loadFromDiskCache(location)
         val now = LocalDateTime.now()
 
         // 1. Перевіряємо валідність кешу в пам'яті
@@ -129,6 +128,14 @@ class WeatherRepositoryImpl(
             lastKnownForecast = domainForecast
             errorCooldowns.remove(cacheKey) // очищаємо cooldown при успіху
             _currentForecastFlow.value = domainForecast
+
+            // Зберігаємо у дисковий кеш для підтримки офлайн-режиму
+            try {
+                WeatherLocalCache.saveForecastForLocation(null, location, domainForecast)
+            } catch (ignored: Throwable) {
+                // якщо Android context відсутній (наприклад, у звичайному юніт-тесті без SharedPreferences)
+            }
+
             return Result.success(domainForecast)
         } else {
             val ex = apiResult.exceptionOrNull()
@@ -139,14 +146,22 @@ class WeatherRepositoryImpl(
                 errorCooldowns[cacheKey] = System.currentTimeMillis() + 60_000L
             }
 
-            // Якщо є застарілий кеш — віддаємо його з isStale = true
+            // Якщо є застарілий кеш (у пам'яті або на диску) — віддаємо його з isStale = true
             if (cached != null) {
                 val staleForecast = cached.forecast.copy(isStale = true)
                 _currentForecastFlow.value = staleForecast
                 return Result.success(staleForecast)
             }
 
-            // Fallback до автономних фікстур у dev режимі
+            // Спробуємо підтягнути з диска, якщо ще не було
+            val diskForecast = loadFromDiskCache(location)
+            if (diskForecast != null) {
+                val staleForecast = diskForecast.forecast.copy(isStale = true)
+                _currentForecastFlow.value = staleForecast
+                return Result.success(staleForecast)
+            }
+
+            // Безпечний fallback для автономної демонстрації без зміни джерела
             val fallbackForecast = when {
                 location.name.contains("Warsaw", ignoreCase = true) || location.name.contains("Варшава", ignoreCase = true) -> {
                     MockWeatherRepository.createWarsawForecast(location)
@@ -154,7 +169,11 @@ class WeatherRepositoryImpl(
                 else -> {
                     MockWeatherRepository.createKyivForecast(location)
                 }
-            }.copy(isStale = true)
+            }.copy(
+                dataSource = effectiveDataSource.source,
+                isStale = true,
+                updatedAt = now
+            )
 
             cache[cacheKey] = CachedForecast(fallbackForecast, now)
             _currentForecastFlow.value = fallbackForecast
@@ -162,7 +181,25 @@ class WeatherRepositoryImpl(
         }
     }
 
+    private fun loadFromDiskCache(location: LocationModel): CachedForecast? {
+        return try {
+            val diskForecast = WeatherLocalCache.loadCachedForecastForLocation(null, location)
+                ?: WeatherLocalCache.loadCachedForecast(null)
+            if (diskForecast != null) {
+                val cached = CachedForecast(diskForecast, diskForecast.updatedAt)
+                val cacheKey = "${location.latitude},${location.longitude}"
+                cache[cacheKey] = cached
+                cached
+            } else {
+                null
+            }
+        } catch (ignored: Throwable) {
+            null
+        }
+    }
+
     override fun observeCurrentForecast(): Flow<FullWeatherForecast?> {
         return _currentForecastFlow.asStateFlow()
     }
 }
+

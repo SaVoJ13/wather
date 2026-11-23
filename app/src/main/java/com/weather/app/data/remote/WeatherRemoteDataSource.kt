@@ -42,23 +42,34 @@ class OpenMeteoRemoteDataSource(
 
 /**
  * Реалізація джерела даних WeatherMetro Free (основний комерційний кандидат v1).
- * Дозволяє комерційне використання з видимою атрибуцією ("Weather data by WeatherMetro").
- * 16 днів щоденного та погодинного прогнозу.
+ * Дозволяє комерційне використання з обов'язковою атрибуцією ("Weather data by WeatherMetro").
+ * 16 днів щоденного та 384 години погодинного прогнозу.
  */
 class WeatherMetroRemoteDataSource(
-    private val fetchMetroApi: (suspend (latitude: Double, longitude: Double, timezone: String) -> Result<FullWeatherForecast>)? = null
+    private val apiKeyProvider: () -> String = {
+        try {
+            com.weather.app.BuildConfig.WEATHERMETRO_API_KEY
+        } catch (e: Throwable) {
+            ""
+        }
+    },
+    private val fetchMetroApi: (suspend (latitude: Double, longitude: Double, timezone: String, apiKey: String) -> Result<com.weather.app.data.remote.dto.WeatherMetroResponse>)? = null
 ) : WeatherRemoteDataSource {
 
     override val source: WeatherDataSource = WeatherDataSource.WEATHER_METRO
 
     override suspend fun fetchForecast(location: LocationModel): Result<FullWeatherForecast> {
-        if (fetchMetroApi != null) {
-            return fetchMetroApi.invoke(location.latitude, location.longitude, location.timezone)
-        }
-        // У Phase 2 (контрактний фундамент): якщо зовнішній лямбда-клієнт не переданий,
-        // повертаємо підготовлений результат із позначкою джерела WEATHER_METRO
         val now = LocalDateTime.now()
-        val mock = com.weather.app.data.mock.MockWeatherRepository.createKyivForecast(location)
-        return Result.success(mock.copy(dataSource = WeatherDataSource.WEATHER_METRO, updatedAt = now))
+        val key = apiKeyProvider()
+
+        val apiResult = if (fetchMetroApi != null) {
+            fetchMetroApi.invoke(location.latitude, location.longitude, location.timezone, key)
+        } else {
+            WeatherMetroHttpClient.fetchForecast(location.latitude, location.longitude, location.timezone, key)
+        }
+
+        return apiResult.map { response ->
+            com.weather.app.data.mapper.WeatherMetroMapper.toDomain(response, location, now)
+        }
     }
 }

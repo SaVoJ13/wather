@@ -1,8 +1,20 @@
-﻿plugins {
+﻿import java.util.Properties
+
+plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.inputStream().use { localProperties.load(it) }
+}
+val weatherMetroKey = (localProperties.getProperty("weathermetro.api.key")
+    ?: localProperties.getProperty("WEATHERMETRO_API_KEY")
+    ?: System.getenv("WEATHERMETRO_API_KEY")
+    ?: "").trim()
 
 android {
     namespace = "com.weather.app"
@@ -16,6 +28,7 @@ android {
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "WEATHERMETRO_API_KEY", "\"$weatherMetroKey\"")
     }
 
     buildTypes {
@@ -40,6 +53,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     bundle {

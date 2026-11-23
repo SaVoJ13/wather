@@ -8,13 +8,13 @@
 
 ## 1. Загальний огляд
 
-- **Поточна дата й час:** 2026-11-23 04:50 (Europe/Warsaw)
-- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 2: Architecture & Foundation — ЗАВЕРШЕНО (ОЧІКУЄ OWNER APPROVED ДЛЯ PHASE 3)** (Усі завдання Phase 2 TASK-019 – TASK-024 виконано. Створено архітектурні контракти, розширено локальний кеш до 24h/16d, реалізовано шар абстракції API, захист від перевантаження квот 429/5xx, навігаційний каркас із 3 вкладками та окремим SettingsScreen, контракти віджетів та AdMob adaptive banner без CLS. 74/74 unit-тести пройдено на 100%, перевірки Android Lint пройдено з 0 помилок при суворих параметрах abortOnError=true та checkReleaseBuilds=true, GitHub Actions CI зелений (Run ID 45107477705 - SUCCESS), APK debug та release зібрано; release APK підписано debug-ключем для верифікації та потребує виробничого ключа перед релізом).
-- **Діючий артефакт:** Робочий проєкт із 74 успішними unit-тестами, чистим Lint (0 errors), успішною збіркою assembleDebug APK (19.98 МБ), assembleRelease APK (8.21 МБ з R8/shrink), зеленим CI у GitHub Actions та незалежним QA-звітом.
+- **Поточна дата й час:** 2026-11-23 15:15 (Europe/Warsaw)
+- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 3: Weather API & Location Integration — У ПРОЦЕСІ** (Phase 2 офіційно затверджено Власником зі статусом Owner Approved, ADR-014. Розпочато виконання завдань Phase 3 згідно з PHASE_3_EXECUTION_PLAN.md: інтеграція WeatherMetro Free, жива локація за явним запитом користувача, повнофункціональний пошук міст без обов'язкового GPS, стійка обробка мережевих помилок та тестування адаптивного банера AdMob без CLS).
+- **Діючий артефакт:** Робочий проєкт із 74 успішними unit-тестами, чистим Lint (0 errors), успішною збіркою assembleDebug APK (19.98 МБ), assembleRelease APK (8.21 МБ з R8/shrink), зеленим CI у GitHub Actions (Run ID 45107477705 та 45108549112 — SUCCESS) та незалежним QA-звітом.
 - **Підключений пристрій:** Samsung Galaxy S24 Ultra (RZCX326349A).
-- **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011).
+- **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011, ADR-014).
 - **Назва та стиль:** «Weather — Smart Forecast» («Погода»), Google Material You, minSdk 26 (ADR-006, ADR-007).
-- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main (коміт `95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4`, CI зелений: SUCCESS).
+- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main (коміти `95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4` та `ba83aec8439ecab817726d9339c6cde972f0769f`, CI зелений: SUCCESS).
 - **Термінові блокери (🔴):** Немає.
 
 ---
@@ -36,17 +36,20 @@
 13. **Підготовка релізу та закритого тестування в Google Play Console (TASK-014):** Налаштовано R8 / ProGuard (`isMinifyEnabled = true`, `isShrinkResources = true`, правила `app/proguard-rules.pro`). Зібрано та верифіковано релізний Android App Bundle (`app/build/outputs/bundle/release/app-release.aab`, розмір: 20 392 850 байт). Підготовлено Політику конфіденційності `docs/release/PRIVACY_POLICY.md` та покрокову інструкцію для Власника `docs/release/CLOSED_TESTING_GUIDE.md` (акаунт `appvsdeveloper@gmail.com`). 55/55 unit-тестів успішні, релізний APK протестовано на фізичному пристрої Samsung Galaxy S24 Ultra без збоїв. **QA Verified ✅**.
 14. **Повноцінна мультимовність (pl, de, ru, en, es, it, uk) (TASK-015):** Повне покриття інтерфейсу, віджетів, TalkBack і Canvas рядковими ресурсами для 7 мов (`pl`, `uk`, `en`, `de`, `ru`, `es`, `it`) із системним англійським fallback для невідомих мов. Додано in-app селектор мов у `WeatherTopBar` (`LanguageSelectionDialog`), підтримку системного Per-app Language (Android 13+ `locales_config.xml` та `AppLocalesMetadataHolderService`), автоматичне оновлення віджета Glance при перемиканні мови з автентичними польськими скороченнями днів тижня (`pn`, `wt`, `śr`, `cz`, `pt`, `sb`, `nd`). 59/59 unit-тестів проходять успішно (100%), збірки `app-debug.apk`, `app-release.apk` та `app-release.aab` готові до завантаження на телефон. **QA Verified ✅**.
 15. **UX/UI Архітектура, Дизайн-система та Незалежний аудит Phase 1 (TASK-016, TASK-017, TASK-018):** Розроблено та незалежно верифіковано нормативні документи USER_FLOWS.md (v2.1, 9 оновлених сценаріїв, 10 Mermaid-діаграм, ергономіка One-Handed Thumb Zone), DESIGN_SYSTEM.md (v2.2, 7 погодних атмосфер неба, контрастність WCAG AA >= 4.5:1, тач-таргети >= 48dp, Reduced Motion, Dynamic Type до 200%, Responsive Breakpoints), UI_SPECIFICATION.md (v2.2, 3 розділи «Зараз», «Прогноз», «Місця», екран налаштувань через TopBar, Anchored Adaptive Banner без CLS, 0% реклами у віджетах, повні візуальні макети Light/Dark), UX_SPEC.md (v2.1). Проведено два незалежні аудити (`docs/qa/PHASE_1_UX_AUDIT_REPORT.md` та `docs/qa/PHASE_1_DESIGN_QA_AUDIT.md`), підтверджено проходження 62/62 тестів (100% PASS), нуль витоків локації, відсутність ACCESS_BACKGROUND_LOCATION, повне вилучення непідтвердженого LIVE-радару з MVP. **QA Verified ✅**.
+16. **Architecture & Foundation Phase 2 (TASK-019 - TASK-024):** Реалізовано чисту архітектуру (Clean Architecture) з повною ізоляцією шарів (Domain, Data, Presentation), контракти `WeatherRemoteDataSource`, `WeatherLocalCache`, захист квот API, стандартний Gradle Wrapper 8.11.1, 74/74 unit-тести, строгий Lint 0 errors, успішний GitHub Actions CI (Run 45108549112). Затверджено Власником (`Owner Approved` ADR-014). **QA Verified ✅**.
+17. **Weather API & Location Integration Phase 3 (TASK-025 - TASK-041):** Реалізовано бойовий клієнт `WeatherMetroHttpClient` та DTO для комерційного API WeatherMetro Free (16 днів daily, 384 години hourly). Налаштовано безпечне зчитування API-ключа з `local.properties` через `BuildConfig.WEATHERMETRO_API_KEY` (0 ключів у git). Інтегровано `WeatherMetroRemoteDataSource` як основне джерело з дисковим Stale-While-Revalidate кешем у `WeatherRepositoryImpl` та суворою забороною релізного fallback на Open-Meteo. Реалізовано стійку обробку 60с кулдауну при HTTP 429/5xx та in-flight дедуплікацію. Забезпечено збереження та видалення обраних міст у `LocationRepositoryImpl` через `WeatherLocalCache`. Foreground-only геолокація (нуль `ACCESS_BACKGROUND_LOCATION`). Кількість unit-тестів збільшено до 86 (172 виконання у Debug та Release — 100% PASS). Строгий Android Lint: 0 errors на Debug та Release. Збірки `assembleDebug` (19.96 МБ) та `assembleRelease` (8.21 МБ з R8 shrink) успішні. Готово до незалежного аудиту Agent 5.
 
 ---
 
 ## 3. Наступні кроки для команди
 
-1. **Очікування рішення Власника (`Owner Approved`):** Затвердження результатів Phase 2 та переходу до Phase 3: Core Implementation (Weather API & Location Integration).
-2. **Підготовка до Phase 3:** Реалізація повноцінної інтеграції WeatherMetro API клієнта на основі створених у Phase 2 контрактів `WeatherRemoteDataSource`, розгортання оновленого форекаст-пайплайну, офлайн-кешу та фонового воркера оновлення віджета.
+1. **Коміт та пуш Phase 3 реалізації до GitHub:** Відправка змін до `origin/main` та верифікація успішного завершення GitHub Actions CI.
+2. **Незалежний аудит Agent 5 (`qa-privacy`):** Перевірка коду, маніфесту, відсутності ключів/витоків GPS, 86 unit-тестів, Lint 0 errors та формування `docs/qa/PHASE_3_QA_REPORT.md` (вердикт `QA_VERIFIED`).
+3. **Фіналізація воріт Phase Gate 3:** Підготовка звіту `docs/reports/PHASE_GATE_3.md` та передача на розгляд Власнику для отримання `Owner Approved` для Phase 3.
 
 ---
 
 ## 4. Питання, що очікують рішення Власника
 
-*Phase 2 успішно завершено. Усі 74 unit-тести пройдено, збірка валідована, незалежний QA-аудит пройдено (`QA_VERIFIED`). Очікується рішення Власника (`Owner Approved`) щодо завершення Phase 2 та старту Phase 3.*
+*Всі технічні завдання Phase 3 реалізовано командою. Unit-тести (86/86, 172 прогони), Android Lint (0 помилок) та APK-збірки (Debug + Release) успішно пройдені. Після незалежного QA-аудиту Agent 5 та успішного CI буде надіслано підсумковий звіт для надання Owner Approved Phase 3.*
 
