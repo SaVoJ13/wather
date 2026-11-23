@@ -85,7 +85,7 @@ class WeatherMapperTest {
 
         assertEquals("Київ", domain.location.name)
         assertEquals(18.5, domain.current.temperatureCelsius, 0.001)
-        assertEquals(17.8, domain.current.apparentTemperatureCelsius, 0.001)
+        assertEquals(17.8, domain.current.apparentTemperatureCelsius ?: 0.0, 0.001)
         assertEquals(WeatherCondition.MAINLY_CLEAR, domain.current.condition)
         assertEquals(65, domain.current.relativeHumidityPercent)
 
@@ -96,7 +96,7 @@ class WeatherMapperTest {
         assertEquals(2, domain.daily14Days.size)
         assertEquals(WeatherCondition.MAINLY_CLEAR, domain.daily14Days[0].condition)
         assertEquals(WeatherCondition.RAIN, domain.daily14Days[1].condition)
-        assertEquals(4.5, domain.daily14Days[1].precipitationSumMm, 0.001)
+        assertEquals(4.5, domain.daily14Days[1].precipitationSumMm ?: 0.0, 0.001)
         assertNotNull(domain.daily14Days[0].sunrise)
     }
 

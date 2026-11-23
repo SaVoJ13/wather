@@ -8,9 +8,9 @@
 
 ## 1. Загальний огляд
 
-- **Поточна дата й час:** 2026-11-23 17:20 (Europe/Warsaw)
-- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 3: Weather API & Location Integration — ЗАВЕРШЕНО (ОЧІКУЄТЬСЯ OWNER APPROVED)** (Всі завдання Phase 3 TASK-025 – TASK-044 реалізовано та верифіковано незалежним аудитором Agent 5 зі статусом QA_VERIFIED. Виправлено дефекти щодо автоматичного fallback на MockWeatherRepository, контексту WeatherLocalCache, строгого парсингу JSON та ізоляції кешу міст. Коміт `121bd02c74f849e50da4133af9697b6e1a3031ac` відправлено до GitHub. GitHub Actions CI успішний: Run 45215254122. Підготовлено підсумковий звіт PHASE_GATE_3.md та звіт незалежного аудиту PHASE_3_QA_REPORT.md v2.0).
-- **Діючий артефакт:** Робочий проєкт із 93 успішними unit-тестами (186 перевірок у Debug та Release — 100% PASS), чистим строгим Lint (0 errors, abortOnError = true, checkReleaseBuilds = true), успішними збірками assembleDebug APK (19.99 МБ) та assembleRelease APK (8.21 МБ з R8 shrink), зеленим CI у GitHub Actions (Run ID 45215254122 — SUCCESS), 0 фонового GPS, 0 API-ключів у коді та незалежним QA-звітом.
+- **Поточна дата й час:** 2026-11-23 17:55 (Europe/Warsaw)
+- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 3: Weather API & Location Integration — ЗАВЕРШЕНО (ОЧІКУЄТЬСЯ OWNER APPROVED)** (Всі завдання Phase 3 TASK-025 – TASK-044 реалізовано та верифіковано незалежним аудитором Agent 5 зі статусом QA_VERIFIED. Виконано повне виправлення достовірності метеоданих Data Integrity Fix: ліквідовано підстановку вигаданих значень (1013.25 гПа, 50%, 0.0 мм, тощо), впроваджено nullable-моделі, додано відображення «Немає даних» у UI, створено інструментальний тест SharedPreferences та незалежні тести точності. Підготовлено підсумковий звіт PHASE_GATE_3.md v3.0 та звіт незалежного аудиту PHASE_3_QA_REPORT.md v3.0).
+- **Діючий артефакт:** Робочий проєкт із 97 успішними unit-тестами (194 перевірки у Debug та Release — 100% PASS), чистим строгим Lint (0 errors, 31 warning, abortOnError = true, checkReleaseBuilds = true), скомпільованим APK інструментальних тестів app-debug-androidTest.apk (350 КБ), успішними збірками assembleDebug APK (20.85 МБ) та assembleRelease APK (8.21 МБ з R8 shrink), 0 фонового GPS, 0 API-ключів у коді та незалежним QA-звітом.
 - **Підключений пристрій:** Samsung Galaxy S24 Ultra (RZCX326349A).
 - **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, $0.00 бюджет, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011, ADR-014).
 - **Назва та стиль:** «Weather — Smart Forecast» («Погода»), Google Material You, minSdk 26 (ADR-006, ADR-007).
@@ -50,5 +50,5 @@
 
 ## 4. Питання, що очікують рішення Власника
 
-*Phase 3 успішно завершено та верифіковано. Усі 93 unit-тести (186 виконань у Debug та Release) пройшли успішно (100% PASS), Android Lint без помилок (0 errors, abortOnError = true, checkReleaseBuilds = true), APK-пакети зібрано (Debug 19.99 МБ, Release 8.21 МБ), CI у GitHub Actions зелений (SUCCESS), звіт незалежного аудиту Agent 5 отримано (`QA_VERIFIED`). Очікується рішення Власника (`Owner Approved`) щодо завершення Phase 3 та дозволу на перехід до Phase 4: Main Android Interface.*
+*Phase 3 успішно завершено та верифіковано. Усі 97 unit-тестів (194 виконання у Debug та Release) пройшли успішно (100% PASS), Android Lint без помилок (0 errors, 31 warning, abortOnError = true, checkReleaseBuilds = true), тестовий інструментальний APK зібрано (350 КБ), виробничі APK-пакети зібрано (Debug 20.85 МБ, Release 8.21 МБ), звіт незалежного аудиту Agent 5 отримано (`QA_VERIFIED`). Очікується рішення Власника (`Owner Approved`) щодо завершення Phase 3 та дозволу на перехід до Phase 4: Main Android Interface.*
 

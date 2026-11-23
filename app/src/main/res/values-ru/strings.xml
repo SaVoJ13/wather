@@ -129,4 +129,5 @@
     <string name="distance_km">%d км</string>
     <string name="unit_mm">мм</string>
     <string name="remove_city_desc">Удалить %s</string>
+    <string name="no_data">Нет данных</string>
 </resources>

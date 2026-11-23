@@ -42,7 +42,6 @@ fun CurrentWeatherHero(
 ) {
     val palette = LocalWeatherPalette.current
     val tempInt = current.temperatureCelsius.roundToInt()
-    val feelsLikeInt = current.apparentTemperatureCelsius.roundToInt()
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val updateTimeFormatted = updatedAt.format(timeFormatter)
 
@@ -81,13 +80,16 @@ fun CurrentWeatherHero(
             color = palette.textColor
         )
 
-        // Відчувається як
-        val feelsPrefix = if (feelsLikeInt > 0) "+" else ""
-        Text(
-            text = stringResource(R.string.feels_like, "$feelsPrefix$feelsLikeInt°"),
-            style = MaterialTheme.typography.bodyLarge,
-            color = palette.textColor.copy(alpha = 0.9f)
-        )
+        // Відчувається як (відображається лише за наявності достовірного значення)
+        if (current.apparentTemperatureCelsius != null) {
+            val feelsLikeInt = current.apparentTemperatureCelsius.roundToInt()
+            val feelsPrefix = if (feelsLikeInt > 0) "+" else ""
+            Text(
+                text = stringResource(R.string.feels_like, "$feelsPrefix$feelsLikeInt°"),
+                style = MaterialTheme.typography.bodyLarge,
+                color = palette.textColor.copy(alpha = 0.9f)
+            )
+        }
 
         // Діапазон сьогодні (мін / макс)
         if (todayForecast != null) {

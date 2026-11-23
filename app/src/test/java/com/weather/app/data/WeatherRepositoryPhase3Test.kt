@@ -69,15 +69,19 @@ class WeatherRepositoryPhase3Test {
             hourly = WeatherMetroHourlyDto(
                 time = listOf("2026-11-23T12:00", "2026-11-23T13:00"),
                 temperature2m = listOf(7.0, 8.0),
+                apparentTemperature = listOf(6.5, 7.5),
                 precipitationProbability = listOf(10, 15),
                 weathercode = listOf(1, 2),
                 relativeHumidity2m = listOf(75, 70),
-                windSpeed10m = listOf(12.0, 14.0)
+                windSpeed10m = listOf(12.0, 14.0),
+                surfacePressure = listOf(1015.0, 1014.0),
+                uvIndex = listOf(2.0, 1.5)
             ),
             daily = WeatherMetroDailyDto(
                 time = listOf("2026-11-23", "2026-11-24"),
                 temperature2mMax = listOf(9.0, 10.0),
                 temperature2mMin = listOf(2.0, 3.0),
+                precipitationSum = listOf(0.0, 1.2),
                 precipitationProbabilityMax = listOf(20, 25),
                 weathercode = listOf(1, 2),
                 sunrise = listOf("2026-11-23T07:22"),

@@ -83,10 +83,8 @@ object WeatherMetroMapper {
             val timeParsed = parseDateTime(timeStr)
                 ?: throw IllegalArgumentException("Неможливо розпарсити дату/час у погодинному прогнозі: '$timeStr'")
             val temp = hourlyDto.temperature2m[i]
-            val pop = hourlyDto.precipitationProbability.getOrNull(i) ?: 0
+            val pop = hourlyDto.precipitationProbability.getOrNull(i)
             val wCode = hourlyDto.weathercode.getOrNull(i)
-            val humidity = hourlyDto.relativeHumidity2m.getOrNull(i) ?: 50
-            val wind = hourlyDto.windSpeed10m.getOrNull(i) ?: 0.0
 
             allHourlyItems.add(
                 HourlyForecastItem(
@@ -99,14 +97,20 @@ object WeatherMetroMapper {
 
             // Визначаємо поточну погоду за годиною, найближчою до часу запиту
             if (!currentFound && (timeParsed.isEqual(currentHour) || timeParsed.isAfter(currentHour))) {
+                val apparentTemp = hourlyDto.apparentTemperature.getOrNull(i)
+                val humidity = hourlyDto.relativeHumidity2m.getOrNull(i)
+                val wind = hourlyDto.windSpeed10m.getOrNull(i)
+                val pressure = hourlyDto.surfacePressure.getOrNull(i)
+                val uv = hourlyDto.uvIndex.getOrNull(i)
+
                 currentWeather = CurrentWeather(
                     temperatureCelsius = temp,
-                    apparentTemperatureCelsius = temp,
+                    apparentTemperatureCelsius = apparentTemp,
                     condition = WeatherCodeMapper.mapWmoCode(wCode),
                     relativeHumidityPercent = humidity,
                     windSpeedKmh = wind,
-                    surfacePressureHpa = 1013.25,
-                    uvIndex = 0.0,
+                    surfacePressureHpa = pressure,
+                    uvIndex = uv,
                     time = timeParsed
                 )
                 currentFound = true
@@ -115,14 +119,20 @@ object WeatherMetroMapper {
 
         if (currentWeather == null && allHourlyItems.isNotEmpty()) {
             val first = allHourlyItems.first()
+            val apparentTemp = hourlyDto.apparentTemperature.firstOrNull()
+            val humidity = hourlyDto.relativeHumidity2m.firstOrNull()
+            val wind = hourlyDto.windSpeed10m.firstOrNull()
+            val pressure = hourlyDto.surfacePressure.firstOrNull()
+            val uv = hourlyDto.uvIndex.firstOrNull()
+
             currentWeather = CurrentWeather(
                 temperatureCelsius = first.temperatureCelsius,
-                apparentTemperatureCelsius = first.temperatureCelsius,
+                apparentTemperatureCelsius = apparentTemp,
                 condition = first.condition,
-                relativeHumidityPercent = hourlyDto.relativeHumidity2m.firstOrNull() ?: 50,
-                windSpeedKmh = hourlyDto.windSpeed10m.firstOrNull() ?: 0.0,
-                surfacePressureHpa = 1013.25,
-                uvIndex = 0.0,
+                relativeHumidityPercent = humidity,
+                windSpeedKmh = wind,
+                surfacePressureHpa = pressure,
+                uvIndex = uv,
                 time = first.time
             )
         }
@@ -148,8 +158,9 @@ object WeatherMetroMapper {
             val wCode = dailyDto.weathercode.getOrNull(i)
             val maxT = dailyDto.temperature2mMax[i]
             val minT = dailyDto.temperature2mMin[i]
-            val popMax = dailyDto.precipitationProbabilityMax.getOrNull(i) ?: 0
-            val windMax = dailyDto.windSpeed10mMax.getOrNull(i) ?: 0.0
+            val popMax = dailyDto.precipitationProbabilityMax.getOrNull(i)
+            val precipSum = dailyDto.precipitationSum.getOrNull(i)
+            val windMax = dailyDto.windSpeed10mMax.getOrNull(i)
             val sunriseStr = dailyDto.sunrise.getOrNull(i)
             val sunsetStr = dailyDto.sunset.getOrNull(i)
 
@@ -160,7 +171,7 @@ object WeatherMetroMapper {
                     maxTemperatureCelsius = maxT,
                     condition = WeatherCodeMapper.mapWmoCode(wCode),
                     precipitationProbabilityPercent = popMax,
-                    precipitationSumMm = 0.0,
+                    precipitationSumMm = precipSum,
                     maxWindSpeedKmh = windMax,
                     sunrise = parseDateTime(sunriseStr),
                     sunset = parseDateTime(sunsetStr)

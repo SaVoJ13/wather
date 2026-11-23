@@ -36,13 +36,17 @@ fun WeatherMetricsGrid(
     current: CurrentWeather,
     modifier: Modifier = Modifier
 ) {
+    val noDataStr = stringResource(R.string.no_data)
+
     val humidityComfort = when {
+        current.relativeHumidityPercent == null -> noDataStr
         current.relativeHumidityPercent < 35 -> stringResource(R.string.humidity_dry)
         current.relativeHumidityPercent in 35..65 -> stringResource(R.string.humidity_comfortable)
         else -> stringResource(R.string.humidity_humid)
     }
 
-    val uvLevel = when (current.uvIndex.roundToInt()) {
+    val uvLevel = when (current.uvIndex?.roundToInt()) {
+        null -> noDataStr
         in 0..2 -> stringResource(R.string.uv_low)
         in 3..5 -> stringResource(R.string.uv_moderate)
         in 6..7 -> stringResource(R.string.uv_high)
@@ -50,7 +54,13 @@ fun WeatherMetricsGrid(
         else -> stringResource(R.string.uv_extreme)
     }
 
-    val pressureMmHg = (current.surfacePressureHpa * 0.750062).roundToInt()
+    val pressureMmHg = current.surfacePressureHpa?.let { (it * 0.750062).roundToInt() }
+
+    val humidityValue = current.relativeHumidityPercent?.let { "$it%" } ?: noDataStr
+    val windValue = current.windSpeedKmh?.let { "${it.roundToInt()} ${stringResource(R.string.wind_unit_kmh)}" } ?: noDataStr
+    val pressureValue = current.surfacePressureHpa?.let { "${it.roundToInt()} ${stringResource(R.string.pressure_unit_hpa)}" } ?: noDataStr
+    val pressureSubtitle = pressureMmHg?.let { "$it ${stringResource(R.string.pressure_unit_mmhg)}" } ?: noDataStr
+    val uvValue = current.uvIndex?.let { String.format(Locale.getDefault(), "%.1f", it) } ?: noDataStr
 
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -63,14 +73,14 @@ fun WeatherMetricsGrid(
             MetricCard(
                 icon = Icons.Default.WaterDrop,
                 title = stringResource(R.string.metric_humidity),
-                value = "${current.relativeHumidityPercent}%",
+                value = humidityValue,
                 subtitle = humidityComfort,
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 icon = Icons.Default.Air,
                 title = stringResource(R.string.metric_wind),
-                value = "${current.windSpeedKmh.roundToInt()} ${stringResource(R.string.wind_unit_kmh)}",
+                value = windValue,
                 subtitle = stringResource(R.string.wind_speed_label),
                 modifier = Modifier.weight(1f)
             )
@@ -83,14 +93,14 @@ fun WeatherMetricsGrid(
             MetricCard(
                 icon = Icons.Default.Compress,
                 title = stringResource(R.string.metric_pressure),
-                value = "${current.surfacePressureHpa.roundToInt()} ${stringResource(R.string.pressure_unit_hpa)}",
-                subtitle = "$pressureMmHg ${stringResource(R.string.pressure_unit_mmhg)}",
+                value = pressureValue,
+                subtitle = pressureSubtitle,
                 modifier = Modifier.weight(1f)
             )
             MetricCard(
                 icon = Icons.Default.WbSunny,
                 title = stringResource(R.string.metric_uv),
-                value = String.format(Locale.getDefault(), "%.1f", current.uvIndex),
+                value = uvValue,
                 subtitle = uvLevel,
                 modifier = Modifier.weight(1f)
             )

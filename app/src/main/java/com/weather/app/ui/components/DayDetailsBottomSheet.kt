@@ -139,6 +139,23 @@ fun DayDetailsBottomSheet(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Метрики опадів та вітру
+            val noDataStr = stringResource(R.string.no_data)
+            val precipValue = if (item.precipitationSumMm != null) {
+                "${String.format(Locale.US, "%.1f", item.precipitationSumMm)} ${stringResource(R.string.unit_mm)}"
+            } else {
+                noDataStr
+            }
+            val precipExtra = if (item.precipitationProbabilityPercent != null) {
+                "${stringResource(R.string.precipitation_probability_desc)}: ${item.precipitationProbabilityPercent}%"
+            } else {
+                "${stringResource(R.string.precipitation_probability_desc)}: $noDataStr"
+            }
+            val windValue = if (item.maxWindSpeedKmh != null) {
+                "${item.maxWindSpeedKmh.roundToInt()} ${stringResource(R.string.wind_unit_kmh)}"
+            } else {
+                noDataStr
+            }
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -147,8 +164,8 @@ fun DayDetailsBottomSheet(
                     icon = Icons.Default.WaterDrop,
                     iconTint = RainAccent,
                     label = stringResource(R.string.precipitation),
-                    value = "${String.format(Locale.US, "%.1f", item.precipitationSumMm)} ${stringResource(R.string.unit_mm)}",
-                    extra = "${stringResource(R.string.precipitation_probability_desc)}: ${item.precipitationProbabilityPercent}%",
+                    value = precipValue,
+                    extra = precipExtra,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -156,7 +173,7 @@ fun DayDetailsBottomSheet(
                     icon = Icons.Default.Air,
                     iconTint = MaterialTheme.colorScheme.primary,
                     label = stringResource(R.string.metric_wind),
-                    value = "${item.maxWindSpeedKmh.roundToInt()} ${stringResource(R.string.wind_unit_kmh)}",
+                    value = windValue,
                     extra = stringResource(R.string.max_wind),
                     modifier = Modifier.weight(1f)
                 )

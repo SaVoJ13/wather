@@ -216,12 +216,22 @@ object WeatherLocalCache {
             // Current
             val cur = JSONObject().apply {
                 put("temp", forecast.current.temperatureCelsius)
-                put("feelsLike", forecast.current.apparentTemperatureCelsius)
+                if (forecast.current.apparentTemperatureCelsius != null) {
+                    put("feelsLike", forecast.current.apparentTemperatureCelsius)
+                }
                 put("condition", forecast.current.condition.name)
-                put("humidity", forecast.current.relativeHumidityPercent)
-                put("wind", forecast.current.windSpeedKmh)
-                put("pressure", forecast.current.surfacePressureHpa)
-                put("uv", forecast.current.uvIndex)
+                if (forecast.current.relativeHumidityPercent != null) {
+                    put("humidity", forecast.current.relativeHumidityPercent)
+                }
+                if (forecast.current.windSpeedKmh != null) {
+                    put("wind", forecast.current.windSpeedKmh)
+                }
+                if (forecast.current.surfacePressureHpa != null) {
+                    put("pressure", forecast.current.surfacePressureHpa)
+                }
+                if (forecast.current.uvIndex != null) {
+                    put("uv", forecast.current.uvIndex)
+                }
                 put("time", forecast.current.time.format(isoFormatter))
             }
             put("current", cur)
@@ -233,7 +243,9 @@ object WeatherLocalCache {
                     put("time", item.time.format(isoFormatter))
                     put("temp", item.temperatureCelsius)
                     put("condition", item.condition.name)
-                    put("pop", item.precipitationProbabilityPercent)
+                    if (item.precipitationProbabilityPercent != null) {
+                        put("pop", item.precipitationProbabilityPercent)
+                    }
                 }
                 hourlyArr.put(hObj)
             }
@@ -247,9 +259,15 @@ object WeatherLocalCache {
                     put("min", item.minTemperatureCelsius)
                     put("max", item.maxTemperatureCelsius)
                     put("condition", item.condition.name)
-                    put("pop", item.precipitationProbabilityPercent)
-                    put("precipSum", item.precipitationSumMm)
-                    put("maxWind", item.maxWindSpeedKmh)
+                    if (item.precipitationProbabilityPercent != null) {
+                        put("pop", item.precipitationProbabilityPercent)
+                    }
+                    if (item.precipitationSumMm != null) {
+                        put("precipSum", item.precipitationSumMm)
+                    }
+                    if (item.maxWindSpeedKmh != null) {
+                        put("maxWind", item.maxWindSpeedKmh)
+                    }
                     item.sunrise?.let { put("sunrise", it.format(isoFormatter)) }
                     item.sunset?.let { put("sunset", it.format(isoFormatter)) }
                 }
@@ -268,15 +286,39 @@ object WeatherLocalCache {
         val isStale = root.optBoolean("isStale", false)
 
         val curObj = root.getJSONObject("current")
+        val apparentTemp = if (curObj.has("feelsLike") && !curObj.isNull("feelsLike")) {
+            val v = curObj.optDouble("feelsLike")
+            if (v.isNaN()) null else v
+        } else null
+
+        val humidity = if (curObj.has("humidity") && !curObj.isNull("humidity")) {
+            curObj.optInt("humidity")
+        } else null
+
+        val wind = if (curObj.has("wind") && !curObj.isNull("wind")) {
+            val v = curObj.optDouble("wind")
+            if (v.isNaN()) null else v
+        } else null
+
+        val pressure = if (curObj.has("pressure") && !curObj.isNull("pressure")) {
+            val v = curObj.optDouble("pressure")
+            if (v.isNaN()) null else v
+        } else null
+
+        val uv = if (curObj.has("uv") && !curObj.isNull("uv")) {
+            val v = curObj.optDouble("uv")
+            if (v.isNaN()) null else v
+        } else null
+
         val current = CurrentWeather(
             temperatureCelsius = curObj.getDouble("temp"),
-            apparentTemperatureCelsius = curObj.getDouble("feelsLike"),
+            apparentTemperatureCelsius = apparentTemp,
             condition = runCatching { WeatherCondition.valueOf(curObj.getString("condition")) }
                 .getOrDefault(WeatherCondition.CLEAR_SKY),
-            relativeHumidityPercent = curObj.optInt("humidity", 70),
-            windSpeedKmh = curObj.optDouble("wind", 10.0),
-            surfacePressureHpa = curObj.optDouble("pressure", 1013.0),
-            uvIndex = curObj.optDouble("uv", 0.0),
+            relativeHumidityPercent = humidity,
+            windSpeedKmh = wind,
+            surfacePressureHpa = pressure,
+            uvIndex = uv,
             time = LocalDateTime.parse(curObj.getString("time"), isoFormatter)
         )
 
@@ -284,13 +326,14 @@ object WeatherLocalCache {
         val hourlyList = mutableListOf<HourlyForecastItem>()
         for (i in 0 until hourlyArr.length()) {
             val hObj = hourlyArr.getJSONObject(i)
+            val pop = if (hObj.has("pop") && !hObj.isNull("pop")) hObj.optInt("pop") else null
             hourlyList.add(
                 HourlyForecastItem(
                     time = LocalDateTime.parse(hObj.getString("time"), isoFormatter),
                     temperatureCelsius = hObj.getDouble("temp"),
                     condition = runCatching { WeatherCondition.valueOf(hObj.getString("condition")) }
                         .getOrDefault(WeatherCondition.CLEAR_SKY),
-                    precipitationProbabilityPercent = hObj.optInt("pop", 0)
+                    precipitationProbabilityPercent = pop
                 )
             )
         }
@@ -307,6 +350,16 @@ object WeatherLocalCache {
             val sunset = sunsetStr?.takeIf { it.isNotBlank() }?.let {
                 runCatching { LocalDateTime.parse(it, isoFormatter) }.getOrNull()
             }
+            val pop = if (dObj.has("pop") && !dObj.isNull("pop")) dObj.optInt("pop") else null
+            val precipSum = if (dObj.has("precipSum") && !dObj.isNull("precipSum")) {
+                val v = dObj.optDouble("precipSum")
+                if (v.isNaN()) null else v
+            } else null
+            val maxWind = if (dObj.has("maxWind") && !dObj.isNull("maxWind")) {
+                val v = dObj.optDouble("maxWind")
+                if (v.isNaN()) null else v
+            } else null
+
             dailyList.add(
                 DailyForecastItem(
                     date = LocalDateTime.parse(dObj.getString("date"), isoFormatter),
@@ -314,9 +367,9 @@ object WeatherLocalCache {
                     maxTemperatureCelsius = dObj.getDouble("max"),
                     condition = runCatching { WeatherCondition.valueOf(dObj.getString("condition")) }
                         .getOrDefault(WeatherCondition.CLEAR_SKY),
-                    precipitationProbabilityPercent = dObj.optInt("pop", 0),
-                    precipitationSumMm = dObj.optDouble("precipSum", 0.0),
-                    maxWindSpeedKmh = dObj.optDouble("maxWind", 10.0),
+                    precipitationProbabilityPercent = pop,
+                    precipitationSumMm = precipSum,
+                    maxWindSpeedKmh = maxWind,
                     sunrise = sunrise,
                     sunset = sunset
                 )

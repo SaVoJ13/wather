@@ -93,7 +93,7 @@ fun HourlyForecastRow(
                     Spacer(modifier = Modifier.height(4.dp))
 
                     // Показуємо відсоток опадів лише якщо він більше 10%
-                    if (item.precipitationProbabilityPercent > 10) {
+                    if (item.precipitationProbabilityPercent != null && item.precipitationProbabilityPercent > 10) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {

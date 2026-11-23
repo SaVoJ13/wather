@@ -51,8 +51,8 @@ object WeatherMetroHttpClient {
             var urlString = "$FORECAST_BASE_URL?" +
                     "lat=$latFormatted" +
                     "&lng=$lngFormatted" +
-                    "&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weathercode,sunrise,sunset,wind_speed_10m_max" +
-                    "&hourly=temperature_2m,precipitation_probability,weathercode,relative_humidity_2m,wind_speed_10m" +
+                    "&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,weathercode,sunrise,sunset,wind_speed_10m_max" +
+                    "&hourly=temperature_2m,apparent_temperature,surface_pressure,uv_index,precipitation_probability,weathercode,relative_humidity_2m,wind_speed_10m" +
                     "&days=16" +
                     "&timezone=$encodedTz"
 
@@ -90,10 +90,13 @@ object WeatherMetroHttpClient {
             val hourlyDto = WeatherMetroHourlyDto(
                 time = hourlyTime,
                 temperature2m = hourlyTemp,
-                precipitationProbability = jsonArrayToIntList(hourlyObj.optJSONArray("precipitation_probability")),
+                apparentTemperature = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("apparent_temperature")),
+                precipitationProbability = jsonArrayToNullableIntList(hourlyObj.optJSONArray("precipitation_probability")),
                 weathercode = jsonArrayToIntList(hourlyObj.optJSONArray("weathercode")),
-                relativeHumidity2m = jsonArrayToIntList(hourlyObj.optJSONArray("relative_humidity_2m")),
-                windSpeed10m = jsonArrayToDoubleList(hourlyObj.optJSONArray("wind_speed_10m"))
+                relativeHumidity2m = jsonArrayToNullableIntList(hourlyObj.optJSONArray("relative_humidity_2m")),
+                windSpeed10m = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("wind_speed_10m")),
+                surfacePressure = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("surface_pressure")),
+                uvIndex = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("uv_index"))
             )
 
             val dailyTime = jsonArrayToStringList(dailyObj.optJSONArray("time"))
@@ -108,11 +111,12 @@ object WeatherMetroHttpClient {
                 time = dailyTime,
                 temperature2mMax = dailyTempMax,
                 temperature2mMin = dailyTempMin,
-                precipitationProbabilityMax = jsonArrayToIntList(dailyObj.optJSONArray("precipitation_probability_max")),
+                precipitationSum = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("precipitation_sum")),
+                precipitationProbabilityMax = jsonArrayToNullableIntList(dailyObj.optJSONArray("precipitation_probability_max")),
                 weathercode = jsonArrayToIntList(dailyObj.optJSONArray("weathercode")),
                 sunrise = jsonArrayToStringList(dailyObj.optJSONArray("sunrise")),
                 sunset = jsonArrayToStringList(dailyObj.optJSONArray("sunset")),
-                windSpeed10mMax = jsonArrayToDoubleList(dailyObj.optJSONArray("wind_speed_10m_max"))
+                windSpeed10mMax = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("wind_speed_10m_max"))
             )
 
             val parsedResponse = WeatherMetroResponse(
@@ -181,6 +185,37 @@ object WeatherMetroHttpClient {
                 throw JSONException("Елемент $i у числовому масиві є null")
             }
             list.add(arr.getDouble(i))
+        }
+        return list
+    }
+
+    private fun jsonArrayToNullableDoubleList(arr: JSONArray?): List<Double?> {
+        if (arr == null) return emptyList()
+        val list = ArrayList<Double?>(arr.length())
+        for (i in 0 until arr.length()) {
+            if (arr.isNull(i)) {
+                list.add(null)
+            } else {
+                val d = arr.optDouble(i)
+                if (d.isNaN()) {
+                    list.add(null)
+                } else {
+                    list.add(d)
+                }
+            }
+        }
+        return list
+    }
+
+    private fun jsonArrayToNullableIntList(arr: JSONArray?): List<Int?> {
+        if (arr == null) return emptyList()
+        val list = ArrayList<Int?>(arr.length())
+        for (i in 0 until arr.length()) {
+            if (arr.isNull(i)) {
+                list.add(null)
+            } else {
+                list.add(arr.optInt(i))
+            }
         }
         return list
     }

@@ -258,8 +258,10 @@ class WeatherGlanceWidget : GlanceAppWidget() {
         val currentLocale = getCurrentLocale()
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
         val tempString = "$tempInt°"
-        val feelsLikeInt = forecast.current.apparentTemperatureCelsius.roundToInt()
-        val feelsLikeString = "$feelsLikeInt°"
+        val feelsLikeLabel = if (forecast.current.apparentTemperatureCelsius != null) {
+            val feelsLikeInt = forecast.current.apparentTemperatureCelsius.roundToInt()
+            context.getString(R.string.feels_like, "$feelsLikeInt°")
+        } else null
         val today = forecast.daily14Days.firstOrNull()
         val minToday = today?.minTemperatureCelsius?.roundToInt() ?: 0
         val maxToday = today?.maxTemperatureCelsius?.roundToInt() ?: 0
@@ -267,7 +269,6 @@ class WeatherGlanceWidget : GlanceAppWidget() {
         val updateTime = forecast.updatedAt.format(timeFormatter)
         val dailyItems = forecast.daily14Days.take(4)
         val conditionDesc = context.getString(forecast.current.condition.stringRes)
-        val feelsLikeLabel = context.getString(R.string.feels_like, feelsLikeString)
         val windUnit = context.getString(R.string.wind_unit_kmh)
 
         Row(
@@ -308,8 +309,10 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
                 Spacer(modifier = GlanceModifier.height(2.dp))
 
+                val rangeText = "↑${maxToday}° / ↓${minToday}°"
+                val subtitleText = if (feelsLikeLabel != null) "$feelsLikeLabel • $rangeText" else rangeText
                 Text(
-                    text = "$feelsLikeLabel • ↑${maxToday}° / ↓${minToday}°",
+                    text = subtitleText,
                     style = TextStyle(
                         color = ColorProvider(Color(0xFF94A3B8)),
                         fontSize = 11.sp
@@ -319,15 +322,20 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
                 Spacer(modifier = GlanceModifier.height(2.dp))
 
-                Text(
-                    text = "💧 ${forecast.current.relativeHumidityPercent}%  💨 ${forecast.current.windSpeedKmh.roundToInt()} $windUnit",
-                    style = TextStyle(
-                        color = ColorProvider(Color(0xFFCBD5E1)),
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
-                    ),
-                    maxLines = 1
-                )
+                val humidityPart = forecast.current.relativeHumidityPercent?.let { "💧 $it%" }
+                val windPart = forecast.current.windSpeedKmh?.let { "💨 ${it.roundToInt()} $windUnit" }
+                val metricsText = listOfNotNull(humidityPart, windPart).joinToString("  ")
+                if (metricsText.isNotEmpty()) {
+                    Text(
+                        text = metricsText,
+                        style = TextStyle(
+                            color = ColorProvider(Color(0xFFCBD5E1)),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium
+                        ),
+                        maxLines = 1
+                    )
+                }
 
                 Spacer(modifier = GlanceModifier.height(2.dp))
 
@@ -389,7 +397,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                                 contentDescription = itemConditionDesc,
                                 modifier = GlanceModifier.size(22.dp)
                             )
-                            if (pop > 15) {
+                            if (pop != null && pop > 15) {
                                 Spacer(modifier = GlanceModifier.width(3.dp))
                                 Text(
                                     text = "💧 $pop%",

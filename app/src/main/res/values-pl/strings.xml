@@ -129,4 +129,5 @@
     <string name="distance_km">%d km</string>
     <string name="unit_mm">mm</string>
     <string name="remove_city_desc">Usuń %s</string>
+    <string name="no_data">Brak danych</string>
 </resources>

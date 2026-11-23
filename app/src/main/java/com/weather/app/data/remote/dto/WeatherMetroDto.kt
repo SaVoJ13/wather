@@ -22,19 +22,23 @@ data class WeatherMetroResponse(
 data class WeatherMetroHourlyDto(
     val time: List<String> = emptyList(),
     val temperature2m: List<Double> = emptyList(),
-    val precipitationProbability: List<Int> = emptyList(),
+    val apparentTemperature: List<Double?> = emptyList(),
+    val precipitationProbability: List<Int?> = emptyList(),
     val weathercode: List<Int> = emptyList(),
-    val relativeHumidity2m: List<Int> = emptyList(),
-    val windSpeed10m: List<Double> = emptyList()
+    val relativeHumidity2m: List<Int?> = emptyList(),
+    val windSpeed10m: List<Double?> = emptyList(),
+    val surfacePressure: List<Double?> = emptyList(),
+    val uvIndex: List<Double?> = emptyList()
 )
 
 data class WeatherMetroDailyDto(
     val time: List<String> = emptyList(),
     val temperature2mMax: List<Double> = emptyList(),
     val temperature2mMin: List<Double> = emptyList(),
-    val precipitationProbabilityMax: List<Int> = emptyList(),
+    val precipitationSum: List<Double?> = emptyList(),
+    val precipitationProbabilityMax: List<Int?> = emptyList(),
     val weathercode: List<Int> = emptyList(),
     val sunrise: List<String> = emptyList(),
     val sunset: List<String> = emptyList(),
-    val windSpeed10mMax: List<Double> = emptyList()
+    val windSpeed10mMax: List<Double?> = emptyList()
 )

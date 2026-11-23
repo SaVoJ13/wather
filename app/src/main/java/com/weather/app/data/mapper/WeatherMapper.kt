@@ -42,23 +42,23 @@ object WeatherMapper {
         val current = if (currentDto != null) {
             CurrentWeather(
                 temperatureCelsius = currentDto.temperature_2m,
-                apparentTemperatureCelsius = currentDto.apparent_temperature ?: currentDto.temperature_2m,
+                apparentTemperatureCelsius = currentDto.apparent_temperature,
                 condition = WeatherCodeMapper.mapWmoCode(currentDto.weather_code),
-                relativeHumidityPercent = currentDto.relative_humidity_2m ?: 0,
-                windSpeedKmh = currentDto.wind_speed_10m ?: 0.0,
-                surfacePressureHpa = currentDto.surface_pressure ?: 1013.25,
-                uvIndex = currentDto.uv_index ?: 0.0,
+                relativeHumidityPercent = currentDto.relative_humidity_2m,
+                windSpeedKmh = currentDto.wind_speed_10m,
+                surfacePressureHpa = currentDto.surface_pressure,
+                uvIndex = currentDto.uv_index,
                 time = parseDateTime(currentDto.time) ?: updatedAt
             )
         } else {
             CurrentWeather(
                 temperatureCelsius = 0.0,
-                apparentTemperatureCelsius = 0.0,
+                apparentTemperatureCelsius = null,
                 condition = WeatherCodeMapper.mapWmoCode(null),
-                relativeHumidityPercent = 0,
-                windSpeedKmh = 0.0,
-                surfacePressureHpa = 1013.25,
-                uvIndex = 0.0,
+                relativeHumidityPercent = null,
+                windSpeedKmh = null,
+                surfacePressureHpa = null,
+                uvIndex = null,
                 time = updatedAt
             )
         }
@@ -72,7 +72,7 @@ object WeatherMapper {
                 val timeParsed = parseDateTime(hourlyDto.time.getOrNull(i)) ?: updatedAt.plusHours(i.toLong())
                 val temp = hourlyDto.temperature_2m.getOrNull(i) ?: 0.0
                 val wCode = hourlyDto.weather_code.getOrNull(i)
-                val pop = hourlyDto.precipitation_probability?.getOrNull(i) ?: 0
+                val pop = hourlyDto.precipitation_probability?.getOrNull(i)
                 allHourlyItems.add(
                     HourlyForecastItem(
                         time = timeParsed,
@@ -102,9 +102,9 @@ object WeatherMapper {
                 val maxTemp = dailyDto.temperature_2m_max.getOrNull(i) ?: 0.0
                 val minTemp = dailyDto.temperature_2m_min.getOrNull(i) ?: 0.0
                 val wCode = dailyDto.weather_code.getOrNull(i)
-                val popMax = dailyDto.precipitation_probability_max?.getOrNull(i) ?: 0
-                val precipSum = dailyDto.precipitation_sum?.getOrNull(i) ?: 0.0
-                val windSpeed = dailyDto.wind_speed_10m_max?.getOrNull(i) ?: 0.0
+                val popMax = dailyDto.precipitation_probability_max?.getOrNull(i)
+                val precipSum = dailyDto.precipitation_sum?.getOrNull(i)
+                val windSpeed = dailyDto.wind_speed_10m_max?.getOrNull(i)
                 val sunrise = parseDateTime(dailyDto.sunrise?.getOrNull(i))
                 val sunset = parseDateTime(dailyDto.sunset?.getOrNull(i))
 

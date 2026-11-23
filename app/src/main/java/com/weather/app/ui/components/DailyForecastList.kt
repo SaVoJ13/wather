@@ -146,7 +146,7 @@ private fun DailyForecastRow(
             modifier = Modifier.width(42.dp),
             contentAlignment = Alignment.CenterStart
         ) {
-            if (item.precipitationProbabilityPercent > 10) {
+            if (item.precipitationProbabilityPercent != null && item.precipitationProbabilityPercent > 10) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
                         imageVector = Icons.Default.WaterDrop,

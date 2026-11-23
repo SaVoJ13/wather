@@ -50,7 +50,7 @@ class MockWeatherRepositoryTest {
         assertEquals(24, forecast.hourly24h.size)
         assertEquals(14, forecast.daily14Days.size)
         assertEquals(WeatherCondition.RAIN, forecast.current.condition)
-        assertTrue(forecast.current.relativeHumidityPercent > 80)
+        assertTrue((forecast.current.relativeHumidityPercent ?: 0) > 80)
     }
 
     @Test
