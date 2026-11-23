@@ -1,5 +1,6 @@
 ﻿package com.weather.app.data
 
+import com.weather.app.data.local.WeatherLocalCache
 import com.weather.app.data.location.DefaultLocationClient
 import com.weather.app.data.location.PermissionDeniedException
 import com.weather.app.data.remote.GeocodingApiClient
@@ -7,6 +8,7 @@ import com.weather.app.data.repository.LocationRepositoryImpl
 import com.weather.app.domain.model.LocationModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -19,10 +21,16 @@ class LocationRepositoryTest {
 
     @Before
     fun setUp() {
+        WeatherLocalCache.clearAll()
         repository = LocationRepositoryImpl(
             geocodingApiClient = GeocodingApiClient(),
             locationClient = DefaultLocationClient()
         )
+    }
+
+    @After
+    fun tearDown() {
+        WeatherLocalCache.clearAll()
     }
 
     @Test

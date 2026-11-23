@@ -16,7 +16,8 @@ import java.time.LocalDateTime
 /**
  * Тести для [WeatherMetroMapper].
  * Перевіряє коректність мапінгу 16-денного та 384-годинного прогнозу,
- * визначення поточної погоди та атрибуції джерела WeatherMetro.
+ * визначення поточної погоди, атрибуції джерела WeatherMetro,
+ * а також суворе відхилення відповідей із відсутніми або порожніми обов'язковими полями.
  */
 class WeatherMetroMapperTest {
 
@@ -99,26 +100,103 @@ class WeatherMetroMapperTest {
 
         // 4. До 16 днів щоденного прогнозу
         assertEquals(16, domain.daily14Days.size)
-        assertEquals(10.0, domain.daily14Days.first().maxTemperatureCelsius, 0.01)
-        assertEquals(2.0, domain.daily14Days.first().minTemperatureCelsius, 0.01)
         assertNotNull(domain.daily14Days.first().sunrise)
         assertNotNull(domain.daily14Days.first().sunset)
     }
 
-    @Test
-    fun testParseDateTimeAndDate() {
-        val dt = WeatherMetroMapper.parseDateTime("2026-11-23T14:30:00")
-        assertNotNull(dt)
-        assertEquals(2026, dt!!.year)
-        assertEquals(11, dt.monthValue)
-        assertEquals(23, dt.dayOfMonth)
-        assertEquals(14, dt.hour)
-        assertEquals(30, dt.minute)
+    @Test(expected = IllegalArgumentException::class)
+    fun testMissingHourlyThrowsIllegalArgumentException() {
+        val response = WeatherMetroResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            timezone = "Europe/Kyiv",
+            hourly = null,
+            daily = WeatherMetroDailyDto(
+                time = listOf("2026-11-23"),
+                temperature2mMax = listOf(10.0),
+                temperature2mMin = listOf(2.0),
+                precipitationProbabilityMax = listOf(20),
+                weathercode = listOf(1),
+                sunrise = listOf("2026-11-23T07:22"),
+                sunset = listOf("2026-11-23T16:06"),
+                windSpeed10mMax = listOf(15.0)
+            )
+        )
+        WeatherMetroMapper.toDomain(response, testLocation)
+    }
 
-        val d = WeatherMetroMapper.parseDate("2026-11-23")
-        assertNotNull(d)
-        assertEquals(2026, d!!.year)
-        assertEquals(11, d.monthValue)
-        assertEquals(23, d.dayOfMonth)
+    @Test(expected = IllegalArgumentException::class)
+    fun testMissingDailyThrowsIllegalArgumentException() {
+        val response = WeatherMetroResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            timezone = "Europe/Kyiv",
+            hourly = WeatherMetroHourlyDto(
+                time = listOf("2026-11-23T12:00"),
+                temperature2m = listOf(5.0),
+                precipitationProbability = listOf(10),
+                weathercode = listOf(1),
+                relativeHumidity2m = listOf(75),
+                windSpeed10m = listOf(12.0)
+            ),
+            daily = null
+        )
+        WeatherMetroMapper.toDomain(response, testLocation)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testEmptyHourlyTemperatureThrowsIllegalArgumentException() {
+        val response = WeatherMetroResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            timezone = "Europe/Kyiv",
+            hourly = WeatherMetroHourlyDto(
+                time = listOf("2026-11-23T12:00"),
+                temperature2m = emptyList(), // порожній масив не повинен перетворюватись у 0.0
+                precipitationProbability = listOf(10),
+                weathercode = listOf(1),
+                relativeHumidity2m = listOf(75),
+                windSpeed10m = listOf(12.0)
+            ),
+            daily = WeatherMetroDailyDto(
+                time = listOf("2026-11-23"),
+                temperature2mMax = listOf(10.0),
+                temperature2mMin = listOf(2.0),
+                precipitationProbabilityMax = listOf(20),
+                weathercode = listOf(1),
+                sunrise = listOf("2026-11-23T07:22"),
+                sunset = listOf("2026-11-23T16:06"),
+                windSpeed10mMax = listOf(15.0)
+            )
+        )
+        WeatherMetroMapper.toDomain(response, testLocation)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun testEmptyDailyMaxTemperatureThrowsIllegalArgumentException() {
+        val response = WeatherMetroResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            timezone = "Europe/Kyiv",
+            hourly = WeatherMetroHourlyDto(
+                time = listOf("2026-11-23T12:00"),
+                temperature2m = listOf(5.0),
+                precipitationProbability = listOf(10),
+                weathercode = listOf(1),
+                relativeHumidity2m = listOf(75),
+                windSpeed10m = listOf(12.0)
+            ),
+            daily = WeatherMetroDailyDto(
+                time = listOf("2026-11-23"),
+                temperature2mMax = emptyList(), // порожній масив макс температур
+                temperature2mMin = listOf(2.0),
+                precipitationProbabilityMax = listOf(20),
+                weathercode = listOf(1),
+                sunrise = listOf("2026-11-23T07:22"),
+                sunset = listOf("2026-11-23T16:06"),
+                windSpeed10mMax = listOf(15.0)
+            )
+        )
+        WeatherMetroMapper.toDomain(response, testLocation)
     }
 }

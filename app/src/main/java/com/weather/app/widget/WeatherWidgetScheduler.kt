@@ -8,8 +8,6 @@ import android.os.Build
 import android.os.SystemClock
 import androidx.glance.appwidget.updateAll
 import com.weather.app.data.local.WeatherLocalCache
-import com.weather.app.data.mapper.WeatherMapper
-import com.weather.app.data.remote.OpenMeteoHttpClient
 import com.weather.app.data.repository.WeatherRepositoryImpl
 import com.weather.app.domain.model.FullWeatherForecast
 import com.weather.app.domain.model.LocationModel
@@ -74,43 +72,19 @@ object WeatherWidgetScheduler {
     }
 
     /**
-     * Виконує фонове оновлення погодних даних для збереженої локації та оновлює віджет.
+     * Оновлює віджет із локального дискового кешу без виконання прямих мережевих HTTP-запитів.
+     * Відповідно до WIDGET_AD_CONTRACTS.md, віджет Glance ніколи не робить запитів до API самостійно.
      */
     fun performBackgroundRefresh(context: Context) {
         scope.launch {
             try {
-                // Отримуємо збережену активну локацію користувача або дефолтний Пшецлав
-                val activeLocation = WeatherLocalCache.loadActiveLocation(context) ?: LocationModel(
-                    id = 3088006L,
-                    name = "Пшецлав (Przecław)",
-                    country = "Польща",
-                    admin1 = "Західнопоморське воєводство (передмістя Щецина)",
-                    latitude = 53.3745,
-                    longitude = 14.4725,
-                    timezone = "Europe/Warsaw",
-                    isCurrentLocation = true
-                )
-
-                val apiResult = OpenMeteoHttpClient.fetchForecast(
-                    latitude = activeLocation.latitude,
-                    longitude = activeLocation.longitude,
-                    timezone = activeLocation.timezone
-                )
-
-                if (apiResult.isSuccess) {
-                    val response = apiResult.getOrThrow()
-                    val now = LocalDateTime.now()
-                    val domainForecast = WeatherMapper.toDomain(response, activeLocation, now)
-
-                    // Зберігаємо свіжий прогноз у локальний кеш та пам'ять
-                    WeatherLocalCache.saveForecast(context, domainForecast)
-                    WeatherRepositoryImpl.lastKnownForecast = domainForecast
-
-                    // Оновлюємо віджети Glance на робочому столі
+                val cachedForecast = WeatherLocalCache.loadCachedForecast(context)
+                if (cachedForecast != null) {
+                    WeatherRepositoryImpl.lastKnownForecast = cachedForecast
                     WeatherGlanceWidget().updateAll(context)
                 }
             } catch (e: Exception) {
-                // безпечне ігнорування збоїв мережі у фоні
+                // безпечне ігнорування
             } finally {
                 // У будь-якому випадку плануємо наступне оновлення через 10 хвилин
                 scheduleNextUpdate(context, UPDATE_INTERVAL_MS)

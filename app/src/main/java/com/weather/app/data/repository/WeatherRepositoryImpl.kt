@@ -1,7 +1,7 @@
 ﻿package com.weather.app.data.repository
 
+import android.content.Context
 import com.weather.app.data.local.WeatherLocalCache
-import com.weather.app.data.mock.MockWeatherRepository
 import com.weather.app.data.remote.OpenMeteoRemoteDataSource
 import com.weather.app.data.remote.WeatherMetroRemoteDataSource
 import com.weather.app.data.remote.WeatherRemoteDataSource
@@ -26,14 +26,17 @@ import java.util.concurrent.ConcurrentHashMap
  * - In-flight дедуплікації паралельних запитів для одних і тих самих координат;
  * - Захисту квот (Rate Limiting & Cooldown при HTTP 429/5xx);
  * - Стратегії Stale-While-Revalidate з позначкою [FullWeatherForecast.isStale];
- * - Дискового кешування мультиміст через [WeatherLocalCache].
+ * - Дискового кешування мультиміст через [WeatherLocalCache];
+ * - Повної відсутності вигаданих або тестових Mock-даних у виробничому контурі.
  * 
  * Обов'язкова ліцензійна вимога:
  * Джерело погодних даних фіксується у [FullWeatherForecast.dataSource].
  * Для комерційного релізу з AdMob основним провайдером є WeatherMetro Free (ADR-009, ADR-011, ADR-014).
  * Open-Meteo Free суворо заборонено як fallback у комерційному контурі.
+ * Якщо сервіс недоступний і немає кешу — повертається чесна помилка (Result.failure).
  */
 class WeatherRepositoryImpl(
+    private val context: Context? = null,
     private val remoteDataSource: WeatherRemoteDataSource? = null,
     private val fetchForecastApi: (suspend (latitude: Double, longitude: Double, timezone: String) -> Result<OpenMeteoForecastResponse>)? = null,
     private val cacheTtlMinutes: Long = 30L
@@ -86,8 +89,9 @@ class WeatherRepositoryImpl(
         val cooldownUntil = errorCooldowns[cacheKey] ?: 0L
         val currentTimeMillis = System.currentTimeMillis()
         if (currentTimeMillis < cooldownUntil) {
-            if (cached != null) {
-                val staleForecast = cached.forecast.copy(isStale = true)
+            val fallbackCache = cached ?: loadFromDiskCache(location)
+            if (fallbackCache != null) {
+                val staleForecast = fallbackCache.forecast.copy(isStale = true)
                 _currentForecastFlow.value = staleForecast
                 return Result.success(staleForecast)
             }
@@ -131,9 +135,9 @@ class WeatherRepositoryImpl(
 
             // Зберігаємо у дисковий кеш для підтримки офлайн-режиму
             try {
-                WeatherLocalCache.saveForecastForLocation(null, location, domainForecast)
+                WeatherLocalCache.saveForecastForLocation(context, location, domainForecast)
             } catch (ignored: Throwable) {
-                // якщо Android context відсутній (наприклад, у звичайному юніт-тесті без SharedPreferences)
+                // безпечне ігнорування збоїв запису на диск
             }
 
             return Result.success(domainForecast)
@@ -142,18 +146,18 @@ class WeatherRepositoryImpl(
             val errorMsg = ex?.message ?: ""
 
             // Якщо отримали 429 або 5xx, встановлюємо 60-секундний cooldown
-            if (errorMsg.contains("429") || errorMsg.contains("500") || errorMsg.contains("503")) {
+            if (errorMsg.contains("429") || errorMsg.contains("500") || errorMsg.contains("502") || errorMsg.contains("503")) {
                 errorCooldowns[cacheKey] = System.currentTimeMillis() + 60_000L
             }
 
-            // Якщо є застарілий кеш (у пам'яті або на диску) — віддаємо його з isStale = true
+            // Якщо є застарілий кеш у пам'яті — віддаємо його з isStale = true
             if (cached != null) {
                 val staleForecast = cached.forecast.copy(isStale = true)
                 _currentForecastFlow.value = staleForecast
                 return Result.success(staleForecast)
             }
 
-            // Спробуємо підтягнути з диска, якщо ще не було
+            // Якщо є застарілий кеш на диску для ЦІЄЇ локації — віддаємо його з isStale = true
             val diskForecast = loadFromDiskCache(location)
             if (diskForecast != null) {
                 val staleForecast = diskForecast.forecast.copy(isStale = true)
@@ -161,30 +165,17 @@ class WeatherRepositoryImpl(
                 return Result.success(staleForecast)
             }
 
-            // Безпечний fallback для автономної демонстрації без зміни джерела
-            val fallbackForecast = when {
-                location.name.contains("Warsaw", ignoreCase = true) || location.name.contains("Варшава", ignoreCase = true) -> {
-                    MockWeatherRepository.createWarsawForecast(location)
-                }
-                else -> {
-                    MockWeatherRepository.createKyivForecast(location)
-                }
-            }.copy(
-                dataSource = effectiveDataSource.source,
-                isStale = true,
-                updatedAt = now
-            )
-
-            cache[cacheKey] = CachedForecast(fallbackForecast, now)
-            _currentForecastFlow.value = fallbackForecast
-            return Result.success(fallbackForecast)
+            // Сувора вимога якості: ЖОДНОГО вигаданого або тестового прогнозу у production!
+            // Якщо сервер недоступний і кешу немає — повертаємо чесну помилку.
+            val finalException = ex ?: Exception("Сервіс погоди тимчасово недоступний, закешовані дані відсутні")
+            return Result.failure(finalException)
         }
     }
 
     private fun loadFromDiskCache(location: LocationModel): CachedForecast? {
         return try {
-            val diskForecast = WeatherLocalCache.loadCachedForecastForLocation(null, location)
-                ?: WeatherLocalCache.loadCachedForecast(null)
+            // Завантажуємо кеш СУВОРО для вказаної локації. Не використовуємо кеш інших міст!
+            val diskForecast = WeatherLocalCache.loadCachedForecastForLocation(context, location)
             if (diskForecast != null) {
                 val cached = CachedForecast(diskForecast, diskForecast.updatedAt)
                 val cacheKey = "${location.latitude},${location.longitude}"
@@ -202,4 +193,3 @@ class WeatherRepositoryImpl(
         return _currentForecastFlow.asStateFlow()
     }
 }
-

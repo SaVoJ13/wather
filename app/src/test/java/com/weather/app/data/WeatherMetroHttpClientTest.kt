@@ -2,7 +2,6 @@ package com.weather.app.data
 
 import com.weather.app.data.remote.WeatherApiException
 import com.weather.app.data.remote.WeatherMetroHttpClient
-import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -11,6 +10,8 @@ import org.junit.Test
 
 /**
  * Тести для [WeatherMetroHttpClient] та обробки відповідей WeatherMetro API v2.
+ * Перевіряє коректний парсинг повного JSON та генерацію винятків [WeatherApiException]
+ * при помилках 401, 429, 500 або некоректних полях.
  */
 class WeatherMetroHttpClientTest {
 
@@ -71,13 +72,20 @@ class WeatherMetroHttpClientTest {
 
     @Test
     fun testWeatherApiExceptionProperties() {
+        // HTTP 401: Неавторизований доступ / недійсний ключ
         val ex401 = WeatherApiException(401, "Invalid API key")
         assertEquals(401, ex401.statusCode)
         assertTrue(ex401.message!!.contains("401"))
         assertTrue(ex401.message!!.contains("Invalid API key"))
 
-        val ex429 = WeatherApiException(429, "Rate limit exceeded")
+        // HTTP 429: Перевищення ліміту запитів
+        val ex429 = WeatherApiException(429, "Rate limit exceeded (Too Many Requests)")
         assertEquals(429, ex429.statusCode)
         assertTrue(ex429.message!!.contains("429"))
+
+        // HTTP 500: Помилка на стороні сервера
+        val ex500 = WeatherApiException(500, "Internal Server Error")
+        assertEquals(500, ex500.statusCode)
+        assertTrue(ex500.message!!.contains("500"))
     }
 }

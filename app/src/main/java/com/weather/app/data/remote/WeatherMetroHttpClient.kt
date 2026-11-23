@@ -6,10 +6,10 @@ import com.weather.app.data.remote.dto.WeatherMetroResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
+import org.json.JSONException
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
+import java.net.SocketTimeoutException
 import java.net.URL
 import java.net.URLEncoder
 import java.util.Locale
@@ -64,34 +64,56 @@ object WeatherMetroHttpClient {
             val jsonString = httpGet(urlString)
             val root = JSONObject(jsonString)
 
+            // Перевіряємо прапорець помилки у тілі відповіді сервера
+            if (root.optBoolean("error", false)) {
+                val reason = root.optString("reason", "WeatherMetro API повернуло статус помилки")
+                throw WeatherApiException(400, reason)
+            }
+
             val responseObj = root.optJSONObject("response")
             val dataObj = responseObj?.optJSONObject("data") ?: root
 
+            // Сувора валідація наявності обов'язкових об'єктів
             val hourlyObj = dataObj.optJSONObject("hourly")
-            val hourlyDto = if (hourlyObj != null) {
-                WeatherMetroHourlyDto(
-                    time = jsonArrayToStringList(hourlyObj.optJSONArray("time")),
-                    temperature2m = jsonArrayToDoubleList(hourlyObj.optJSONArray("temperature_2m")),
-                    precipitationProbability = jsonArrayToIntList(hourlyObj.optJSONArray("precipitation_probability")),
-                    weathercode = jsonArrayToIntList(hourlyObj.optJSONArray("weathercode")),
-                    relativeHumidity2m = jsonArrayToIntList(hourlyObj.optJSONArray("relative_humidity_2m")),
-                    windSpeed10m = jsonArrayToDoubleList(hourlyObj.optJSONArray("wind_speed_10m"))
-                )
-            } else null
+                ?: throw WeatherApiException(200, "Відповідь API не містить обов'язкового об'єкта 'hourly'")
 
             val dailyObj = dataObj.optJSONObject("daily")
-            val dailyDto = if (dailyObj != null) {
-                WeatherMetroDailyDto(
-                    time = jsonArrayToStringList(dailyObj.optJSONArray("time")),
-                    temperature2mMax = jsonArrayToDoubleList(dailyObj.optJSONArray("temperature_2m_max")),
-                    temperature2mMin = jsonArrayToDoubleList(dailyObj.optJSONArray("temperature_2m_min")),
-                    precipitationProbabilityMax = jsonArrayToIntList(dailyObj.optJSONArray("precipitation_probability_max")),
-                    weathercode = jsonArrayToIntList(dailyObj.optJSONArray("weathercode")),
-                    sunrise = jsonArrayToStringList(dailyObj.optJSONArray("sunrise")),
-                    sunset = jsonArrayToStringList(dailyObj.optJSONArray("sunset")),
-                    windSpeed10mMax = jsonArrayToDoubleList(dailyObj.optJSONArray("wind_speed_10m_max"))
-                )
-            } else null
+                ?: throw WeatherApiException(200, "Відповідь API не містить обов'язкового об'єкта 'daily'")
+
+            val hourlyTime = jsonArrayToStringList(hourlyObj.optJSONArray("time"))
+            val hourlyTemp = jsonArrayToDoubleList(hourlyObj.optJSONArray("temperature_2m"))
+
+            if (hourlyTime.isEmpty() || hourlyTemp.isEmpty()) {
+                throw WeatherApiException(200, "Погодинний масив API не містить обов'язкових полів time або temperature_2m")
+            }
+
+            val hourlyDto = WeatherMetroHourlyDto(
+                time = hourlyTime,
+                temperature2m = hourlyTemp,
+                precipitationProbability = jsonArrayToIntList(hourlyObj.optJSONArray("precipitation_probability")),
+                weathercode = jsonArrayToIntList(hourlyObj.optJSONArray("weathercode")),
+                relativeHumidity2m = jsonArrayToIntList(hourlyObj.optJSONArray("relative_humidity_2m")),
+                windSpeed10m = jsonArrayToDoubleList(hourlyObj.optJSONArray("wind_speed_10m"))
+            )
+
+            val dailyTime = jsonArrayToStringList(dailyObj.optJSONArray("time"))
+            val dailyTempMax = jsonArrayToDoubleList(dailyObj.optJSONArray("temperature_2m_max"))
+            val dailyTempMin = jsonArrayToDoubleList(dailyObj.optJSONArray("temperature_2m_min"))
+
+            if (dailyTime.isEmpty() || dailyTempMax.isEmpty() || dailyTempMin.isEmpty()) {
+                throw WeatherApiException(200, "Щоденний масив API не містить обов'язкових полів time або temperature_2m_max/min")
+            }
+
+            val dailyDto = WeatherMetroDailyDto(
+                time = dailyTime,
+                temperature2mMax = dailyTempMax,
+                temperature2mMin = dailyTempMin,
+                precipitationProbabilityMax = jsonArrayToIntList(dailyObj.optJSONArray("precipitation_probability_max")),
+                weathercode = jsonArrayToIntList(dailyObj.optJSONArray("weathercode")),
+                sunrise = jsonArrayToStringList(dailyObj.optJSONArray("sunrise")),
+                sunset = jsonArrayToStringList(dailyObj.optJSONArray("sunset")),
+                windSpeed10mMax = jsonArrayToDoubleList(dailyObj.optJSONArray("wind_speed_10m_max"))
+            )
 
             val parsedResponse = WeatherMetroResponse(
                 latitude = dataObj.optDouble("latitude", latitude),
@@ -128,6 +150,8 @@ object WeatherMetroHttpClient {
             }
 
             return connection.inputStream.bufferedReader().use { it.readText() }
+        } catch (e: SocketTimeoutException) {
+            throw WeatherApiException(408, "Таймаут з'єднання з погодним сервером: ${e.message}")
         } finally {
             connection.disconnect()
         }
@@ -137,7 +161,14 @@ object WeatherMetroHttpClient {
         if (arr == null) return emptyList()
         val list = ArrayList<String>(arr.length())
         for (i in 0 until arr.length()) {
-            list.add(arr.optString(i, ""))
+            if (arr.isNull(i)) {
+                throw JSONException("Елемент $i у масиві часу/дат є null")
+            }
+            val str = arr.getString(i)
+            if (str.isBlank()) {
+                throw JSONException("Елемент $i у масиві часу/дат є порожнім")
+            }
+            list.add(str)
         }
         return list
     }
@@ -146,7 +177,10 @@ object WeatherMetroHttpClient {
         if (arr == null) return emptyList()
         val list = ArrayList<Double>(arr.length())
         for (i in 0 until arr.length()) {
-            list.add(arr.optDouble(i, 0.0))
+            if (arr.isNull(i)) {
+                throw JSONException("Елемент $i у числовому масиві є null")
+            }
+            list.add(arr.getDouble(i))
         }
         return list
     }
@@ -155,7 +189,7 @@ object WeatherMetroHttpClient {
         if (arr == null) return emptyList()
         val list = ArrayList<Int>(arr.length())
         for (i in 0 until arr.length()) {
-            list.add(arr.optInt(i, 0))
+            list.add(if (arr.isNull(i)) 0 else arr.optInt(i, 0))
         }
         return list
     }

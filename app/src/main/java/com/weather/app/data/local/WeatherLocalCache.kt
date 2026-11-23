@@ -42,24 +42,120 @@ object WeatherLocalCache {
     private const val PREFIX_FORECAST_CITY = "forecast_city_"
 
     val DEFAULT_LOCATION = LocationModel(
-        id = 3088006L,
-        name = "Пшецлав (Przecław)",
-        country = "Польща",
-        admin1 = "Західнопоморське воєводство (передмістя Щецина)",
-        latitude = 53.3745,
-        longitude = 14.4725,
-        timezone = "Europe/Warsaw"
+        id = 703448L,
+        name = "Київ",
+        country = "Україна",
+        admin1 = "Київська область",
+        latitude = 50.4501,
+        longitude = 30.5234,
+        timezone = "Europe/Kyiv"
     )
 
     @Volatile
+    var appContext: Context? = null
+
+    @Volatile
     var customPrefs: SharedPreferences? = null
+
+    /**
+     * Ініціалізація глобального контексту застосунку з [WeatherApplication].
+     */
+    fun init(context: Context) {
+        appContext = context.applicationContext
+    }
+
+    private val inMemoryStorage = java.util.concurrent.ConcurrentHashMap<String, Any?>()
+
+    private val inMemoryPrefs: SharedPreferences by lazy {
+        createInMemoryPreferences(inMemoryStorage)
+    }
 
     private val isoFormatter = DateTimeFormatter.ISO_LOCAL_DATE_TIME
 
     private fun getPrefs(context: Context?): SharedPreferences {
         customPrefs?.let { return it }
-        return context?.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-            ?: throw IllegalStateException("Context or customPrefs must be provided")
+        val ctx = context?.applicationContext ?: appContext
+        if (ctx != null) {
+            return ctx.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        }
+        return inMemoryPrefs
+    }
+
+    private fun createInMemoryPreferences(storage: java.util.concurrent.ConcurrentHashMap<String, Any?>): SharedPreferences {
+        val editorHandler = java.lang.reflect.InvocationHandler { proxy, method, args ->
+            when (method.name) {
+                "putString" -> {
+                    val key = args!![0] as String
+                    val value = args[1] as String?
+                    if (value == null) storage.remove(key) else storage[key] = value
+                    proxy
+                }
+                "putLong" -> {
+                    storage[args!![0] as String] = args[1] as Long
+                    proxy
+                }
+                "putFloat" -> {
+                    storage[args!![0] as String] = args[1] as Float
+                    proxy
+                }
+                "putBoolean" -> {
+                    storage[args!![0] as String] = args[1] as Boolean
+                    proxy
+                }
+                "remove" -> {
+                    storage.remove(args!![0] as String)
+                    proxy
+                }
+                "clear" -> {
+                    storage.clear()
+                    proxy
+                }
+                "apply", "commit" -> {
+                    if (method.returnType == Boolean::class.javaPrimitiveType) true else null
+                }
+                else -> null
+            }
+        }
+
+        val fakeEditor = java.lang.reflect.Proxy.newProxyInstance(
+            SharedPreferences.Editor::class.java.classLoader,
+            arrayOf(SharedPreferences.Editor::class.java),
+            editorHandler
+        ) as SharedPreferences.Editor
+
+        val prefsHandler = java.lang.reflect.InvocationHandler { _, method, args ->
+            when (method.name) {
+                "getString" -> {
+                    val key = args!![0] as String
+                    val def = args.getOrNull(1) as String?
+                    storage[key] as? String ?: def
+                }
+                "getLong" -> {
+                    val key = args!![0] as String
+                    val def = args[1] as Long
+                    storage[key] as? Long ?: def
+                }
+                "getFloat" -> {
+                    val key = args!![0] as String
+                    val def = args[1] as Float
+                    storage[key] as? Float ?: def
+                }
+                "getBoolean" -> {
+                    val key = args!![0] as String
+                    val def = args[1] as Boolean
+                    storage[key] as? Boolean ?: def
+                }
+                "contains" -> storage.containsKey(args!![0] as String)
+                "edit" -> fakeEditor
+                else -> null
+            }
+        }
+
+        return java.lang.reflect.Proxy.newProxyInstance(
+            SharedPreferences::class.java.classLoader,
+            arrayOf(SharedPreferences::class.java),
+            prefsHandler
+        ) as SharedPreferences
     }
 
     private fun getCityKey(lat: Double, lon: Double): String {
@@ -303,7 +399,15 @@ object WeatherLocalCache {
 
         return try {
             val root = JSONObject(jsonStr)
-            deserializeForecast(root, location)
+            val forecast = deserializeForecast(root, location)
+            // Сувора перевірка: чи відповідають збережені координати запитуваному місту (Місто A != Місто B)
+            val latDiff = Math.abs(forecast.location.latitude - location.latitude)
+            val lonDiff = Math.abs(forecast.location.longitude - location.longitude)
+            if (latDiff > 0.05 || lonDiff > 0.05) {
+                null
+            } else {
+                forecast
+            }
         } catch (e: Exception) {
             runCatching { getPrefs(context).edit().remove(cityKey).apply() }
             null
@@ -401,7 +505,10 @@ object WeatherLocalCache {
      * Повністю очищає всі закешовані дані (використовується в тестах та налаштуваннях).
      */
     fun clearAll(context: Context? = null) {
-        getPrefs(context).edit().clear().apply()
+        inMemoryStorage.clear()
+        try {
+            getPrefs(context).edit().clear().apply()
+        } catch (ignored: Throwable) {}
     }
 
     private fun isSameCity(a: LocationModel, b: LocationModel): Boolean {

@@ -15,7 +15,8 @@ import java.time.temporal.ChronoUnit
 
 /**
  * Мапер даних між WeatherMetro DTO та чистими доменними моделями.
- * Забезпечує дотримання архітектурних контрактів (DATA_CONTRACTS.md) та ліцензійних вимог.
+ * Забезпечує дотримання архітектурних контрактів (DATA_CONTRACTS.md), сувору валідацію
+ * полів без перетворення відсутніх даних на фальшиві нулі.
  */
 object WeatherMetroMapper {
 
@@ -48,83 +49,88 @@ object WeatherMetroMapper {
         }
     }
 
+    /**
+     * Конвертує відповідь WeatherMetro API у доменний агрегат [FullWeatherForecast].
+     * При відсутності критичних полів генерує виняток [IllegalArgumentException],
+     * не маскуючи помилки фіктивними значеннями.
+     */
     fun toDomain(
         response: WeatherMetroResponse,
         location: LocationModel,
         updatedAt: LocalDateTime = LocalDateTime.now()
     ): FullWeatherForecast {
         val hourlyDto = response.hourly
+            ?: throw IllegalArgumentException("WeatherMetro response missing required 'hourly' component")
         val dailyDto = response.daily
+            ?: throw IllegalArgumentException("WeatherMetro response missing required 'daily' component")
+
+        if (hourlyDto.time.isEmpty() || hourlyDto.temperature2m.isEmpty()) {
+            throw IllegalArgumentException("WeatherMetro response has empty hourly time or temperature array")
+        }
+        if (dailyDto.time.isEmpty() || dailyDto.temperature2mMax.isEmpty() || dailyDto.temperature2mMin.isEmpty()) {
+            throw IllegalArgumentException("WeatherMetro response has empty daily time or temperature array")
+        }
 
         val allHourlyItems = mutableListOf<HourlyForecastItem>()
-        var currentWeather = CurrentWeather(
-            temperatureCelsius = 0.0,
-            apparentTemperatureCelsius = 0.0,
-            condition = WeatherCodeMapper.mapWmoCode(null),
-            relativeHumidityPercent = 50,
-            windSpeedKmh = 0.0,
-            surfacePressureHpa = 1013.25,
-            uvIndex = 0.0,
-            time = updatedAt
-        )
+        var currentWeather: CurrentWeather? = null
 
-        if (hourlyDto != null && hourlyDto.time.isNotEmpty()) {
-            val totalSize = hourlyDto.time.size
-            val currentHour = updatedAt.truncatedTo(ChronoUnit.HOURS)
-            var currentFound = false
+        val totalSize = minOf(hourlyDto.time.size, hourlyDto.temperature2m.size)
+        val currentHour = updatedAt.truncatedTo(ChronoUnit.HOURS)
+        var currentFound = false
 
-            for (i in 0 until totalSize) {
-                val timeStr = hourlyDto.time.getOrNull(i)
-                val timeParsed = parseDateTime(timeStr) ?: updatedAt.plusHours(i.toLong())
-                val temp = hourlyDto.temperature2m.getOrNull(i) ?: 0.0
-                val pop = hourlyDto.precipitationProbability.getOrNull(i) ?: 0
-                val wCode = hourlyDto.weathercode.getOrNull(i)
-                val humidity = hourlyDto.relativeHumidity2m.getOrNull(i) ?: 50
-                val wind = hourlyDto.windSpeed10m.getOrNull(i) ?: 0.0
+        for (i in 0 until totalSize) {
+            val timeStr = hourlyDto.time[i]
+            val timeParsed = parseDateTime(timeStr)
+                ?: throw IllegalArgumentException("Неможливо розпарсити дату/час у погодинному прогнозі: '$timeStr'")
+            val temp = hourlyDto.temperature2m[i]
+            val pop = hourlyDto.precipitationProbability.getOrNull(i) ?: 0
+            val wCode = hourlyDto.weathercode.getOrNull(i)
+            val humidity = hourlyDto.relativeHumidity2m.getOrNull(i) ?: 50
+            val wind = hourlyDto.windSpeed10m.getOrNull(i) ?: 0.0
 
-                allHourlyItems.add(
-                    HourlyForecastItem(
-                        time = timeParsed,
-                        temperatureCelsius = temp,
-                        condition = WeatherCodeMapper.mapWmoCode(wCode),
-                        precipitationProbabilityPercent = pop
-                    )
+            allHourlyItems.add(
+                HourlyForecastItem(
+                    time = timeParsed,
+                    temperatureCelsius = temp,
+                    condition = WeatherCodeMapper.mapWmoCode(wCode),
+                    precipitationProbabilityPercent = pop
                 )
+            )
 
-                // Визначаємо поточну погоду за годиною, найближчою до часу запиту
-                if (!currentFound && (timeParsed.isEqual(currentHour) || timeParsed.isAfter(currentHour))) {
-                    currentWeather = CurrentWeather(
-                        temperatureCelsius = temp,
-                        apparentTemperatureCelsius = temp,
-                        condition = WeatherCodeMapper.mapWmoCode(wCode),
-                        relativeHumidityPercent = humidity,
-                        windSpeedKmh = wind,
-                        surfacePressureHpa = 1013.25,
-                        uvIndex = 0.0,
-                        time = timeParsed
-                    )
-                    currentFound = true
-                }
-            }
-
-            // Якщо поточну годину не знайдено (наприклад, усі записи в минулому), беремо перший доступний
-            if (!currentFound && allHourlyItems.isNotEmpty()) {
-                val first = allHourlyItems.first()
+            // Визначаємо поточну погоду за годиною, найближчою до часу запиту
+            if (!currentFound && (timeParsed.isEqual(currentHour) || timeParsed.isAfter(currentHour))) {
                 currentWeather = CurrentWeather(
-                    temperatureCelsius = first.temperatureCelsius,
-                    apparentTemperatureCelsius = first.temperatureCelsius,
-                    condition = first.condition,
-                    relativeHumidityPercent = hourlyDto.relativeHumidity2m.firstOrNull() ?: 50,
-                    windSpeedKmh = hourlyDto.windSpeed10m.firstOrNull() ?: 0.0,
+                    temperatureCelsius = temp,
+                    apparentTemperatureCelsius = temp,
+                    condition = WeatherCodeMapper.mapWmoCode(wCode),
+                    relativeHumidityPercent = humidity,
+                    windSpeedKmh = wind,
                     surfacePressureHpa = 1013.25,
                     uvIndex = 0.0,
-                    time = first.time
+                    time = timeParsed
                 )
+                currentFound = true
             }
         }
 
+        if (currentWeather == null && allHourlyItems.isNotEmpty()) {
+            val first = allHourlyItems.first()
+            currentWeather = CurrentWeather(
+                temperatureCelsius = first.temperatureCelsius,
+                apparentTemperatureCelsius = first.temperatureCelsius,
+                condition = first.condition,
+                relativeHumidityPercent = hourlyDto.relativeHumidity2m.firstOrNull() ?: 50,
+                windSpeedKmh = hourlyDto.windSpeed10m.firstOrNull() ?: 0.0,
+                surfacePressureHpa = 1013.25,
+                uvIndex = 0.0,
+                time = first.time
+            )
+        }
+
+        val finalCurrentWeather = currentWeather
+            ?: throw IllegalArgumentException("Неможливо сформувати поточну погоду з погодинного масиву")
+
         // Відбираємо 24 години, починаючи від поточної
-        val currentHour = updatedAt.truncatedTo(ChronoUnit.HOURS)
         val startIndex = allHourlyItems.indexOfFirst { !it.time.isBefore(currentHour) }
         val hourly24h = if (startIndex != -1) {
             allHourlyItems.drop(startIndex).take(24)
@@ -134,38 +140,41 @@ object WeatherMetroMapper {
 
         // Формуємо щоденний прогноз (до 16 днів)
         val dailyList = mutableListOf<DailyForecastItem>()
-        if (dailyDto != null && dailyDto.time.isNotEmpty()) {
-            val count = minOf(16, dailyDto.time.size)
-            for (i in 0 until count) {
-                val dateStr = dailyDto.time.getOrNull(i)
-                val dateTimeParsed = parseDateTime(dateStr) ?: updatedAt.toLocalDate().plusDays(i.toLong()).atStartOfDay()
-                val wCode = dailyDto.weathercode.getOrNull(i)
-                val maxT = dailyDto.temperature2mMax.getOrNull(i) ?: 0.0
-                val minT = dailyDto.temperature2mMin.getOrNull(i) ?: 0.0
-                val popMax = dailyDto.precipitationProbabilityMax.getOrNull(i) ?: 0
-                val windMax = dailyDto.windSpeed10mMax.getOrNull(i) ?: 0.0
-                val sunriseStr = dailyDto.sunrise.getOrNull(i)
-                val sunsetStr = dailyDto.sunset.getOrNull(i)
+        val count = minOf(16, dailyDto.time.size, dailyDto.temperature2mMax.size, dailyDto.temperature2mMin.size)
+        for (i in 0 until count) {
+            val dateStr = dailyDto.time[i]
+            val dateTimeParsed = parseDateTime(dateStr)
+                ?: throw IllegalArgumentException("Неможливо розпарсити дату у щоденному прогнозі: '$dateStr'")
+            val wCode = dailyDto.weathercode.getOrNull(i)
+            val maxT = dailyDto.temperature2mMax[i]
+            val minT = dailyDto.temperature2mMin[i]
+            val popMax = dailyDto.precipitationProbabilityMax.getOrNull(i) ?: 0
+            val windMax = dailyDto.windSpeed10mMax.getOrNull(i) ?: 0.0
+            val sunriseStr = dailyDto.sunrise.getOrNull(i)
+            val sunsetStr = dailyDto.sunset.getOrNull(i)
 
-                dailyList.add(
-                    DailyForecastItem(
-                        date = dateTimeParsed,
-                        minTemperatureCelsius = minT,
-                        maxTemperatureCelsius = maxT,
-                        condition = WeatherCodeMapper.mapWmoCode(wCode),
-                        precipitationProbabilityPercent = popMax,
-                        precipitationSumMm = 0.0,
-                        maxWindSpeedKmh = windMax,
-                        sunrise = parseDateTime(sunriseStr),
-                        sunset = parseDateTime(sunsetStr)
-                    )
+            dailyList.add(
+                DailyForecastItem(
+                    date = dateTimeParsed,
+                    minTemperatureCelsius = minT,
+                    maxTemperatureCelsius = maxT,
+                    condition = WeatherCodeMapper.mapWmoCode(wCode),
+                    precipitationProbabilityPercent = popMax,
+                    precipitationSumMm = 0.0,
+                    maxWindSpeedKmh = windMax,
+                    sunrise = parseDateTime(sunriseStr),
+                    sunset = parseDateTime(sunsetStr)
                 )
-            }
+            )
+        }
+
+        if (dailyList.isEmpty()) {
+            throw IllegalArgumentException("Неможливо сформувати щоденний прогноз: відсутні валідні дні")
         }
 
         return FullWeatherForecast(
             location = location,
-            current = currentWeather,
+            current = finalCurrentWeather,
             hourly24h = hourly24h,
             daily14Days = dailyList,
             updatedAt = updatedAt,

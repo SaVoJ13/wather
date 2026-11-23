@@ -1,5 +1,6 @@
 package com.weather.app.data
 
+import com.weather.app.data.local.WeatherLocalCache
 import com.weather.app.data.remote.WeatherRemoteDataSource
 import com.weather.app.data.repository.WeatherRepositoryImpl
 import com.weather.app.domain.model.CurrentWeather
@@ -10,9 +11,11 @@ import com.weather.app.domain.model.WeatherDataSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 import java.time.LocalDateTime
 import java.util.concurrent.atomic.AtomicInteger
@@ -28,6 +31,16 @@ class WeatherRepositoryPhase2Test {
         longitude = 30.52,
         timezone = "Europe/Kyiv"
     )
+
+    @Before
+    fun setUp() {
+        WeatherLocalCache.clearAll()
+    }
+
+    @After
+    fun tearDown() {
+        WeatherLocalCache.clearAll()
+    }
 
     private fun createDummyForecast(location: LocationModel, ds: WeatherDataSource = WeatherDataSource.WEATHER_METRO): FullWeatherForecast {
         val now = LocalDateTime.now()

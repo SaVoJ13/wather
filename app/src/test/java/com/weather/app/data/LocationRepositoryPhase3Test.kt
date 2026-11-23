@@ -1,5 +1,6 @@
 package com.weather.app.data
 
+import com.weather.app.data.local.WeatherLocalCache
 import com.weather.app.data.remote.dto.GeocodingItemDto
 import com.weather.app.data.remote.dto.GeocodingResponse
 import com.weather.app.data.location.DefaultLocationClient
@@ -10,9 +11,11 @@ import com.weather.app.data.repository.LocationRepositoryImpl
 import com.weather.app.domain.model.LocationModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -22,6 +25,16 @@ import org.junit.Test
  * - Обробка відмови користувача та вимкненого сервісу локації.
  */
 class LocationRepositoryPhase3Test {
+
+    @Before
+    fun setUp() {
+        WeatherLocalCache.clearAll()
+    }
+
+    @After
+    fun tearDown() {
+        WeatherLocalCache.clearAll()
+    }
 
     private val warsaw = LocationModel(
         id = 2L,
