@@ -124,4 +124,27 @@ class WeatherMetroHttpClientTest {
         assertEquals(95, hourlyArr.getInt(2))
         assertEquals("invalid", hourlyArr.getString(3))
     }
+
+    @Test
+    fun testFractionalWmoCodeIsNotTruncatedToZero() {
+        val jsonArray = org.json.JSONArray("[0, 0.0, 0.5, 1.0, 1.9, \"0\", \"0.5\", null]")
+        val parsed = WeatherMetroHttpClient.jsonArrayToNullableIntList(jsonArray)
+
+        // 0 -> 0 (Clear Sky)
+        assertEquals(0, parsed[0])
+        // 0.0 -> 0 (Clear Sky)
+        assertEquals(0, parsed[1])
+        // 0.5 -> null (НЕ truncates to 0!)
+        org.junit.Assert.assertNull("0.5 must NOT be truncated to 0 Clear Sky", parsed[2])
+        // 1.0 -> 1
+        assertEquals(1, parsed[3])
+        // 1.9 -> null (НЕ truncates to 1!)
+        org.junit.Assert.assertNull("1.9 must NOT be truncated to 1", parsed[4])
+        // "0" -> 0
+        assertEquals(0, parsed[5])
+        // "0.5" -> null
+        org.junit.Assert.assertNull("\"0.5\" must NOT be parsed as 0", parsed[6])
+        // null -> null
+        org.junit.Assert.assertNull(parsed[7])
+    }
 }

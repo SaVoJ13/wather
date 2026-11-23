@@ -8,8 +8,8 @@
 
 ## 1. Загальний огляд
 
-- **Поточна дата й час:** 2026-11-23 18:25 (Europe/Warsaw)
-- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 3: Weather API & Location Integration — ЗАВЕРШЕНО (ОЧІКУЄТЬСЯ OWNER APPROVED)** (Усі завдання Phase 3 та зауваження директиви `FINAL LOCATION & TIME INTEGRITY GATE` усунено: GPS викликається лише за явної дії користувача, стан міст ізольовано, часові пояси локацій розраховуються коректно, невалідні WMO-коди не перетворюються на Clear Sky. 105 unit-тестів проходять у Debug та Release [210 перевірок — 100% PASS], Android Lint чистий [0 errors, abortOnError = true, checkReleaseBuilds = true], збірки assembleDebug та assembleRelease успішні, підготовлено звіти PHASE_GATE_3.md v3.1 та PHASE_3_QA_REPORT.md v3.1 зі статусом QA_VERIFIED).
+- **Поточна дата й час:** 2026-11-23 18:45 (Europe/Warsaw)
+- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 4: Main Android Interface — В РОБОТІ (OWNER APPROVED)** (Phase 3 офіційно затверджено Власником зі статусом Owner Approved ADR-015. Розпочато Phase 4: Main Android Interface відповідно до затверджених специфікацій Phase 1, тривкладкової навігації, без фальшивих показників, із запуском інструментальних тестів на емуляторі/пристрої).
 - **Діючий артефакт:** Робочий проєкт із 105 успішними unit-тестами (210 перевірок у Debug та Release — 100% PASS), чистим строгим Lint (0 errors, 31 warning, abortOnError = true, checkReleaseBuilds = true), скомпільованим APK інструментальних тестів app-debug-androidTest.apk (358 КБ, статус NOT EXECUTED), успішними збірками assembleDebug APK (20.85 МБ) та assembleRelease APK (8.21 МБ з R8 shrink), 0 фонового GPS, 0 API-ключів у коді та незалежним QA-звітом.
 - **Підключений пристрій:** Samsung Galaxy S24 Ultra (RZCX326349A).
 - **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, $0.00 бюджет, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011, ADR-014).

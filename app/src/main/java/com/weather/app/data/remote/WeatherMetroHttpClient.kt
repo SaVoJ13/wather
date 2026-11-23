@@ -207,7 +207,7 @@ object WeatherMetroHttpClient {
         return list
     }
 
-    private fun jsonArrayToNullableIntList(arr: JSONArray?): List<Int?> {
+    internal fun jsonArrayToNullableIntList(arr: JSONArray?): List<Int?> {
         if (arr == null) return emptyList()
         val list = ArrayList<Int?>(arr.length())
         for (i in 0 until arr.length()) {
@@ -216,7 +216,16 @@ object WeatherMetroHttpClient {
             } else {
                 val obj = arr.opt(i)
                 when (obj) {
-                    is Number -> list.add(obj.toInt())
+                    is Number -> {
+                        val d = obj.toDouble()
+                        // WMO коди є строго цілими числами (0..99). Дробові числа (наприклад, 0.5 або 1.7) є невалідними
+                        // і не повинні автоматично усікатися до 0 (Clear Sky).
+                        if (d == d.toLong().toDouble() && !d.isNaN() && !d.isInfinite()) {
+                            list.add(d.toInt())
+                        } else {
+                            list.add(null)
+                        }
+                    }
                     is String -> list.add(obj.toIntOrNull())
                     else -> list.add(null)
                 }
