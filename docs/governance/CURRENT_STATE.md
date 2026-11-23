@@ -8,13 +8,13 @@
 
 ## 1. Загальний огляд
 
-- **Поточна дата й час:** 2026-11-22 20:35 (Europe/Warsaw)
-- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 2: Architecture & Foundation — ЗАВЕРШЕНО (ОЧІКУЄ OWNER APPROVED ДЛЯ PHASE 3)** (Усі завдання Phase 2 TASK-019 – TASK-024 виконано. Створено архітектурні контракти, розширено локальний кеш до 24h/16d, реалізовано шар абстракції API, захист від перевантаження квот 429/5xx, навігаційний каркас із 3 вкладками та окремим SettingsScreen, контракти віджетів та AdMob adaptive banner без CLS. 74/74 unit-тести пройдено на 100%, debug APK зібрано).
-- **Діючий артефакт:** Робочий проєкт із 74 успішними unit-тестами, успішною збіркою assembleDebug APK (21.8 МБ), архітектурними контрактами та незалежним QA-звітом.
+- **Поточна дата й час:** 2026-11-23 04:50 (Europe/Warsaw)
+- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 2: Architecture & Foundation — ЗАВЕРШЕНО (ОЧІКУЄ OWNER APPROVED ДЛЯ PHASE 3)** (Усі завдання Phase 2 TASK-019 – TASK-024 виконано. Створено архітектурні контракти, розширено локальний кеш до 24h/16d, реалізовано шар абстракції API, захист від перевантаження квот 429/5xx, навігаційний каркас із 3 вкладками та окремим SettingsScreen, контракти віджетів та AdMob adaptive banner без CLS. 74/74 unit-тести пройдено на 100%, перевірки Android Lint пройдено з 0 помилок при суворих параметрах abortOnError=true та checkReleaseBuilds=true, GitHub Actions CI зелений (Run ID 45107477705 - SUCCESS), APK debug та release зібрано; release APK підписано debug-ключем для верифікації та потребує виробничого ключа перед релізом).
+- **Діючий артефакт:** Робочий проєкт із 74 успішними unit-тестами, чистим Lint (0 errors), успішною збіркою assembleDebug APK (19.98 МБ), assembleRelease APK (8.21 МБ з R8/shrink), зеленим CI у GitHub Actions та незалежним QA-звітом.
 - **Підключений пристрій:** Samsung Galaxy S24 Ultra (RZCX326349A).
 - **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011).
 - **Назва та стиль:** «Weather — Smart Forecast» («Погода»), Google Material You, minSdk 26 (ADR-006, ADR-007).
-- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main (синхронізовано).
+- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main (коміт `95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4`, CI зелений: SUCCESS).
 - **Термінові блокери (🔴):** Немає.
 
 ---

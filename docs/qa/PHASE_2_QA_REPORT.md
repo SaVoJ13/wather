@@ -12,6 +12,10 @@
 > - `a7aa3a468a67806aa322a6e0512fb5a3bc5c06c7` — *feat(phase-2): deliver architecture foundation, data contracts, cache resilience, and presentation skeleton*  
 > - `df825132b06c769bc6a8906c41e10c2f4e96a08f` — *docs(qa): update independent QA & Privacy report for Phase 2 with strict factual evidence*  
 > - `83b0c7d917d0a3eb85e750fec31d61e4082c76b4` — *docs(governance): finalize THIRD_PARTY license as Public Domain and update PHASE_GATE_2*  
+> - `76ac0f9b42019640a991c8d8912336d6aea888dc` — *fix(phase-2): configure JDK 17, pass lintDebug and lintRelease, update Visual Crossing in THIRD_PARTY, and finalize Phase Gate 2*  
+> - `22458486b35e61d59da84f1c3463ef8044d4b992` — *fix(infra): restore standard Gradle Wrapper 8.11.1, remove absolute paths, configure GitHub Actions CI, and resolve AppBundleLocaleChanges lint warning*  
+> - `554bad8c9735d64227891823bb1d9777e4156c38` — *docs(reports): update PHASE_GATE_2 commit list*  
+> - `95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4` — *fix(lint): enforce strict lint checks (abortOnError=true, checkReleaseBuilds=true), strip BOM from gradle.properties, and configure CI memory*  
 
 ---
 
@@ -72,15 +76,59 @@
    - **Глобальні системні змінні Windows не зазнали жодних змін** (перевірено: системний `JAVA_HOME` лишився чистим).
 2. **Офіційна сумісність:**
    - Поєднання AGP 8.7.2 + Gradle 9.6.0 + JDK 17 повністю відповідає офіційній матриці сумісності Google Android та Gradle.
-3. **Виправлення виявлених дефектів коду без послаблення лінту:**
+3. **Відновлення та суворе дотримання параметрів Android Lint (нуль послаблень):**
+   - У `app/build.gradle.kts` конфігурація `lint` суворо активує блокування збірок та контроль релізу:
+     ```kotlin
+     lint {
+         checkReleaseBuilds = true
+         abortOnError = true
+     }
+     ```
+   - Забезпечено повну відповідність Червоній лінії №5 («Заборона послаблення або вимикання перевірок»):
+     - `abortOnError = true`: Будь-яка критична або фатальна помилка Lint гарантовано блокує збірку з кодом повернення помилки.
+     - `checkReleaseBuilds = true`: Під час `assembleRelease` автоматично запускається перевірка життєздатності `lintVitalRelease`.
    - `WeatherMetricsGrid.kt`: виправлено виклик `String.format(Locale.getDefault(), "%.1f", current.uvIndex)` замість неявного `Locale`, що усунуло зауваження інтернаціоналізації.
    - `WeatherWidgetScheduler.kt`: вилучено застарілу перевірку `Build.VERSION.SDK_INT >= Build.VERSION_CODES.M`, оскільки `minSdk = 26` (Android 8.0) апріорі перевищує API 23 (Android 6.0). Залишено прямий виклик `alarmManager.setAndAllowWhileIdle(...)`.
    - `WeatherMainScreen.kt`: виправлено черговість параметрів згідно з Compose API Guidelines (`modifier: Modifier = Modifier` поставлено першим серед необов'язкових аргументів).
-   - **Жодне правило лінту не було вимкнено чи приглушено** (`@SuppressLint` відсутній у змінах, `abortOnError` збережено).
+   - `bundle.language.enableSplit = false`: усунуто попередження `AppBundleLocaleChanges` для цілісності мовних ресурсів у AAB.
+   - **Жодне правило лінту не було вимкнено, приглушено чи заігноровано** (`@SuppressLint` відсутній у коді, `abortOnError = true` діє).
 4. **Фактичний результат виконання Lint:**
-   - `lintDebug`: **0 errors, 28 warnings**
-   - `lintRelease`: **0 errors, 28 warnings**
-   - Розподіл 28 попереджень: `OldTargetApi` (1 — рекомендація API 36), `UnusedAttribute` (5 — атрибути новіших API), `AppBundleLocaleChanges` (1 — конфігурація мов бандлу), `GradleDependency` (10 — мінорні оновлення залежностей), `VectorPath` (1 — довгий векторний шлях), `UnusedResources` (10 — зарезервовані іконки). Жодної критичної або блокуючої помилки.
+   - `lintDebug`: **0 errors, 27 warnings** (HTML/XML звіт згенеровано).
+   - `lintRelease`: **0 errors, 27 warnings** (HTML/XML звіт згенеровано).
+   - `lintVitalRelease` (у складі `assembleRelease`): **0 errors (BUILD SUCCESSFUL)**.
+   - Розподіл 27 попереджень: `OldTargetApi` (1 — рекомендація API 36 при обов'язковому Google Play targetSdk 35), `UnusedAttribute` (5 — атрибути новіших API для зворотної сумісності від API 26), `GradleDependency` (9 — мінорні оновлення залежностей Compose BOM), `VectorPath` (1 — довгий векторний шлях сонця), `UnusedResources` (11 — локалізовані рядки мов). Жодної критичної або блокуючої помилки.
+
+---
+
+### 2.3. Застереження щодо підпису релізного APK (Signing Configuration Limitation)
+
+- **Поточний стан:** У `app/build.gradle.kts` для типу збірки `release` встановлено:
+  ```kotlin
+  signingConfig = signingConfigs.getByName("debug")
+  ```
+- **Призначення:** Дозволяє виконувати повноцінне складання релізного пакунка (`assembleRelease`), проводити реальну R8-оптимізацію, видалення невикористаних ресурсів (`isShrinkResources = true`) та перевірку `lintVitalRelease` як локально, так і в автоматизованому CI-контурі GitHub Actions, не розміщуючи приватний виробничий ключ у відкритому коді.
+- **Обмеження релізу:** Згенерований APK (`app-release.apk`) підписаний тестовим Android Debug-ключем. Він **категорично непридатний для публікації в Google Play Store**.
+- **Дотримання Конституції:** Відповідно до п. 3.2 Конституції («Лише Власник»), бойові ключі підпису та налаштування Google Play App Signing здійснюються виключно Власником під час Phase 4/5.
+
+---
+
+### 2.4. Верифікація хмарного CI у GitHub Actions (Run ID 45107477705 — SUCCESS)
+
+- **Конфігурація CI:** Створено файл `.github/workflows/ci.yml` з повноцінним середовищем збірки:
+  - ОС: `ubuntu-latest`
+  - JDK: `actions/setup-java@v4` з дистрибутивом `temurin` версії `17`
+  - Пам'ять Gradle: `GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m"`
+  - Виправлено `gradle.properties`: видалено невидимий UTF-8 BOM, що блокував читання `org.gradle.jvmargs` на Linux.
+- **Фактичні результати GitHub Actions (Коміт `95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4`):**
+  - **Статус workflow:** `completed`
+  - **Результат (Conclusion):** **`SUCCESS` ✅**
+  - **Тривалість збірки:** 8m 21s
+  - **Кроки:**
+    - `Grant execute permission for gradlew`: SUCCESS
+    - `Run Unit Tests` (`./gradlew testDebugUnitTest testReleaseUnitTest`): **SUCCESS (74/74 PASS)**
+    - `Run Android Lint` (`./gradlew lintDebug lintRelease`): **SUCCESS (0 errors)**
+    - `Build Debug & Release APK` (`./gradlew assembleDebug assembleRelease`): **SUCCESS**
+  - **Пряме посилання на звіт:** [GitHub Actions Run 45107477705](https://github.com/SaVoJ13/wather/actions/runs/45107477705)
 
 ---
 

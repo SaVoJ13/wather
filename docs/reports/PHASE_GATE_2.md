@@ -36,9 +36,20 @@
    - **Офіційний стандартний Gradle Wrapper 8.11.1:** Розгорнуто чисті версіоновані скрипти `gradlew`, `gradlew.bat` та `gradle/wrapper/` (`gradle-wrapper.jar`, `gradle-wrapper.properties`). Будь-які абсолютні шляхи до комп'ютера розробника (`C:\Users\...`) повністю вилучено.
    - **Чистий `gradle.properties`:** Версіонований файл не містить `org.gradle.java.home`. На локальній машині встановлена Temurin JDK 17 підключається поза Git через `~/.gradle/gradle.properties` або системний `JAVA_HOME`. Новий розробник може клонувати репозиторій і відразу зібрати проєкт командою `./gradlew assembleDebug` без редагування коду.
    - **CI GitHub Actions:** Створено `.github/workflows/ci.yml`, налаштований на збірку під Ubuntu з вільною JDK 17 (Eclipse Temurin) з автоматичним запуском unit-тестів, лінту та збірок APK.
-7. **Аналіз Android Lint (27 допустимих попереджень, 0 помилок):**
-   - `lintDebug`: **BUILD SUCCESSFUL (0 errors, 27 warnings)**.
-   - `lintRelease`: **BUILD SUCCESSFUL (0 errors, 27 warnings)**.
+7. **Суворий контроль якості Android Lint (0 помилок, нуль послаблень):**
+   - У `app/build.gradle.kts` відновлено суворий та безкомпромісний контроль:
+     ```kotlin
+     lint {
+         checkReleaseBuilds = true
+         abortOnError = true
+     }
+     ```
+   - `abortOnError = true`: Будь-яка критична або фатальна помилка Lint гарантовано зупиняє збірку.
+   - `checkReleaseBuilds = true`: Автоматичний запуск `lintVitalAnalyzeRelease`, `lintVitalReportRelease` та `lintVitalRelease` під час виконання `assembleRelease`.
+   - Фактичні локальні результати:
+     - `lintDebug`: **BUILD SUCCESSFUL (0 errors, 27 warnings)**.
+     - `lintRelease`: **BUILD SUCCESSFUL (0 errors, 27 warnings)**.
+     - `lintVitalRelease` (у складі `assembleRelease`): **BUILD SUCCESSFUL (0 errors)**.
    - Усунуто попередження `AppBundleLocaleChanges` шляхом додавання `bundle.language.enableSplit = false` в `app/build.gradle.kts`.
    - Проаналізовано залишкові 27 попереджень:
      - `OldTargetApi (1)`: `targetSdk = 35` (Android 15) є поточною обов'язковою вимогою Google Play для релізу; API 36 (Android 16) перебуває на стадії раннього прев'ю і ще не є релізним стандартом.
@@ -46,12 +57,32 @@
      - `GradleDependency (9)`: Зафіксовані стабільні версії Compose BOM `2024.11.00`.
      - `UnusedResources (11)`: Рядкові ресурси назв мов у `strings.xml`.
      - `VectorPath (1)`: Стандартний вектор іконки сонця для віджета.
-   - Жодної перевірки лінту не було вимкнено чи послаблено.
-8. **Unit-тести та збірки APK:**
+   - Жодної перевірки лінту не було вимкнено, приховано чи послаблено.
+
+8. **Unit-тести, збірки APK та обмеження конфігурації підпису:**
    - `testDebugUnitTest`: **74/74 PASS (100%)**.
    - `testReleaseUnitTest`: **74/74 PASS (100%)**.
+   - Загалом виконано **148/148 тестів (0 failures, 0 errors)**.
    - `assembleDebug`: **BUILD SUCCESSFUL**, згенеровано APK розміром 19.98 МБ (`app/build/outputs/apk/debug/app-debug.apk`).
    - `assembleRelease`: **BUILD SUCCESSFUL**, згенеровано оптимізований R8/shrink APK розміром 8.21 МБ (8 606 043 байти, `app/build/outputs/apk/release/app-release.apk`).
+   - ⚠️ **КРИТИЧНЕ ЗАСТЕРЕЖЕННЯ ЩОДО ПІДПИСУ РЕЛІЗНОГО APK:**
+     - У `app/build.gradle.kts` для типу `release` наразі налаштовано `signingConfig = signingConfigs.getByName("debug")`.
+     - Це зроблено виключно для забезпечення можливості локальної та CI перевірки `assembleRelease`, оптимізацій R8, скорочення ресурсів (shrinkResources) та перевірки життєздатності Lint (`lintVitalRelease`) без необхідності зберігання приватного виробничого ключа у відкритому репозиторії.
+     - **Згенерований `app-release.apk` підписано налагоджувальним сертифікатом і він категорично НЕПРИДАТНИЙ для публічного релізу в Google Play.**
+     - Справжні виробничі ключі підпису (Google Play App Signing / Upload Key) відповідно до п. 3.2 Конституції («Лише Власник») створюються та додаються Власником на етапі Phase 4/5.
+
+9. **Верифікація хмарного CI у GitHub Actions:**
+   - Робочий процес `.github/workflows/ci.yml` автоматично запускається на раннері `ubuntu-latest` з відкритою JDK 17 (Eclipse Temurin).
+   - **Фактичний результат запуску CI для коміту `95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4`:**
+     - **Workflow Run ID:** `45107477705`
+     - **Статус:** `completed`
+     - **Результат (Conclusion):** **`SUCCESS` ✅**
+     - **Тривалість:** 8 хвилин 21 секунда
+     - **Посилання:** [GitHub Actions Run 45107477705](https://github.com/SaVoJ13/wather/actions/runs/45107477705)
+     - **Виконані кроки:**
+       - `Run Unit Tests` (`./gradlew testDebugUnitTest testReleaseUnitTest`): **SUCCESS**
+       - `Run Android Lint` (`./gradlew lintDebug lintRelease`): **SUCCESS**
+       - `Build Debug & Release APK` (`./gradlew assembleDebug assembleRelease`): **SUCCESS**
 
 ---
 
@@ -86,8 +117,10 @@
 - **Коміт звіту незалежного аудиту QA:** [`df825132b06c769bc6a8906c41e10c2f4e96a08f`](https://github.com/SaVoJ13/wather/commit/df825132b06c769bc6a8906c41e10c2f4e96a08f)
 - **Коміт оновлення ліцензій та етапного звіту:** [`83b0c7d917d0a3eb85e750fec31d61e4082c76b4`](https://github.com/SaVoJ13/wather/commit/83b0c7d917d0a3eb85e750fec31d61e4082c76b4)
 - **Коміт виправлень Release Gate (JDK 17, Lint, Visual Crossing):** [`76ac0f9b42019640a991c8d8912336d6aea888dc`](https://github.com/SaVoJ13/wather/commit/76ac0f9b42019640a991c8d8912336d6aea888dc)
-- **Коміт перенесення інфраструктури (Gradle Wrapper 8.11.1, Zero Absolute Paths, CI, AppBundleLocaleChanges):** [`22458486b35e61d59da84f1c3463ef8044d4b992`](https://github.com/SaVoJ13/wather/commit/22458486b35e61d59da84f1c3463ef8044d4b992)
-- **Гілка:** `main` (чисте дерево, повна синхронізація з `origin/main`).
+- **Коміт відновлення Gradle Wrapper 8.11.1 та CI:** [`22458486b35e61d59da84f1c3463ef8044d4b992`](https://github.com/SaVoJ13/wather/commit/22458486b35e61d59da84f1c3463ef8044d4b992)
+- **Коміт списку комітів Phase Gate 2:** [`554bad8c9735d64227891823bb1d9777e4156c38`](https://github.com/SaVoJ13/wather/commit/554bad8c9735d64227891823bb1d9777e4156c38)
+- **Коміт відновлення суворого Lint (abortOnError=true, checkReleaseBuilds=true), видалення BOM та CI Memory Fix:** [`95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4`](https://github.com/SaVoJ13/wather/commit/95032d3a6dbdc698d4c55fa6cb0ccbf8b43761f4)
+- **Гілка:** `main` (чисте дерево, синхронізовано з `origin/main`).
 
 ---
 
