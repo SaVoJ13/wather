@@ -251,4 +251,74 @@ class WeatherDataIntegrityTest {
         assertNotNull("Запит для Києва повинен повернути збережений прогноз", kyivResult)
         assertEquals("Київ", kyivResult?.location?.name)
     }
+
+    @Test
+    fun testWmoCodeIntegrityZeroVsNullVsInvalid() {
+        val now = LocalDateTime.now()
+        val timeStr = "2026-11-23T12:00:00"
+        val dateStr = "2026-11-23"
+
+        // 1. Справжній числовий 0 з API -> CLEAR_SKY
+        val responseWithZero = WeatherMetroResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            hourly = WeatherMetroHourlyDto(
+                time = listOf(timeStr),
+                temperature2m = listOf(15.0),
+                weathercode = listOf(0)
+            ),
+            daily = WeatherMetroDailyDto(
+                time = listOf(dateStr),
+                temperature2mMax = listOf(18.0),
+                temperature2mMin = listOf(8.0),
+                weathercode = listOf(0)
+            )
+        )
+        val forecastWithZero = WeatherMetroMapper.toDomain(responseWithZero, kyivLocation, now)
+        assertEquals(WeatherCondition.CLEAR_SKY, forecastWithZero.current.condition)
+        assertEquals(WeatherCondition.CLEAR_SKY, forecastWithZero.hourly24h.first().condition)
+        assertEquals(WeatherCondition.CLEAR_SKY, forecastWithZero.daily14Days.first().condition)
+
+        // 2. Відсутній код (null) -> UNKNOWN (не перетворюється на CLEAR_SKY!)
+        val responseWithNull = WeatherMetroResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            hourly = WeatherMetroHourlyDto(
+                time = listOf(timeStr),
+                temperature2m = listOf(15.0),
+                weathercode = listOf(null)
+            ),
+            daily = WeatherMetroDailyDto(
+                time = listOf(dateStr),
+                temperature2mMax = listOf(18.0),
+                temperature2mMin = listOf(8.0),
+                weathercode = listOf(null)
+            )
+        )
+        val forecastWithNull = WeatherMetroMapper.toDomain(responseWithNull, kyivLocation, now)
+        assertEquals(WeatherCondition.UNKNOWN, forecastWithNull.current.condition)
+        assertEquals(WeatherCondition.UNKNOWN, forecastWithNull.hourly24h.first().condition)
+        assertEquals(WeatherCondition.UNKNOWN, forecastWithNull.daily14Days.first().condition)
+
+        // 3. Невалідні коди (-1, 999) -> UNKNOWN
+        val responseWithInvalid = WeatherMetroResponse(
+            latitude = 50.45,
+            longitude = 30.52,
+            hourly = WeatherMetroHourlyDto(
+                time = listOf(timeStr),
+                temperature2m = listOf(15.0),
+                weathercode = listOf(-1)
+            ),
+            daily = WeatherMetroDailyDto(
+                time = listOf(dateStr),
+                temperature2mMax = listOf(18.0),
+                temperature2mMin = listOf(8.0),
+                weathercode = listOf(999)
+            )
+        )
+        val forecastWithInvalid = WeatherMetroMapper.toDomain(responseWithInvalid, kyivLocation, now)
+        assertEquals(WeatherCondition.UNKNOWN, forecastWithInvalid.current.condition)
+        assertEquals(WeatherCondition.UNKNOWN, forecastWithInvalid.hourly24h.first().condition)
+        assertEquals(WeatherCondition.UNKNOWN, forecastWithInvalid.daily14Days.first().condition)
+    }
 }

@@ -23,6 +23,9 @@ import com.weather.app.domain.model.WeatherCondition
 object WeatherCodeMapper {
 
     fun mapWmoCode(wmoCode: Int?): WeatherCondition {
+        if (wmoCode == null || wmoCode !in 0..99) {
+            return WeatherCondition.UNKNOWN
+        }
         return when (wmoCode) {
             0 -> WeatherCondition.CLEAR_SKY
             1 -> WeatherCondition.MAINLY_CLEAR

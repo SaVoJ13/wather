@@ -13,11 +13,13 @@ import com.weather.app.domain.repository.LocationRepository
 import com.weather.app.domain.repository.WeatherRepository
 import com.weather.app.ui.state.WeatherUiState
 import com.weather.app.widget.WeatherWidgetScheduler
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 /**
  * ViewModel головного екрана погоди з підтримкою реального API Open-Meteo,
@@ -110,10 +112,18 @@ class WeatherViewModel(
     )
 
     private var currentLocation: LocationModel = popularCities.first()
+    private var fetchForecastJob: Job? = null
 
     init {
         observeCachedForecast()
         loadForecast(currentLocation)
+    }
+
+    private fun isSameCity(loc1: LocationModel, loc2: LocationModel): Boolean {
+        if (loc1.id != 0L && loc2.id != 0L && loc1.id == loc2.id) return true
+        val nameMatch = loc1.name.equals(loc2.name, ignoreCase = true)
+        val coordMatch = abs(loc1.latitude - loc2.latitude) < 0.05 && abs(loc1.longitude - loc2.longitude) < 0.05
+        return nameMatch || coordMatch
     }
 
     private fun observeCachedForecast() {
@@ -121,7 +131,7 @@ class WeatherViewModel(
             weatherRepository.observeCurrentForecast()
                 .catch { /* ігноруємо помилки спостереження */ }
                 .collect { forecast ->
-                    if (forecast != null && _uiState.value is WeatherUiState.Loading) {
+                    if (forecast != null && isSameCity(forecast.location, currentLocation) && _uiState.value is WeatherUiState.Loading) {
                         _uiState.value = WeatherUiState.Success(
                             forecast = forecast,
                             isRefreshing = false
@@ -136,16 +146,19 @@ class WeatherViewModel(
         forceRefresh: Boolean = false,
         onLoaded: ((FullWeatherForecast) -> Unit)? = null
     ) {
+        fetchForecastJob?.cancel()
         currentLocation = location
         val currentState = _uiState.value
+        val currentSuccess = currentState as? WeatherUiState.Success
+        val isSameCity = currentSuccess?.forecast?.location?.let { isSameCity(it, location) } == true
 
-        if (forceRefresh && currentState is WeatherUiState.Success) {
-            _uiState.value = currentState.copy(isRefreshing = true)
-        } else if (!forceRefresh && currentState !is WeatherUiState.Success) {
+        if (forceRefresh && isSameCity) {
+            _uiState.value = currentSuccess.copy(isRefreshing = true)
+        } else {
             _uiState.value = WeatherUiState.Loading
         }
 
-        viewModelScope.launch {
+        fetchForecastJob = viewModelScope.launch {
             val result = weatherRepository.getFullForecast(location, forceRefresh = forceRefresh)
             result.fold(
                 onSuccess = { forecast ->
@@ -157,7 +170,7 @@ class WeatherViewModel(
                     onLoaded?.invoke(forecast)
                 },
                 onFailure = { error ->
-                    val lastForecast = (currentState as? WeatherUiState.Success)?.forecast
+                    val lastForecast = if (isSameCity) currentSuccess?.forecast else null
                     _uiState.value = WeatherUiState.Error(
                         message = error.message ?: "Помилка завантаження погодних даних",
                         canRetry = true,

@@ -9,6 +9,8 @@ import com.weather.app.domain.model.LocationModel
 import com.weather.app.domain.model.WeatherDataSource
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.time.temporal.ChronoUnit
@@ -22,6 +24,20 @@ object WeatherMetroMapper {
 
     private val ISO_DATE_TIME_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE_TIME
     private val ISO_DATE_FORMATTER = DateTimeFormatter.ISO_LOCAL_DATE
+
+    /**
+     * Безпечно резолвить часовий пояс із рядка або повертає fallback.
+     */
+    fun resolveZoneId(timezoneStr: String?, fallback: ZoneId = ZoneId.systemDefault()): ZoneId {
+        if (timezoneStr.isNullOrBlank() || timezoneStr.equals("auto", ignoreCase = true)) {
+            return fallback
+        }
+        return try {
+            ZoneId.of(timezoneStr)
+        } catch (_: Exception) {
+            fallback
+        }
+    }
 
     fun parseDateTime(isoString: String?): LocalDateTime? {
         if (isoString.isNullOrBlank()) return null
@@ -57,7 +73,8 @@ object WeatherMetroMapper {
     fun toDomain(
         response: WeatherMetroResponse,
         location: LocationModel,
-        updatedAt: LocalDateTime = LocalDateTime.now()
+        updatedAt: LocalDateTime = LocalDateTime.now(),
+        sourceZoneId: ZoneId = ZoneId.systemDefault()
     ): FullWeatherForecast {
         val hourlyDto = response.hourly
             ?: throw IllegalArgumentException("WeatherMetro response missing required 'hourly' component")
@@ -75,7 +92,18 @@ object WeatherMetroMapper {
         var currentWeather: CurrentWeather? = null
 
         val totalSize = minOf(hourlyDto.time.size, hourlyDto.temperature2m.size)
-        val currentHour = updatedAt.truncatedTo(ChronoUnit.HOURS)
+
+        // Враховуємо часовий пояс обраної локації (response.timezone або location.timezone)
+        val targetZone = resolveZoneId(
+            response.timezone,
+            fallback = resolveZoneId(location.timezone, fallback = sourceZoneId)
+        )
+        val locationCurrentTime = try {
+            updatedAt.atZone(sourceZoneId).withZoneSameInstant(targetZone).toLocalDateTime()
+        } catch (_: Exception) {
+            updatedAt
+        }
+        val currentHour = locationCurrentTime.truncatedTo(ChronoUnit.HOURS)
         var currentFound = false
 
         for (i in 0 until totalSize) {
@@ -118,22 +146,23 @@ object WeatherMetroMapper {
         }
 
         if (currentWeather == null && allHourlyItems.isNotEmpty()) {
-            val first = allHourlyItems.first()
-            val apparentTemp = hourlyDto.apparentTemperature.firstOrNull()
-            val humidity = hourlyDto.relativeHumidity2m.firstOrNull()
-            val wind = hourlyDto.windSpeed10m.firstOrNull()
-            val pressure = hourlyDto.surfacePressure.firstOrNull()
-            val uv = hourlyDto.uvIndex.firstOrNull()
+            val fallbackItem = allHourlyItems.lastOrNull() ?: allHourlyItems.first()
+            val fallbackIndex = allHourlyItems.indexOf(fallbackItem).coerceAtLeast(0)
+            val apparentTemp = hourlyDto.apparentTemperature.getOrNull(fallbackIndex)
+            val humidity = hourlyDto.relativeHumidity2m.getOrNull(fallbackIndex)
+            val wind = hourlyDto.windSpeed10m.getOrNull(fallbackIndex)
+            val pressure = hourlyDto.surfacePressure.getOrNull(fallbackIndex)
+            val uv = hourlyDto.uvIndex.getOrNull(fallbackIndex)
 
             currentWeather = CurrentWeather(
-                temperatureCelsius = first.temperatureCelsius,
+                temperatureCelsius = fallbackItem.temperatureCelsius,
                 apparentTemperatureCelsius = apparentTemp,
-                condition = first.condition,
+                condition = fallbackItem.condition,
                 relativeHumidityPercent = humidity,
                 windSpeedKmh = wind,
                 surfacePressureHpa = pressure,
                 uvIndex = uv,
-                time = first.time
+                time = fallbackItem.time
             )
         }
 

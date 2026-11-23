@@ -83,7 +83,12 @@ class WeatherMetroMapperTest {
             )
         )
 
-        val domain = WeatherMetroMapper.toDomain(response, testLocation, updatedAt = now)
+        val domain = WeatherMetroMapper.toDomain(
+            response = response,
+            location = testLocation,
+            updatedAt = now,
+            sourceZoneId = java.time.ZoneId.of("Europe/Kyiv")
+        )
 
         // 1. Джерело даних — WeatherMetro
         assertEquals(WeatherDataSource.WEATHER_METRO, domain.dataSource)

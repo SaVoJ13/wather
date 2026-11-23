@@ -161,4 +161,54 @@ class WeatherViewModelTest {
         advanceUntilIdle()
         assertTrue(viewModel.selectedCities.value.none { it.name == "Варшава" })
     }
+
+    @Test
+    fun testCityUiStateIsolationKyivToWarsawHttp500() = runTest(testDispatcher) {
+        val mockRepo = MockWeatherRepository()
+        val warsaw = MockWeatherRepository.createWarsawLocation()
+        var warsawCallFailed = false
+
+        val testRepo = object : WeatherRepository {
+            override suspend fun getFullForecast(location: LocationModel, forceRefresh: Boolean): Result<FullWeatherForecast> {
+                return if (location.name.contains("Варшава", ignoreCase = true)) {
+                    warsawCallFailed = true
+                    Result.failure(Exception("HTTP 500: Internal Server Error"))
+                } else {
+                    mockRepo.getFullForecast(location, forceRefresh)
+                }
+            }
+
+            override fun observeCurrentForecast(): Flow<FullWeatherForecast?> = mockRepo.observeCurrentForecast()
+        }
+
+        val viewModel = WeatherViewModel(testRepo)
+        advanceUntilIdle()
+
+        // Початковий стан: Київ
+        val initialState = viewModel.uiState.value
+        assertTrue("Initial state must be Success", initialState is WeatherUiState.Success)
+        assertEquals("Київ", (initialState as WeatherUiState.Success).forecast.location.name)
+
+        // Перемикаємось на Варшаву, яка падає з HTTP 500 і не має кешу
+        viewModel.selectLocation(warsaw)
+        advanceUntilIdle()
+
+        assertTrue("Warsaw call should have been triggered", warsawCallFailed)
+        val finalState = viewModel.uiState.value
+        assertTrue("State must be Error, not Success with Kyiv data: got $finalState", finalState is WeatherUiState.Error)
+        val errorState = finalState as WeatherUiState.Error
+        assertEquals("HTTP 500: Internal Server Error", errorState.message)
+        // КРИТИЧНО: прогноз Києва НЕ повинен підставлятися як кеш Варшави!
+        org.junit.Assert.assertNull("Kyiv's forecast must NOT leak as Warsaw's cached forecast", errorState.lastCachedForecast)
+    }
+
+    @Test
+    fun testCitySearchIsIndependentOfGps() = runTest(testDispatcher) {
+        val mockRepo = MockWeatherRepository()
+        val viewModel = WeatherViewModel(mockRepo)
+        advanceUntilIdle()
+
+        val cities = viewModel.searchCities("Київ")
+        assertNotNull(cities)
+    }
 }

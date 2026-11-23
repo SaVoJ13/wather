@@ -171,7 +171,7 @@ fun WeatherMainScreen(
         }
     }
 
-    // Завантажуємо збережену локацію або визначаємо поточну за GPS
+    // Завантажуємо збережену активну локацію з локального кешу без автоматичного запиту GPS
     androidx.compose.runtime.LaunchedEffect(Unit) {
         viewModel.loadSelectedCities(context)
         val savedLoc = com.weather.app.data.local.WeatherLocalCache.loadActiveLocation(context)
@@ -179,12 +179,6 @@ fun WeatherMainScreen(
             viewModel.selectLocation(savedLoc, context = context, onLoaded = { forecast ->
                 com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
             })
-        }
-
-        val hasFine = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val hasCoarse = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        if (hasFine || hasCoarse) {
-            determineGpsLocation()
         }
     }
 

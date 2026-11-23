@@ -88,4 +88,40 @@ class WeatherMetroHttpClientTest {
         assertEquals(500, ex500.statusCode)
         assertTrue(ex500.message!!.contains("500"))
     }
+
+    @Test
+    fun testWeathercodeParsingNullableInts() {
+        val json = """
+        {
+          "response": {
+            "data": {
+              "latitude": 50.45,
+              "longitude": 30.52,
+              "hourly": {
+                "time": ["2026-11-23T00:00", "2026-11-23T01:00", "2026-11-23T02:00", "2026-11-23T03:00"],
+                "temperature_2m": [10.0, 11.0, 12.0, 13.0],
+                "weathercode": [0, null, 95, "invalid"]
+              },
+              "daily": {
+                "time": ["2026-11-23", "2026-11-24"],
+                "temperature_2m_max": [15.0, 16.0],
+                "temperature_2m_min": [5.0, 6.0],
+                "weathercode": [null, 0]
+              }
+            }
+          }
+        }
+        """.trimIndent()
+
+        val root = JSONObject(json)
+        val dataObj = root.getJSONObject("response").getJSONObject("data")
+        val hourlyObj = dataObj.getJSONObject("hourly")
+        val hourlyArr = hourlyObj.getJSONArray("weathercode")
+
+        // Перевіряємо, що елементи JSON: 0 є числом 0, null є null, 95 є 95, "invalid" не число
+        assertEquals(0, hourlyArr.getInt(0))
+        assertTrue(hourlyArr.isNull(1))
+        assertEquals(95, hourlyArr.getInt(2))
+        assertEquals("invalid", hourlyArr.getString(3))
+    }
 }
