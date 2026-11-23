@@ -8,13 +8,13 @@
 
 ## 1. Загальний огляд
 
-- **Поточна дата й час:** 2026-11-23 18:45 (Europe/Warsaw)
-- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 4: Main Android Interface — В РОБОТІ (OWNER APPROVED)** (Phase 3 офіційно затверджено Власником зі статусом Owner Approved ADR-015. Розпочато Phase 4: Main Android Interface відповідно до затверджених специфікацій Phase 1, тривкладкової навігації, без фальшивих показників, із запуском інструментальних тестів на емуляторі/пристрої).
-- **Діючий артефакт:** Робочий проєкт із 105 успішними unit-тестами (210 перевірок у Debug та Release — 100% PASS), чистим строгим Lint (0 errors, 31 warning, abortOnError = true, checkReleaseBuilds = true), скомпільованим APK інструментальних тестів app-debug-androidTest.apk (358 КБ, статус NOT EXECUTED), успішними збірками assembleDebug APK (20.85 МБ) та assembleRelease APK (8.21 МБ з R8 shrink), 0 фонового GPS, 0 API-ключів у коді та незалежним QA-звітом.
-- **Підключений пристрій:** Samsung Galaxy S24 Ultra (RZCX326349A).
-- **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, $0.00 бюджет, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011, ADR-014).
+- **Поточна дата й час:** 2026-11-23 19:20 (Europe/Warsaw)
+- **Поточний етап Roadmap:** **ROADMAP 2.0 — Phase 4: Main Android Interface — ЗАВЕРШЕНО (ОЧІКУЄТЬСЯ OWNER APPROVED)** (Усі завдання Phase 4 виконано: реалізовано тривкладковий інтерфейс «Зараз», «Прогноз», «Місця» та SettingsScreen, усунено ризик дробових WMO-кодів, виконано інструментальний тест на Android-емуляторі small_phone API 36 [100% PASS], знято 5 автентичних скриншотів у docs/release/screenshots/, 106 unit-тестів проходять у Debug та Release [212 виконань — 100% PASS], Android Lint чистий [0 errors], збірки APK успішні, GitHub Actions CI зелений [Run 45232603323], отримано незалежний QA-вердикт QA_VERIFIED від Agent 5, підготовлено звіти PHASE_4_QA_REPORT.md та PHASE_GATE_4.md).
+- **Діючий артефакт:** Робочий проєкт із 106 успішними unit-тестами (212 перевірок у Debug та Release — 100% PASS), чистим строгим Lint (0 errors, 30 warnings, abortOnError = true, checkReleaseBuilds = true), успішно пройденим інструментальним тестом на Android-емуляторі small_phone (1/1 PASS, 100%), успішними збірками assembleDebug APK (20.85 МБ) та assembleRelease APK (8.21 МБ з R8 shrink), 0 фонового GPS, 0 API-ключів у коді, 5 скриншотами інтерфейсу та незалежним QA-звітом.
+- **Підключений пристрій / Емулятор:** Android Virtual Device `small_phone` (Android 16, API 36, WHPX accel).
+- **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, $0.00 бюджет, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011, ADR-014, ADR-015).
 - **Назва та стиль:** «Weather — Smart Forecast» («Погода»), Google Material You, minSdk 26 (ADR-006, ADR-007).
-- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main (коміт `6de7bfd`, GitHub Actions CI Run 45229219088: SUCCESS in 4m42s ✅).
+- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main.
 - **Термінові блокери (🔴):** Немає.
 
 ---
