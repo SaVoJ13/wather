@@ -14,7 +14,7 @@
 - **Підключений пристрій:** Samsung Galaxy S24 Ultra (RZCX326349A).
 - **Бізнес-модель:** Розумна комерційна модель AdMob + WeatherMetro Free (0 грн витрат, $0.00 бюджет, 100% чистий прибуток Власника, ADR-009, ADR-010, ADR-011, ADR-014).
 - **Назва та стиль:** «Weather — Smart Forecast» («Погода»), Google Material You, minSdk 26 (ADR-006, ADR-007).
-- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main.
+- **Статус репозиторію:** Git репозиторій https://github.com/SaVoJ13/wather.git, гілка main (коміт `6de7bfd`, GitHub Actions CI Run 45229219088: SUCCESS in 4m42s ✅).
 - **Термінові блокери (🔴):** Немає.
 
 ---
