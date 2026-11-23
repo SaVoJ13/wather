@@ -86,6 +86,7 @@
 - **Коміт звіту незалежного аудиту QA:** [`df825132b06c769bc6a8906c41e10c2f4e96a08f`](https://github.com/SaVoJ13/wather/commit/df825132b06c769bc6a8906c41e10c2f4e96a08f)
 - **Коміт оновлення ліцензій та етапного звіту:** [`83b0c7d917d0a3eb85e750fec31d61e4082c76b4`](https://github.com/SaVoJ13/wather/commit/83b0c7d917d0a3eb85e750fec31d61e4082c76b4)
 - **Коміт виправлень Release Gate (JDK 17, Lint, Visual Crossing):** [`76ac0f9b42019640a991c8d8912336d6aea888dc`](https://github.com/SaVoJ13/wather/commit/76ac0f9b42019640a991c8d8912336d6aea888dc)
+- **Коміт перенесення інфраструктури (Gradle Wrapper 8.11.1, Zero Absolute Paths, CI, AppBundleLocaleChanges):** [`22458486b35e61d59da84f1c3463ef8044d4b992`](https://github.com/SaVoJ13/wather/commit/22458486b35e61d59da84f1c3463ef8044d4b992)
 - **Гілка:** `main` (чисте дерево, повна синхронізація з `origin/main`).
 
 ---
