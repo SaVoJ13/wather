@@ -9,14 +9,24 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import com.weather.app.domain.model.WeatherCondition
+import kotlin.math.max
+import kotlin.math.min
 
 @Immutable
 data class WeatherPalette(
     val gradientColors: List<Color>,
     val surfaceTint: Color,
     val textColor: Color,
-    val accentColor: Color
+    val accentColor: Color,
+    val navBarContainerColor: Color = NavBarContainerSurface,
+    val navBarTopBorderColor: Color = NavBarTopBorder,
+    val navBarSelectedIconColor: Color = NavBarSelectedIcon,
+    val navBarSelectedTextColor: Color = NavBarSelectedText,
+    val navBarUnselectedIconColor: Color = NavBarUnselectedIcon,
+    val navBarUnselectedTextColor: Color = NavBarUnselectedText,
+    val navBarIndicatorColor: Color = NavBarIndicatorPill
 )
 
 val LocalWeatherPalette = staticCompositionLocalOf {
@@ -41,6 +51,17 @@ object WeatherMotionPolicy {
     fun screenStateCrossfadeDurationMillis(reducedMotion: Boolean): Int = if (reducedMotion) 80 else 250
     fun sunArcAnimationDurationMillis(reducedMotion: Boolean): Int = if (reducedMotion) 0 else 1000
     fun shouldRunInfiniteAnimations(reducedMotion: Boolean): Boolean = !reducedMotion
+
+    /**
+     * Обчислює коефіцієнт контрастності WCAG 2.1 між кольором тексту/іконки та фоном (від 1.0 до 21.0).
+     */
+    fun calculateContrastRatio(foreground: Color, background: Color): Double {
+        val lum1 = foreground.luminance().toDouble()
+        val lum2 = background.luminance().toDouble()
+        val brightest = max(lum1, lum2)
+        val darkest = min(lum1, lum2)
+        return (brightest + 0.05) / (darkest + 0.05)
+    }
 }
 
 private val LightColorScheme = lightColorScheme(
@@ -74,7 +95,7 @@ fun weatherPaletteFor(
     isDark: Boolean,
     isDay: Boolean = true
 ): WeatherPalette {
-    return when (condition) {
+    val basePalette = when (condition) {
         WeatherCondition.CLEAR_SKY, WeatherCondition.MAINLY_CLEAR -> {
             if (isDay) {
                 WeatherPalette(
@@ -176,6 +197,7 @@ fun weatherPaletteFor(
             )
         }
     }
+    return basePalette
 }
 
 @Composable

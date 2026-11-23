@@ -80,3 +80,12 @@ val TempBarTrack = Color(0x33FFFFFF)
 // Індикатор застарілості (Stale badge)
 val StaleBadgeBackground = Color(0xFFFFB74D)
 val StaleBadgeText = Color(0xFF3E2723)
+
+// Висококонтрастні токени нижньої панелі навігації (Bottom Navigation Bar — WCAG AA/AAA)
+val NavBarContainerSurface = Color(0xF50F172A)     // Темний графітово-синій фон (96% непрозорості, L ≈ 0.0085)
+val NavBarTopBorder = Color(0x2EFFFFFF)            // Тонка верхня межа 18% білого для візуального відділення
+val NavBarSelectedIcon = Color(0xFF38BDF8)         // Яскравий блакитний акцент (Sky-400, контраст ~9.2:1 на фоні та ~6.9:1 на індикаторі)
+val NavBarSelectedText = Color(0xFFFFFFFF)         // Чистий білий текст активної вкладки (контраст ~17.9:1)
+val NavBarUnselectedIcon = Color(0xFFCBD5E1)       // Чіткий сріблясто-сірий для неактивних іконок (Slate-300, контраст ~11.9:1)
+val NavBarUnselectedText = Color(0xFFE2E8F0)       // Чіткий світло-сірий для неактивних підписів (Slate-200, контраст ~14.3:1)
+val NavBarIndicatorPill = Color(0xFF1E3250)        // Контрастна графітово-сапфірова капсула активної вкладки

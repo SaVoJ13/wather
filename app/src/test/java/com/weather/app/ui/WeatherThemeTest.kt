@@ -70,4 +70,58 @@ class WeatherThemeTest {
             com.weather.app.ui.theme.WeatherMotionPolicy.shouldRunInfiniteAnimations(true)
         )
     }
+
+    @Test
+    fun testBottomNavigationBarContrastMeetsWcagAaAcrossAllPalettes() {
+        for (condition in WeatherCondition.entries) {
+            for (isDark in listOf(false, true)) {
+                for (isDay in listOf(false, true)) {
+                    val palette = weatherPaletteFor(condition, isDark = isDark, isDay = isDay)
+                    val bg = palette.navBarContainerColor
+
+                    val selectedTextContrast = com.weather.app.ui.theme.WeatherMotionPolicy.calculateContrastRatio(
+                        palette.navBarSelectedTextColor,
+                        bg
+                    )
+                    val unselectedTextContrast = com.weather.app.ui.theme.WeatherMotionPolicy.calculateContrastRatio(
+                        palette.navBarUnselectedTextColor,
+                        bg
+                    )
+                    val selectedIconContrast = com.weather.app.ui.theme.WeatherMotionPolicy.calculateContrastRatio(
+                        palette.navBarSelectedIconColor,
+                        bg
+                    )
+                    val selectedIconOnIndicatorContrast = com.weather.app.ui.theme.WeatherMotionPolicy.calculateContrastRatio(
+                        palette.navBarSelectedIconColor,
+                        palette.navBarIndicatorColor
+                    )
+                    val unselectedIconContrast = com.weather.app.ui.theme.WeatherMotionPolicy.calculateContrastRatio(
+                        palette.navBarUnselectedIconColor,
+                        bg
+                    )
+
+                    assertTrue(
+                        "Selected tab text contrast ($selectedTextContrast) must exceed WCAG AAA (>= 7.0) for $condition (isDark=$isDark)",
+                        selectedTextContrast >= 7.0
+                    )
+                    assertTrue(
+                        "Unselected tab text contrast ($unselectedTextContrast) must exceed WCAG AA (>= 4.5) for $condition (isDark=$isDark)",
+                        unselectedTextContrast >= 4.5
+                    )
+                    assertTrue(
+                        "Selected tab icon contrast ($selectedIconContrast) must exceed WCAG AA (>= 4.5) for $condition (isDark=$isDark)",
+                        selectedIconContrast >= 4.5
+                    )
+                    assertTrue(
+                        "Selected tab icon contrast on indicator ($selectedIconOnIndicatorContrast) must exceed WCAG AA (>= 3.0) for $condition (isDark=$isDark)",
+                        selectedIconOnIndicatorContrast >= 3.0
+                    )
+                    assertTrue(
+                        "Unselected tab icon contrast ($unselectedIconContrast) must exceed WCAG AA (>= 4.5) for $condition (isDark=$isDark)",
+                        unselectedIconContrast >= 4.5
+                    )
+                }
+            }
+        }
+    }
 }

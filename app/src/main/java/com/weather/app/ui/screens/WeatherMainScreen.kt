@@ -58,7 +58,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.weather.app.R
@@ -328,16 +330,25 @@ fun WeatherMainScreenContent(
                     // Рекламний контейнер AdMob Anchored Adaptive Banner (Zero CLS)
                     AdBannerPlaceholder(bannerHeight = 60.dp)
 
-                    // Нижня панель навігації на 3 вкладки
+                    // Верхня тонка лінія для чіткого відділення нижньої панелі від фону екрана
+                    androidx.compose.material3.HorizontalDivider(
+                        thickness = 1.dp,
+                        color = palette.navBarTopBorderColor
+                    )
+
+                    // Нижня панель навігації на 3 вкладки з підвищеною контрастністю (WCAG AA/AAA)
                     NavigationBar(
-                        containerColor = palette.surfaceTint.copy(alpha = 0.95f),
-                        tonalElevation = 8.dp,
+                        containerColor = palette.navBarContainerColor,
+                        contentColor = palette.navBarSelectedTextColor,
+                        tonalElevation = 0.dp,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         WeatherNavTab.values().forEach { tab ->
+                            val isSelected = selectedTab == tab
                             NavigationBarItem(
-                                selected = selectedTab == tab,
+                                selected = isSelected,
                                 onClick = { selectedTab = tab },
+                                alwaysShowLabel = true,
                                 icon = {
                                     Icon(
                                         imageVector = tab.icon,
@@ -348,15 +359,28 @@ fun WeatherMainScreenContent(
                                 label = {
                                     Text(
                                         text = stringResource(tab.titleRes),
-                                        style = MaterialTheme.typography.labelSmall
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 10.5.sp,
+                                            lineHeight = 13.sp,
+                                            letterSpacing = 0.sp,
+                                            fontWeight = if (isSelected) {
+                                                androidx.compose.ui.text.font.FontWeight.Bold
+                                            } else {
+                                                androidx.compose.ui.text.font.FontWeight.Medium
+                                            }
+                                        ),
+                                        maxLines = 1,
+                                        softWrap = false,
+                                        overflow = TextOverflow.Visible,
+                                        textAlign = TextAlign.Center
                                     )
                                 },
                                 colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = palette.accentColor,
-                                    selectedTextColor = palette.accentColor,
-                                    indicatorColor = palette.surfaceTint,
-                                    unselectedIconColor = palette.textColor.copy(alpha = 0.6f),
-                                    unselectedTextColor = palette.textColor.copy(alpha = 0.6f)
+                                    selectedIconColor = palette.navBarSelectedIconColor,
+                                    selectedTextColor = palette.navBarSelectedTextColor,
+                                    indicatorColor = palette.navBarIndicatorColor,
+                                    unselectedIconColor = palette.navBarUnselectedIconColor,
+                                    unselectedTextColor = palette.navBarUnselectedTextColor
                                 )
                             )
                         }
