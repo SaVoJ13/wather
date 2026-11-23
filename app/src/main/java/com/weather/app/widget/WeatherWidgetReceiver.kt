@@ -6,8 +6,9 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 
 /**
- * Реєстратор віджета Jetpack Glance у системі Android з підтримкою автоматичного
- * оновлення кожні 10 хвилин через WeatherWidgetScheduler.
+ * Реєстратор віджета Jetpack Glance у системі Android з підтримкою енергоощадного
+ * фонового оновлення за дозволеним системою графіком через [WeatherWidgetScheduler]
+ * (без фонового GPS, без реклами та без гарантії точного 10-хвилинного інтервалу в режимі Doze).
  */
 class WeatherWidgetReceiver : GlanceAppWidgetReceiver() {
 

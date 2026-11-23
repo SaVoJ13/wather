@@ -142,15 +142,16 @@ fun SunriseSunsetCard(
     val targetProgress = remember(currentTime, sunrise, sunset) {
         SunriseSunsetCalculator.calculateSunProgress(currentTime, sunrise, sunset)
     }
+    val sunArcDuration = com.weather.app.ui.theme.WeatherMotionPolicy.sunArcAnimationDurationMillis(isReducedMotion)
     val animatedProgress by animateFloatAsState(
         targetValue = targetProgress,
-        animationSpec = if (isReducedMotion) snap() else tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        animationSpec = if (sunArcDuration == 0) snap() else tween(durationMillis = sunArcDuration, easing = FastOutSlowInEasing),
         label = "sunProgress"
     )
-    val infiniteTransition = rememberInfiniteTransition(label = "sunPulse")
-    val pulseScale by if (isReducedMotion) {
+    val pulseScale by if (!com.weather.app.ui.theme.WeatherMotionPolicy.shouldRunInfiniteAnimations(isReducedMotion)) {
         remember { mutableFloatStateOf(1f) }
     } else {
+        val infiniteTransition = rememberInfiniteTransition(label = "sunPulse")
         infiniteTransition.animateFloat(
             initialValue = 1f,
             targetValue = 1.25f,

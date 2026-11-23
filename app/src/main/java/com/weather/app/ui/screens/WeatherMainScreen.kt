@@ -298,8 +298,21 @@ fun WeatherMainScreenContent(
     var isSettingsOpen by remember { mutableStateOf(false) }
     var selectedDayForDetails by remember { mutableStateOf<DailyForecastItem?>(null) }
 
-    val backgroundBrush = remember(palette.gradientColors) {
-        Brush.verticalGradient(colors = palette.gradientColors)
+    val topTargetColor = palette.gradientColors.firstOrNull() ?: Color(0xFF1E3C72)
+    val bottomTargetColor = palette.gradientColors.lastOrNull() ?: topTargetColor
+    val skyAnimDuration = com.weather.app.ui.theme.WeatherMotionPolicy.skyGradientDurationMillis(reducedMotion)
+    val animatedTopColor by androidx.compose.animation.animateColorAsState(
+        targetValue = topTargetColor,
+        animationSpec = tween(durationMillis = skyAnimDuration),
+        label = "SkyTopColor"
+    )
+    val animatedBottomColor by androidx.compose.animation.animateColorAsState(
+        targetValue = bottomTargetColor,
+        animationSpec = tween(durationMillis = skyAnimDuration),
+        label = "SkyBottomColor"
+    )
+    val backgroundBrush = remember(animatedTopColor, animatedBottomColor) {
+        Brush.verticalGradient(colors = listOf(animatedTopColor, animatedBottomColor))
     }
 
     Scaffold(
@@ -364,7 +377,9 @@ fun WeatherMainScreenContent(
         } else {
             Crossfade(
                 targetState = uiState,
-                animationSpec = tween(durationMillis = if (reducedMotion) 100 else 250),
+                animationSpec = tween(
+                    durationMillis = com.weather.app.ui.theme.WeatherMotionPolicy.screenStateCrossfadeDurationMillis(reducedMotion)
+                ),
                 label = "ScreenStateCrossfade",
                 modifier = Modifier.padding(paddingValues)
             ) { state ->
@@ -475,9 +490,13 @@ private fun WeatherTabContent(
             }
         }
 
-        // Вміст активної вкладки
+        // Вміст активної вкладки з підтримкою Reduced Motion
+        val reducedMotion = LocalReducedMotion.current
         Crossfade(
             targetState = selectedTab,
+            animationSpec = tween(
+                durationMillis = com.weather.app.ui.theme.WeatherMotionPolicy.tabCrossfadeDurationMillis(reducedMotion)
+            ),
             label = "TabContentCrossfade",
             modifier = Modifier.weight(1f)
         ) { tab ->

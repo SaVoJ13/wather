@@ -54,6 +54,32 @@
 | **TASK-042** | Модульне та інтеграційне тестування Phase 3 (≥ 80 тестів 100% PASS) | Phase 3 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
 | **TASK-043** | Незалежний аудит приватності, Manifest та безпеки секретів (нуль ключів у git) | Phase 3 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
 | **TASK-044** | Фінальний аудит Phase 3, незалежний звіт PHASE_3_QA_REPORT та статус QA_VERIFIED | Phase 3 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-045** | Координація Phase 4, фіксація ADR-015 та розробка PHASE_4_EXECUTION_PLAN | Phase 4 | Agent 0 | DONE | ✅ 2026-11-23 |
+| **TASK-046** | Захист архітектурних контрактів Clean Architecture у Compose-шарі | Phase 4 | Agent 0 | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-047** | UX-аудит відповідності 3 вкладок та SettingsScreen макетам Phase 1 | Phase 4 | product-ux | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-048** | Перевірка доступності WCAG AA (контраст, тач-таргети 48dp, TalkBack, Reduced Motion) | Phase 4 | product-ux | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-049** | Полірування вкладок «Зараз», «Прогноз», «Місця» та модальних вікон | Phase 4 | android-ui | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-050** | Реалізація та перевірка окремого екрана «Налаштування» (SettingsScreen) | Phase 4 | android-ui | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-051** | Керування станами Loading, Success, Offline/Stale та Error у головному UI | Phase 4 | android-ui | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-052** | Цілісність WMO-кодів (усунення ризику усікання дробових чисел у Clear Sky) | Phase 4 | weather-location | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-053** | Ізоляція стану міст та часових поясів під час переходів між вкладками | Phase 4 | weather-location | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-054** | Перевірка рекламного контейнера AdMob Anchored Adaptive Banner (Zero CLS) | Phase 4 | widget-monetization | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-055** | Синхронізація вибору активного міста із домашнім віджетом Glance | Phase 4 | widget-monetization | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-056** | Запуск інструментальних тестів connectedDebugAndroidTest на Android | Phase 4 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-057** | Зняття фактичних скриншотів 5 екранів інтерфейсу та верифікація на S24 Ultra | Phase 4 | qa-privacy / Owner | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-058** | Фінальний аудит Phase 4 (PHASE_4_QA_REPORT, PHASE_GATE_4, Owner Approved) | Phase 4 | qa-privacy / Agent 0 | DONE | ✅ 2026-11-23 |
+| **TASK-059** | Фіксація ADR-016 (Owner Approved Phase 4) та розробка PHASE_5_EXECUTION_PLAN | Phase 5 | Agent 0 | DONE | ✅ 2026-11-23 |
+| **TASK-060** | Координація Phase 5, контроль енергоощадних контрактів віджетів та CI | Phase 5 | Agent 0 | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-061** | UX-специфікація станів віджетів 2x2 і 4x2 (Active, Stale/Offline, No Data) та Motion-токенів | Phase 5 | product-ux | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-062** | Перевірка доступності та семантики віджетів і анімацій при Reduced Motion | Phase 5 | product-ux | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-063** | Плавна анімація переходів небесних градієнтів, вкладок і карток з підтримкою Reduced Motion | Phase 5 | android-ui | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-064** | Оптимізація Canvas-анімації SunriseSunsetCard (нуль фонових тіків при Reduced Motion) | Phase 5 | android-ui | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-065** | Гарантія достовірності даних кешу для віджетів (0 вигаданих значень, 0 Mock-фолбеку, часові пояси) | Phase 5 | weather-location | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-066** | Вдосконалення Jetpack Glance віджетів 2x2 та 4x2 (реальні дані, чесний стан No Data / Stale) | Phase 5 | widget-monetization | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-067** | Енергоощадний планувальник WeatherWidgetScheduler (non-wakeup ELAPSED_REALTIME, OS limits) | Phase 5 | widget-monetization | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-068** | Автоматизовані unit- та інструментальні тести віджетів 2x2/4x2 і Reduced Motion | Phase 5 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-069** | Перевірка віджетів і анімацій на фізичному Samsung Galaxy S24 Ultra (RZCX326349A) | Phase 5 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-070** | Незалежний аудит Phase 5 (PHASE_5_QA_REPORT, PHASE_GATE_5, 0 Background GPS, 0 Ads in Widget) | Phase 5 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
 
 ---
 

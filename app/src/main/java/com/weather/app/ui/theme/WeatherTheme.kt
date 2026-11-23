@@ -30,6 +30,19 @@ val LocalWeatherPalette = staticCompositionLocalOf {
 
 val LocalReducedMotion = staticCompositionLocalOf { false }
 
+/**
+ * Централізована політика анімацій та руху (Phase 5 — Motion & Accessibility).
+ * Забезпечує плавні переходи в нормальному режимі та миттєві або скорочені переходи,
+ * коли в системі Android увімкнено зменшення руху (Reduced Motion).
+ */
+object WeatherMotionPolicy {
+    fun skyGradientDurationMillis(reducedMotion: Boolean): Int = if (reducedMotion) 0 else 600
+    fun tabCrossfadeDurationMillis(reducedMotion: Boolean): Int = if (reducedMotion) 0 else 220
+    fun screenStateCrossfadeDurationMillis(reducedMotion: Boolean): Int = if (reducedMotion) 80 else 250
+    fun sunArcAnimationDurationMillis(reducedMotion: Boolean): Int = if (reducedMotion) 0 else 1000
+    fun shouldRunInfiniteAnimations(reducedMotion: Boolean): Boolean = !reducedMotion
+}
+
 private val LightColorScheme = lightColorScheme(
     primary = MdLightPrimary,
     onPrimary = MdLightOnPrimary,

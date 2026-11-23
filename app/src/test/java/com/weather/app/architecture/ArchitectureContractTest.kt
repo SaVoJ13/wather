@@ -102,4 +102,47 @@ class ArchitectureContractTest {
             content.contains("ACCESS_BACKGROUND_LOCATION")
         )
     }
+
+    @Test
+    fun widgetLayer_hasZeroAdsZeroGpsZeroMockFallbackAndZeroWakeupAlarms() {
+        val widgetDir = File("src/main/java/com/weather/app/widget")
+        assertTrue("Widget directory must exist", widgetDir.exists())
+
+        val files = widgetDir.walkTopDown().filter { it.extension == "kt" }.toList()
+        assertTrue("Widget files must exist", files.isNotEmpty())
+
+        val forbiddenPatterns = listOf(
+            "import com.weather.app.data.mock.MockWeatherRepository",
+            "MockWeatherRepository.",
+            "AdBannerPlaceholder",
+            "com.google.android.gms.ads",
+            "AdView",
+            "LocationManager",
+            "FusedLocationProviderClient",
+            "LocationClient",
+            "ACCESS_BACKGROUND_LOCATION",
+            "AlarmManager.ELAPSED_REALTIME_WAKEUP",
+            "AlarmManager.RTC_WAKEUP"
+        )
+
+        val violations = mutableListOf<String>()
+
+        for (file in files) {
+            val lines = file.readLines()
+            for ((index, line) in lines.withIndex()) {
+                val trimmed = line.trim()
+                if (trimmed.startsWith("//") || trimmed.startsWith("*")) continue
+                for (pattern in forbiddenPatterns) {
+                    if (trimmed.contains(pattern)) {
+                        violations.add("${file.name}:${index + 1} contains forbidden '$pattern'")
+                    }
+                }
+            }
+        }
+
+        assertTrue(
+            "Widget package must have 0 ads, 0 GPS calls, 0 MockWeatherRepository fallbacks, and 0 CPU wakeup alarms. Violations: $violations",
+            violations.isEmpty()
+        )
+    }
 }

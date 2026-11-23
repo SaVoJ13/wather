@@ -50,4 +50,24 @@ class WeatherThemeTest {
             assertTrue("Icon for $condition must not be null", icon.name.isNotBlank())
         }
     }
+
+    @Test
+    fun testWeatherMotionPolicyRespectsReducedMotion() {
+        // Normal motion (reducedMotion = false)
+        assertEquals(600, com.weather.app.ui.theme.WeatherMotionPolicy.skyGradientDurationMillis(false))
+        assertEquals(220, com.weather.app.ui.theme.WeatherMotionPolicy.tabCrossfadeDurationMillis(false))
+        assertEquals(250, com.weather.app.ui.theme.WeatherMotionPolicy.screenStateCrossfadeDurationMillis(false))
+        assertEquals(1000, com.weather.app.ui.theme.WeatherMotionPolicy.sunArcAnimationDurationMillis(false))
+        assertTrue(com.weather.app.ui.theme.WeatherMotionPolicy.shouldRunInfiniteAnimations(false))
+
+        // Reduced motion enabled (reducedMotion = true)
+        assertEquals(0, com.weather.app.ui.theme.WeatherMotionPolicy.skyGradientDurationMillis(true))
+        assertEquals(0, com.weather.app.ui.theme.WeatherMotionPolicy.tabCrossfadeDurationMillis(true))
+        assertEquals(80, com.weather.app.ui.theme.WeatherMotionPolicy.screenStateCrossfadeDurationMillis(true))
+        assertEquals(0, com.weather.app.ui.theme.WeatherMotionPolicy.sunArcAnimationDurationMillis(true))
+        org.junit.Assert.assertFalse(
+            "Infinite animations must be disabled when Reduced Motion is active",
+            com.weather.app.ui.theme.WeatherMotionPolicy.shouldRunInfiniteAnimations(true)
+        )
+    }
 }

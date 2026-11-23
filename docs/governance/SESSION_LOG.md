@@ -81,3 +81,24 @@
   5. Agent 4: розроблено `WIDGET_AD_CONTRACTS.md`, адаптовано `AdBannerPlaceholder.kt` під Anchored Adaptive Banner (50..90 dp, Zero CLS, 0% реклами у віджетах).
   6. Agent 5: розширено тестову базу до 74 тестів (`ArchitectureContractTest`, `WeatherRepositoryPhase2Test`, `WeatherLocalCacheTest`, `NavigationAndStateTest`), 100% тестів успішні (74/74 PASS), верифіковано збірку `assembleDebug` APK (21.8 МБ), підтверджено суворе дотримання політики $0, відсутність `ACCESS_BACKGROUND_LOCATION` та секретів у коді.
 - Складено звіт закриття воріт `docs/reports/PHASE_GATE_2.md`. Всі матеріали підготовлено до схвалення Власником (`Owner Approved`) для переходу до Phase 3.
+
+### 2026-11-23 18:40 — Завершення та офіційне затвердження Phase 3: Weather API & Location Integration (`Owner Approved`, ADR-015)
+- Повністю інтегровано WeatherMetro Free API (16 днів, 384 години) без автоматичного fallback на Open-Meteo або MockWeatherRepository у виробничому коді.
+- Реалізовано суворий захист достовірності метеоданих (Data Integrity Fix): усунено всі фіктивні значення (1013.25 гПа, 50%, 0.0 мм, temp), впроваджено nullable-моделі та відображення «Немає даних» у 8 мовах.
+- Усунено автозапит GPS при запуску (`LaunchedEffect(Unit)` лише відновлює кеш), реалізовано ізоляцію станів міст (`fetchForecastJob?.cancel()`, `lastCachedForecast = null`), розрахунок часових поясів локацій (`WeatherLocationTimezoneTest`) та захист WMO-кодів.
+- Пройдено 105/105 unit-тестів (210 запусків), чистий Android Lint (0 errors), зелений GitHub Actions CI (`Run 45229219088` та `45230180507`).
+- Власник надав офіційний статус `Owner Approved` (ADR-015) для переходу до Phase 4.
+
+### 2026-11-23 19:41 — Завершення, перевірка на Samsung Galaxy S24 Ultra та офіційне затвердження Phase 4: Main Android Interface (`Owner Approved`, ADR-016)
+- Реалізовано та перевірено тривкладковий інтерфейс Jetpack Compose («Зараз», «Прогноз», «Місця») та окремий екран «Налаштування» через TopBar.
+- Усунено ризик усікання дробових WMO-кодів (0.5, 1.9) у `WeatherMetroHttpClient.kt` (`testFractionalWmoCodeIsNotTruncatedToZero`).
+- Виконано інструментальні тести `connectedDebugAndroidTest` на Android (`1/1 PASS`, 100%) та 106/106 unit-тестів (212 запусків).
+- Знято 5 автентичних скриншотів інтерфейсу (`docs/release/screenshots/`), проведено незалежний аудит Agent 5 (`PHASE_4_QA_REPORT.md` — `QA_VERIFIED` ✅) та підготовлено `PHASE_GATE_4.md`.
+- Збірку встановлено на фізичний телефон Власника **Samsung Galaxy S24 Ultra (`SM-S928B`, `RZCX326349A`)** через `adb -s RZCX326349A install -r` зі збереженням даних.
+- Власник особисто протестував застосунок на телефоні, підтвердив відповідність очікуванням, надав статус **`Owner Approved` для Phase 4 (ADR-016)** та дозволив розпочати **Phase 5 — Widgets & Animation**.
+
+### 2026-11-23 20:15 — Виконання та незалежна верифікація Phase 5: Widgets & Animation (Команда 6 агентів)
+- Розроблено та виконано план `docs/tasks/PHASE_5_EXECUTION_PLAN.md` (завдання `TASK-059` – `TASK-070`).
+- **Agent 4 & Agent 3:** У `WeatherGlanceWidget.kt` повністю вилучено `MockWeatherRepository` та підстановки фіктивних нулів (`?: 0`), додано чесний стан `EmptyWidgetContent` («Немає даних») та індикацію застарілого офлайн-кешу (`isForecastStaleForWidget`). У `WeatherWidgetScheduler.kt` виконано перехід на енергоощадний non-wakeup таймер `AlarmManager.ELAPSED_REALTIME` (`type 3`, `IS_EXACT_INTERVAL_GUARANTEED = false`) відповідно до обмежень ОС Android.
+- **Agent 2 & Agent 1:** Впроваджено `WeatherMotionPolicy` у `WeatherTheme.kt`, плавну інтерполяцію небесних градієнтів (`animateColorAsState` 600 мс ➔ 0 мс при Reduced Motion), синхронізацію `Crossfade` вкладок та повне вимкнення `rememberInfiniteTransition` у `SunriseSunsetCard.kt` при увімкненому системному режимі Reduced Motion.
+- **Agent 5 (`qa-privacy`):** Розширено тестову базу до 114 unit-тестів (228 прогонів у Debug та Release — 100% PASS) та 2 інструментальних тестів (`connectedDebugAndroidTest` — 2/2 PASS на фізичному смартфоні **Samsung Galaxy S24 Ultra `SM-S928B` / `RZCX326349A`** та 2/2 PASS на емуляторі). Підтверджено реєстрацію віджета 4×2 у Samsung One UI Launcher (`dumpsys appwidget`) та роботу non-wakeup таймера `*alarm* type 3` (`dumpsys alarm`). Сформовано `docs/qa/PHASE_5_QA_REPORT.md` зі статусом `QA VERIFIED [PASS] ✅` та підсумковий звіт воріт `docs/reports/PHASE_GATE_5.md`.

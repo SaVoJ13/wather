@@ -35,22 +35,24 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.weather.app.R
-import com.weather.app.data.mock.MockWeatherRepository
 import com.weather.app.domain.model.FullWeatherForecast
 import com.weather.app.domain.model.WeatherCondition
 import com.weather.app.ui.MainActivity
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 import kotlin.math.roundToInt
 
 /**
- * Домашній погодний віджет на базі Jetpack Glance згідно з TASK-007, docs/ux/UX_SPEC.md та ADR-005.
+ * Домашній погодний віджет на базі Jetpack Glance (Phase 5 — Widgets & Animation).
  *
  * Особливості:
  * 1. Адаптивність: підтримує компактний (2x2) та розширений (4x2) режими відображення.
- * 2. Енергоефективність: жодних безперервних анімацій або тикерів (строге дотримання лімітів RemoteViews).
- * 3. Безпека та бізнес-модель: сувора відсутність реклами у віджеті (заборонено політиками Android).
- * 4. Офлайн-стійкість: показує останній закешований прогноз із точною позначкою часу оновлення.
+ * 2. Чесність даних (Data Integrity): працює виключно з реальними погодними даними та офлайн-кешем;
+ *    ніколи не використовує MockWeatherRepository та не підставляє вигадані значення (0° тощо).
+ * 3. Енергоефективність: жодних безперервних анімацій, фонового GPS або примусових пробуджень CPU.
+ * 4. Безпека та бізнес-модель: сувора відсутність реклами у віджеті (0% реклами).
  * 5. Інтерактивність: клік на будь-яку ділянку віджета відкриває MainActivity.
  */
 class WeatherGlanceWidget : GlanceAppWidget() {
@@ -58,6 +60,45 @@ class WeatherGlanceWidget : GlanceAppWidget() {
     companion object {
         val COMPACT_SIZE = DpSize(120.dp, 100.dp)
         val EXPANDED_SIZE = DpSize(220.dp, 100.dp)
+        const val STALE_THRESHOLD_MINUTES = 60L
+
+        fun isExpandedMode(size: DpSize): Boolean {
+            return size.width >= EXPANDED_SIZE.width
+        }
+
+        /**
+         * Повертає реальний збережений прогноз із дискового кешу або оперативної пам'яті.
+         * Ніколи не повертає тестові/вигадані дані MockWeatherRepository.
+         */
+        fun resolveWidgetForecast(
+            cachedForecast: FullWeatherForecast?,
+            lastKnownForecast: FullWeatherForecast?
+        ): FullWeatherForecast? {
+            return cachedForecast ?: lastKnownForecast
+        }
+
+        /**
+         * Перевіряє, чи є прогноз у віджеті застарілим (прапорець isStale або вік > 60 хвилин).
+         */
+        fun isForecastStaleForWidget(
+            forecast: FullWeatherForecast,
+            now: LocalDateTime = LocalDateTime.now()
+        ): Boolean {
+            if (forecast.isStale) return true
+            val ageMinutes = Duration.between(forecast.updatedAt, now).toMinutes()
+            return ageMinutes > STALE_THRESHOLD_MINUTES
+        }
+
+        /**
+         * Форматує денний діапазон температур (↑max° / ↓min°) або повертає null,
+         * якщо щоденний прогноз відсутній (без підстановки фіктивних 0°).
+         */
+        fun formatTodayRange(forecast: FullWeatherForecast): String? {
+            val today = forecast.daily14Days.firstOrNull() ?: return null
+            val minToday = today.minTemperatureCelsius.roundToInt()
+            val maxToday = today.maxTemperatureCelsius.roundToInt()
+            return "↑${maxToday}° / ↓${minToday}°"
+        }
 
         fun weatherConditionDrawableRes(condition: WeatherCondition): Int {
             return when (condition) {
@@ -132,12 +173,13 @@ class WeatherGlanceWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Responsive(setOf(COMPACT_SIZE, EXPANDED_SIZE))
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        // Отримуємо останній закешований прогноз локації користувача з дискового кешу, пам'яті або фолбек
-        val forecast = com.weather.app.data.local.WeatherLocalCache.loadCachedForecast(context)
-            ?: com.weather.app.data.repository.WeatherRepositoryImpl.lastKnownForecast
-            ?: MockWeatherRepository.createKyivForecast()
+        // Отримуємо реальний закешований прогноз локації користувача з дискового кешу або пам'яті (без Mock-фолбеку)
+        val forecast = resolveWidgetForecast(
+            cachedForecast = com.weather.app.data.local.WeatherLocalCache.loadCachedForecast(context),
+            lastKnownForecast = com.weather.app.data.repository.WeatherRepositoryImpl.lastKnownForecast
+        )
 
-        // Переконуємося, що 10-хвилинне оновлення заплановане
+        // Плануємо наступне енергоощадне оновлення згідно з обмеженнями ОС Android
         WeatherWidgetScheduler.scheduleNextUpdate(context)
 
         val openAppIntent = Intent(context, MainActivity::class.java).apply {
@@ -146,7 +188,7 @@ class WeatherGlanceWidget : GlanceAppWidget() {
 
         provideContent {
             val size = LocalSize.current
-            val isExpanded = size.width >= EXPANDED_SIZE.width
+            val isExpanded = isExpandedMode(size)
 
             Box(
                 modifier = GlanceModifier
@@ -155,11 +197,65 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                     .clickable(actionStartActivity(openAppIntent))
                     .padding(12.dp)
             ) {
-                if (isExpanded) {
+                if (forecast == null) {
+                    EmptyWidgetContent(isExpanded = isExpanded)
+                } else if (isExpanded) {
                     ExpandedWidgetContent(forecast)
                 } else {
                     CompactWidgetContent(forecast)
                 }
+            }
+        }
+    }
+
+    @androidx.compose.runtime.Composable
+    private fun EmptyWidgetContent(isExpanded: Boolean) {
+        val rawContext = LocalContext.current
+        val context = getLocalizedContext(rawContext)
+        val appName = context.getString(R.string.app_name)
+        val noDataText = context.getString(R.string.no_data)
+        val selectCityText = context.getString(R.string.city_selection)
+
+        Column(
+            modifier = GlanceModifier.fillMaxSize(),
+            verticalAlignment = Alignment.Vertical.CenterVertically,
+            horizontalAlignment = Alignment.Horizontal.CenterHorizontally
+        ) {
+            Image(
+                provider = ImageProvider(R.drawable.ic_widget_partly_cloudy),
+                contentDescription = noDataText,
+                modifier = GlanceModifier.size(if (isExpanded) 36.dp else 28.dp)
+            )
+            Spacer(modifier = GlanceModifier.height(4.dp))
+            Text(
+                text = appName,
+                style = TextStyle(
+                    color = ColorProvider(Color.White),
+                    fontSize = if (isExpanded) 15.sp else 13.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                maxLines = 1
+            )
+            Spacer(modifier = GlanceModifier.height(2.dp))
+            Text(
+                text = noDataText,
+                style = TextStyle(
+                    color = ColorProvider(Color(0xFFCBD5E1)),
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                maxLines = 1
+            )
+            if (isExpanded) {
+                Spacer(modifier = GlanceModifier.height(2.dp))
+                Text(
+                    text = selectCityText,
+                    style = TextStyle(
+                        color = ColorProvider(Color(0xFF94A3B8)),
+                        fontSize = 11.sp
+                    ),
+                    maxLines = 1
+                )
             }
         }
     }
@@ -170,11 +266,10 @@ class WeatherGlanceWidget : GlanceAppWidget() {
         val context = getLocalizedContext(rawContext)
         val tempInt = forecast.current.temperatureCelsius.roundToInt()
         val tempString = "$tempInt°"
-        val today = forecast.daily14Days.firstOrNull()
-        val minToday = today?.minTemperatureCelsius?.roundToInt() ?: 0
-        val maxToday = today?.maxTemperatureCelsius?.roundToInt() ?: 0
+        val rangeText = formatTodayRange(forecast)
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
         val updateTime = forecast.updatedAt.format(timeFormatter)
+        val isStale = isForecastStaleForWidget(forecast)
         val conditionDesc = context.getString(forecast.current.condition.stringRes)
 
         Column(
@@ -229,24 +324,27 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                 maxLines = 1
             )
 
-            Spacer(modifier = GlanceModifier.height(2.dp))
-
-            Text(
-                text = "↑${maxToday}° / ↓${minToday}°",
-                style = TextStyle(
-                    color = ColorProvider(Color(0xFF94A3B8)),
-                    fontSize = 11.sp
+            if (rangeText != null) {
+                Spacer(modifier = GlanceModifier.height(2.dp))
+                Text(
+                    text = rangeText,
+                    style = TextStyle(
+                        color = ColorProvider(Color(0xFF94A3B8)),
+                        fontSize = 11.sp
+                    )
                 )
-            )
+            }
 
             Spacer(modifier = GlanceModifier.height(2.dp))
 
+            val updatedLabel = context.getString(R.string.widget_updated_short, updateTime)
             Text(
-                text = context.getString(R.string.widget_updated_short, updateTime),
+                text = if (isStale) "$updatedLabel • ⏳" else updatedLabel,
                 style = TextStyle(
-                    color = ColorProvider(Color(0x9994A3B8)),
+                    color = ColorProvider(if (isStale) Color(0xFFFBBF24) else Color(0x9994A3B8)),
                     fontSize = 9.sp
-                )
+                ),
+                maxLines = 1
             )
         }
     }
@@ -262,11 +360,10 @@ class WeatherGlanceWidget : GlanceAppWidget() {
             val feelsLikeInt = forecast.current.apparentTemperatureCelsius.roundToInt()
             context.getString(R.string.feels_like, "$feelsLikeInt°")
         } else null
-        val today = forecast.daily14Days.firstOrNull()
-        val minToday = today?.minTemperatureCelsius?.roundToInt() ?: 0
-        val maxToday = today?.maxTemperatureCelsius?.roundToInt() ?: 0
+        val rangeText = formatTodayRange(forecast)
         val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
         val updateTime = forecast.updatedAt.format(timeFormatter)
+        val isStale = isForecastStaleForWidget(forecast)
         val dailyItems = forecast.daily14Days.take(4)
         val conditionDesc = context.getString(forecast.current.condition.stringRes)
         val windUnit = context.getString(R.string.wind_unit_kmh)
@@ -307,18 +404,18 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                     maxLines = 1
                 )
 
-                Spacer(modifier = GlanceModifier.height(2.dp))
-
-                val rangeText = "↑${maxToday}° / ↓${minToday}°"
-                val subtitleText = if (feelsLikeLabel != null) "$feelsLikeLabel • $rangeText" else rangeText
-                Text(
-                    text = subtitleText,
-                    style = TextStyle(
-                        color = ColorProvider(Color(0xFF94A3B8)),
-                        fontSize = 11.sp
-                    ),
-                    maxLines = 1
-                )
+                val subtitleText = listOfNotNull(feelsLikeLabel, rangeText).joinToString(" • ")
+                if (subtitleText.isNotEmpty()) {
+                    Spacer(modifier = GlanceModifier.height(2.dp))
+                    Text(
+                        text = subtitleText,
+                        style = TextStyle(
+                            color = ColorProvider(Color(0xFF94A3B8)),
+                            fontSize = 11.sp
+                        ),
+                        maxLines = 1
+                    )
+                }
 
                 Spacer(modifier = GlanceModifier.height(2.dp))
 
@@ -348,10 +445,15 @@ class WeatherGlanceWidget : GlanceAppWidget() {
                         modifier = GlanceModifier.size(12.dp)
                     )
                     Spacer(modifier = GlanceModifier.width(3.dp))
+                    val locationAndTime = if (isStale) {
+                        "${forecast.location.name} • $updateTime • ⏳"
+                    } else {
+                        "${forecast.location.name} • $updateTime"
+                    }
                     Text(
-                        text = "${forecast.location.name} • $updateTime",
+                        text = locationAndTime,
                         style = TextStyle(
-                            color = ColorProvider(Color(0xFF94A3B8)),
+                            color = ColorProvider(if (isStale) Color(0xFFFBBF24) else Color(0xFF94A3B8)),
                             fontSize = 11.sp
                         ),
                         maxLines = 1

@@ -122,4 +122,63 @@ class WeatherLocalCacheAndroidTest {
         val loadedWarsaw = WeatherLocalCache.loadCachedForecastForLocation(context, warsawLocation)
         assertNull("Кеш одного міста (Києва) за жодних умов не повинен повертатися для іншого (Варшави)", loadedWarsaw)
     }
+
+    @Test
+    fun testGlanceWidgetOfflineCacheAndProviderRegistrationOnAndroid() {
+        // 1. Коли кеш порожній, віджет повертає null (чесний стан "Немає даних", без MockWeatherRepository)
+        WeatherLocalCache.clearAll(context)
+        val emptyWidgetForecast = com.weather.app.widget.WeatherGlanceWidget.resolveWidgetForecast(
+            cachedForecast = WeatherLocalCache.loadCachedForecast(context),
+            lastKnownForecast = null
+        )
+        assertNull("Віджет не повинен повертати вигаданий прогноз, коли кеш порожній", emptyWidgetForecast)
+
+        // 2. Після збереження реального прогнозу в кеш віджет отримує його для 2x2 і 4x2 режимів
+        val now = LocalDateTime.now()
+        val realForecast = FullWeatherForecast(
+            location = warsawLocation,
+            current = CurrentWeather(
+                temperatureCelsius = 7.2,
+                apparentTemperatureCelsius = 5.0,
+                condition = WeatherCondition.RAIN,
+                relativeHumidityPercent = 82,
+                windSpeedKmh = 18.5,
+                surfacePressureHpa = 1009.0,
+                uvIndex = 1.0,
+                time = now
+            ),
+            hourly24h = emptyList(),
+            daily14Days = listOf(
+                DailyForecastItem(
+                    date = now,
+                    minTemperatureCelsius = 3.0,
+                    maxTemperatureCelsius = 9.0,
+                    condition = WeatherCondition.RAIN,
+                    precipitationProbabilityPercent = 70,
+                    precipitationSumMm = 4.2,
+                    maxWindSpeedKmh = 22.0
+                )
+            ),
+            updatedAt = now,
+            isStale = false,
+            dataSource = WeatherDataSource.WEATHER_METRO
+        )
+        WeatherLocalCache.saveForecast(context, realForecast)
+
+        val resolved = com.weather.app.widget.WeatherGlanceWidget.resolveWidgetForecast(
+            cachedForecast = WeatherLocalCache.loadCachedForecast(context),
+            lastKnownForecast = null
+        )
+        assertNotNull("Віджет повинен успішно зчитувати реальний прогноз з дискового кешу Android", resolved)
+        assertEquals("Варшава", resolved?.location?.name)
+        assertEquals("↑9° / ↓3°", resolved?.let { com.weather.app.widget.WeatherGlanceWidget.formatTodayRange(it) })
+
+        // 3. Перевіряємо реєстрацію AppWidgetProvider у системному AppWidgetManager Android
+        val appWidgetManager = android.appwidget.AppWidgetManager.getInstance(context)
+        val installedProviders = appWidgetManager.getInstalledProvidersForPackage(context.packageName, null)
+        val weatherProvider = installedProviders.firstOrNull {
+            it.provider.className == com.weather.app.widget.WeatherWidgetReceiver::class.java.name
+        }
+        assertNotNull("WeatherWidgetReceiver повинен бути зареєстрований у системному AppWidgetManager", weatherProvider)
+    }
 }
