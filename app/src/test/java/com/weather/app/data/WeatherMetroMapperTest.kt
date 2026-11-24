@@ -204,4 +204,45 @@ class WeatherMetroMapperTest {
         )
         WeatherMetroMapper.toDomain(response, testLocation)
     }
+
+    @Test
+    fun testTrailingTimezoneShiftNullTemperaturesAreFilteredSafelyWithoutFailingRequest() {
+        val now = LocalDateTime.of(2026, 11, 24, 3, 0)
+        // Останні 4 години 16-го дня містять null через зсув часового поясу UTC+1/+2
+        val hourlyTimes = listOf("2026-11-24T03:00", "2026-11-24T04:00", "2026-12-09T22:00", "2026-12-09T23:00")
+        val hourlyTemps: List<Double?> = listOf(1.3, 1.4, null, null)
+
+        val dailyTimes = listOf("2026-11-24", "2026-11-25", "2026-12-09")
+        val dailyMaxTemps: List<Double?> = listOf(2.9, 2.4, null)
+        val dailyMinTemps: List<Double?> = listOf(0.4, -1.9, null)
+
+        val response = WeatherMetroResponse(
+            latitude = 53.3745,
+            longitude = 14.4725,
+            timezone = "Europe/Warsaw",
+            hourly = WeatherMetroHourlyDto(
+                time = hourlyTimes,
+                temperature2m = hourlyTemps,
+                weathercode = listOf(3, 3, null, null)
+            ),
+            daily = WeatherMetroDailyDto(
+                time = dailyTimes,
+                temperature2mMax = dailyMaxTemps,
+                temperature2mMin = dailyMinTemps,
+                weathercode = listOf(3, 2, null)
+            )
+        )
+
+        val domain = WeatherMetroMapper.toDomain(
+            response = response,
+            location = testLocation,
+            updatedAt = now,
+            sourceZoneId = java.time.ZoneId.of("Europe/Warsaw")
+        )
+
+        assertEquals("isStale must be false for fresh API response", false, domain.isStale)
+        assertEquals("Only valid non-null hourly entries must be mapped", 2, domain.hourly24h.size)
+        assertEquals("Only valid non-null daily entries must be mapped", 2, domain.daily14Days.size)
+        assertEquals(1.3, domain.current.temperatureCelsius, 0.01)
+    }
 }

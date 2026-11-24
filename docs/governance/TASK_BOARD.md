@@ -80,6 +80,7 @@
 | **TASK-068** | Автоматизовані unit- та інструментальні тести віджетів 2x2/4x2 і Reduced Motion | Phase 5 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
 | **TASK-069** | Перевірка віджетів і анімацій на фізичному Samsung Galaxy S24 Ultra (RZCX326349A) | Phase 5 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
 | **TASK-070** | Незалежний аудит Phase 5 (PHASE_5_QA_REPORT, PHASE_GATE_5, 0 Background GPS, 0 Ads in Widget) | Phase 5 | qa-privacy | QA_VERIFIED | ✅ 2026-11-23 |
+| **TASK-071** | UI-виправлення контрастності нижньої панелі навігації (Bottom Navigation Contrast WCAG AAA — Owner Accepted) | Phase 4/5 | android-ui / product-ux / qa-privacy | DONE | ✅ 2026-11-24 |
 
 ---
 

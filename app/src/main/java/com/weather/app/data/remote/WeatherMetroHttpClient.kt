@@ -81,9 +81,9 @@ object WeatherMetroHttpClient {
                 ?: throw WeatherApiException(200, "Відповідь API не містить обов'язкового об'єкта 'daily'")
 
             val hourlyTime = jsonArrayToStringList(hourlyObj.optJSONArray("time"))
-            val hourlyTemp = jsonArrayToDoubleList(hourlyObj.optJSONArray("temperature_2m"))
+            val hourlyTemp = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("temperature_2m"))
 
-            if (hourlyTime.isEmpty() || hourlyTemp.isEmpty()) {
+            if (hourlyTime.isEmpty() || hourlyTemp.isEmpty() || hourlyTemp.all { it == null }) {
                 throw WeatherApiException(200, "Погодинний масив API не містить обов'язкових полів time або temperature_2m")
             }
 
@@ -100,10 +100,12 @@ object WeatherMetroHttpClient {
             )
 
             val dailyTime = jsonArrayToStringList(dailyObj.optJSONArray("time"))
-            val dailyTempMax = jsonArrayToDoubleList(dailyObj.optJSONArray("temperature_2m_max"))
-            val dailyTempMin = jsonArrayToDoubleList(dailyObj.optJSONArray("temperature_2m_min"))
+            val dailyTempMax = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("temperature_2m_max"))
+            val dailyTempMin = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("temperature_2m_min"))
 
-            if (dailyTime.isEmpty() || dailyTempMax.isEmpty() || dailyTempMin.isEmpty()) {
+            if (dailyTime.isEmpty() || dailyTempMax.isEmpty() || dailyTempMin.isEmpty() ||
+                dailyTempMax.all { it == null } || dailyTempMin.all { it == null }
+            ) {
                 throw WeatherApiException(200, "Щоденний масив API не містить обов'язкових полів time або temperature_2m_max/min")
             }
 
@@ -114,8 +116,8 @@ object WeatherMetroHttpClient {
                 precipitationSum = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("precipitation_sum")),
                 precipitationProbabilityMax = jsonArrayToNullableIntList(dailyObj.optJSONArray("precipitation_probability_max")),
                 weathercode = jsonArrayToNullableIntList(dailyObj.optJSONArray("weathercode")),
-                sunrise = jsonArrayToStringList(dailyObj.optJSONArray("sunrise")),
-                sunset = jsonArrayToStringList(dailyObj.optJSONArray("sunset")),
+                sunrise = jsonArrayToNullableStringList(dailyObj.optJSONArray("sunrise")),
+                sunset = jsonArrayToNullableStringList(dailyObj.optJSONArray("sunset")),
                 windSpeed10mMax = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("wind_speed_10m_max"))
             )
 
@@ -173,6 +175,20 @@ object WeatherMetroHttpClient {
                 throw JSONException("Елемент $i у масиві часу/дат є порожнім")
             }
             list.add(str)
+        }
+        return list
+    }
+
+    private fun jsonArrayToNullableStringList(arr: JSONArray?): List<String?> {
+        if (arr == null) return emptyList()
+        val list = ArrayList<String?>(arr.length())
+        for (i in 0 until arr.length()) {
+            if (arr.isNull(i)) {
+                list.add(null)
+            } else {
+                val str = arr.optString(i, "")
+                list.add(str.takeIf { it.isNotBlank() })
+            }
         }
         return list
     }

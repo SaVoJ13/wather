@@ -81,10 +81,12 @@ object WeatherMetroMapper {
         val dailyDto = response.daily
             ?: throw IllegalArgumentException("WeatherMetro response missing required 'daily' component")
 
-        if (hourlyDto.time.isEmpty() || hourlyDto.temperature2m.isEmpty()) {
+        if (hourlyDto.time.isEmpty() || hourlyDto.temperature2m.isEmpty() || hourlyDto.temperature2m.all { it == null }) {
             throw IllegalArgumentException("WeatherMetro response has empty hourly time or temperature array")
         }
-        if (dailyDto.time.isEmpty() || dailyDto.temperature2mMax.isEmpty() || dailyDto.temperature2mMin.isEmpty()) {
+        if (dailyDto.time.isEmpty() || dailyDto.temperature2mMax.isEmpty() || dailyDto.temperature2mMin.isEmpty() ||
+            dailyDto.temperature2mMax.all { it == null } || dailyDto.temperature2mMin.all { it == null }
+        ) {
             throw IllegalArgumentException("WeatherMetro response has empty daily time or temperature array")
         }
 
@@ -110,7 +112,7 @@ object WeatherMetroMapper {
             val timeStr = hourlyDto.time[i]
             val timeParsed = parseDateTime(timeStr)
                 ?: throw IllegalArgumentException("Неможливо розпарсити дату/час у погодинному прогнозі: '$timeStr'")
-            val temp = hourlyDto.temperature2m[i]
+            val temp = hourlyDto.temperature2m[i] ?: continue
             val pop = hourlyDto.precipitationProbability.getOrNull(i)
             val wCode = hourlyDto.weathercode.getOrNull(i)
 
@@ -147,7 +149,7 @@ object WeatherMetroMapper {
 
         if (currentWeather == null && allHourlyItems.isNotEmpty()) {
             val fallbackItem = allHourlyItems.lastOrNull() ?: allHourlyItems.first()
-            val fallbackIndex = allHourlyItems.indexOf(fallbackItem).coerceAtLeast(0)
+            val fallbackIndex = hourlyDto.time.indexOfFirst { parseDateTime(it) == fallbackItem.time }.coerceAtLeast(0)
             val apparentTemp = hourlyDto.apparentTemperature.getOrNull(fallbackIndex)
             val humidity = hourlyDto.relativeHumidity2m.getOrNull(fallbackIndex)
             val wind = hourlyDto.windSpeed10m.getOrNull(fallbackIndex)
@@ -177,16 +179,16 @@ object WeatherMetroMapper {
             allHourlyItems.take(24)
         }
 
-        // Формуємо щоденний прогноз (до 16 днів)
+        // Формуємо щоденний прогноз (до 16 днів, пропускаючи хвостові дні з null-температурою через зсув UTC)
         val dailyList = mutableListOf<DailyForecastItem>()
         val count = minOf(16, dailyDto.time.size, dailyDto.temperature2mMax.size, dailyDto.temperature2mMin.size)
         for (i in 0 until count) {
             val dateStr = dailyDto.time[i]
             val dateTimeParsed = parseDateTime(dateStr)
                 ?: throw IllegalArgumentException("Неможливо розпарсити дату у щоденному прогнозі: '$dateStr'")
+            val maxT = dailyDto.temperature2mMax[i] ?: continue
+            val minT = dailyDto.temperature2mMin[i] ?: continue
             val wCode = dailyDto.weathercode.getOrNull(i)
-            val maxT = dailyDto.temperature2mMax[i]
-            val minT = dailyDto.temperature2mMin[i]
             val popMax = dailyDto.precipitationProbabilityMax.getOrNull(i)
             val precipSum = dailyDto.precipitationSum.getOrNull(i)
             val windMax = dailyDto.windSpeed10mMax.getOrNull(i)
