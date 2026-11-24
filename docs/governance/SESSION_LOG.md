@@ -116,3 +116,14 @@
   2. У `WeatherMainScreen.kt` задано явні кольори через `NavigationBarItemDefaults.colors()`, `tonalElevation = 0.dp`, `alwaysShowLabel = true`, а для підпису вкладок налаштовано однорядкове відображення (`10.5.sp`, `letterSpacing = 0.sp`, `maxLines = 1`, `softWrap = false`), щоб довгий підпис «Прогноз на 14 днів» не обрізався і не накладався.
   3. Додано автоматизований тест контрастності WCAG AA/AAA `testBottomNavigationBarContrastMeetsWcagAaAcrossAllPalettes` у `WeatherThemeTest.kt` (115/115 unit-тестів PASS).
 - **Незалежний QA (Agent 5 — `qa-privacy`):** Перевірено код, звіти unit-тестів та 3 скриншоти з Android-емулятора (`bottom_nav_fix_dark.png`, `bottom_nav_fix_light.png`, `bottom_nav_fix_forecast_tab.png`). Підтверджено статус **`QA_VERIFIED` ✅**. (Фізичний пристрій Samsung Galaxy S24 Ultra `RZCX326349A` на момент ADB-встановлення був відключений від USB/ADB; інструкцію для встановлення в 1 команду надано Власнику).
+
+### 2026-11-24 05:00 — Виконання Етапу A директиви Власника VISUAL DESIGN RECOVERY (без зміни коду, ADR-018)
+- Нові роботи з оптимізації призупинено відповідно до директиви Власника. Жоден файл коду у `app/src/` не змінювався.
+- **Agent 1 (`product-ux`):** Проведено порівняльний аудит 4 джерел (`docs/design/VISUAL_DESIGN_RECOVERY_AUDIT.md`) з матрицею розбіжностей `P0`–`P2` та розроблено нову візуальну концепцію **«Sapphire Atmospheric Glass»** (`docs/design/VISUAL_DESIGN_RECOVERY_CONCEPT.md`) зі збереженням висококонтрастної нижньої панелі навігації (`ADR-017`).
+- Створено та візуально перевірено 5 реальних PNG-макетів (720×1560 px) у `docs/design/recovery/`:
+  1. `01_now_screen_day_recovery.png` — Екран «Зараз» (Денний стан);
+  2. `02_now_screen_night_recovery.png` — Екран «Зараз» (Нічний стан);
+  3. `03_forecast_screen_recovery.png` — Екран «Прогноз» (Погодинна стрічка + 16-денний графік тренду Макс/Мін + об'ємні рядки днів);
+  4. `04_locations_screen_recovery.png` — Екран «Місця» (Ілюстровані картки міст);
+  5. `05_settings_screen_recovery.png` — Екран «Налаштування» (Скляні секції з сегментованими перемикачами одиниць).
+- Матеріали передано Власнику на розгляд для отримання **`Owner Design Approved`**.
