@@ -36,6 +36,18 @@ class WeatherViewModel(
     private val _selectedCities = MutableStateFlow<List<LocationModel>>(emptyList())
     val selectedCities: StateFlow<List<LocationModel>> = _selectedCities.asStateFlow()
 
+    private val _cityForecasts = MutableStateFlow<Map<String, FullWeatherForecast>>(emptyMap())
+    val cityForecasts: StateFlow<Map<String, FullWeatherForecast>> = _cityForecasts.asStateFlow()
+    private val inFlightCityPreloads = java.util.Collections.synchronizedSet(mutableSetOf<String>())
+
+    companion object {
+        const val MAX_CITY_CARD_API_PRELOADS_PER_BATCH = 3
+
+        fun cityCacheKey(location: LocationModel): String {
+            return String.format(java.util.Locale.US, "%.2f_%.2f", location.latitude, location.longitude)
+        }
+    }
+
     val popularCities: List<LocationModel> = listOf(
         LocationModel(
             id = 703448L,
@@ -167,6 +179,8 @@ class WeatherViewModel(
                         isRefreshing = false,
                         isOffline = forecast.isStale
                     )
+                    updateCityForecastEntry(location, forecast)
+                    updateCityForecastEntry(forecast.location, forecast)
                     onLoaded?.invoke(forecast)
                 },
                 onFailure = { error ->
@@ -186,7 +200,67 @@ class WeatherViewModel(
     }
 
     fun loadSelectedCities(context: Context) {
-        _selectedCities.value = WeatherLocalCache.loadSelectedCities(context)
+        val loaded = WeatherLocalCache.loadSelectedCities(context)
+        _selectedCities.value = loaded
+        refreshCachedCityForecasts(context, loaded)
+    }
+
+    private fun updateCityForecastEntry(location: LocationModel, forecast: FullWeatherForecast) {
+        val key = cityCacheKey(location)
+        val updated = _cityForecasts.value.toMutableMap()
+        updated[key] = forecast
+        _cityForecasts.value = updated
+    }
+
+    fun refreshCachedCityForecasts(
+        context: Context? = null,
+        cities: List<LocationModel> = _selectedCities.value
+    ) {
+        val updated = _cityForecasts.value.toMutableMap()
+        val activeSuccess = (_uiState.value as? WeatherUiState.Success)?.forecast
+        if (activeSuccess != null) {
+            updated[cityCacheKey(activeSuccess.location)] = activeSuccess
+            updated[cityCacheKey(currentLocation)] = activeSuccess
+        }
+        for (city in cities) {
+            val cached = WeatherLocalCache.loadCachedForecastForLocation(context, city)
+            if (cached != null) {
+                updated[cityCacheKey(city)] = cached
+            }
+        }
+        _cityForecasts.value = updated
+    }
+
+    /**
+     * Обмежене фонове довантаження прогнозів для збережених міст на вкладці «Місця»,
+     * які ще не мають власного локального кешу (максимум [MAX_CITY_CARD_API_PRELOADS_PER_BATCH] запити),
+     * відповідно до вимоги Власника (Stage B — Requirement 6: реальні дані або власний кеш міста з обмеженням API-запитів).
+     */
+    fun preloadMissingCityForecasts(context: Context? = null) {
+        val cities = _selectedCities.value
+        refreshCachedCityForecasts(context, cities)
+
+        val currentMap = _cityForecasts.value
+        val missingCities = cities.filter { city ->
+            val key = cityCacheKey(city)
+            !currentMap.containsKey(key) && !inFlightCityPreloads.contains(key)
+        }.take(MAX_CITY_CARD_API_PRELOADS_PER_BATCH)
+
+        for (city in missingCities) {
+            val key = cityCacheKey(city)
+            inFlightCityPreloads.add(key)
+            viewModelScope.launch {
+                try {
+                    val result = weatherRepository.getFullForecast(city, forceRefresh = false)
+                    result.onSuccess { forecast ->
+                        WeatherLocalCache.saveForecastForLocation(context, city, forecast)
+                        updateCityForecastEntry(city, forecast)
+                    }
+                } finally {
+                    inFlightCityPreloads.remove(key)
+                }
+            }
+        }
     }
 
     fun removeSelectedCity(context: Context?, city: LocationModel) {

@@ -9,10 +9,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.weather.app.R
 
 /**
- * Три затверджені навігаційні розділи нижньої панелі відповідно до USER_FLOWS.md та UI_STATE_CONTRACT.md:
+ * Три затверджені навігаційні розділи нижньої панелі відповідно до USER_FLOWS.md та Sapphire Atmospheric Glass v2 (ADR-019):
  * 1. Зараз (Now) — поточні умови, погодинний ряд, ключові метрики, сонце.
- * 2. Прогноз (Forecast) — 14-16 днів щоденного прогнозу, Range Bars, деталі дня.
- * 3. Місця (Locations) — збережені міста, пошук, безпечний GPS.
+ * 2. Прогноз (Forecast) — коротка назва вкладки «Прогноз» (до 16 днів щоденного прогнозу, графік тренду, деталі дня).
+ * 3. Місця (Locations) — коротка назва вкладки «Місця» (ілюстровані картки збережених міст, пошук, безпечний GPS).
  */
 enum class WeatherNavTab(
     @StringRes val titleRes: Int,
@@ -25,12 +25,12 @@ enum class WeatherNavTab(
         contentDescription = "Вкладка Зараз: поточні погодні умови та погодинна стрічка"
     ),
     FORECAST(
-        titleRes = R.string.daily_forecast_title,
+        titleRes = R.string.nav_forecast,
         icon = Icons.Default.CalendarMonth,
-        contentDescription = "Вкладка Прогноз: щоденний прогноз на 14–16 днів"
+        contentDescription = "Вкладка Прогноз: щоденний прогноз та графік тренду"
     ),
     LOCATIONS(
-        titleRes = R.string.city_selection,
+        titleRes = R.string.nav_locations,
         icon = Icons.Default.LocationOn,
         contentDescription = "Вкладка Місця: управління збереженими містами та пошук"
     )

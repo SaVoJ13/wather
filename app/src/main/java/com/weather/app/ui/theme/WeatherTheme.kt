@@ -20,6 +20,12 @@ data class WeatherPalette(
     val surfaceTint: Color,
     val textColor: Color,
     val accentColor: Color,
+    val isDay: Boolean = true,
+    val glassCardTopColor: Color = GlassCardDayTop,
+    val glassCardBottomColor: Color = GlassCardDayBottom,
+    val glassBorderTopColor: Color = GlassSpecularBorderTop,
+    val glassBorderBottomColor: Color = GlassSpecularBorderBottom,
+    val heroGlowColor: Color = SunAccent,
     val navBarContainerColor: Color = NavBarContainerSurface,
     val navBarTopBorderColor: Color = NavBarTopBorder,
     val navBarSelectedIconColor: Color = NavBarSelectedIcon,
@@ -31,17 +37,18 @@ data class WeatherPalette(
 
 val LocalWeatherPalette = staticCompositionLocalOf {
     WeatherPalette(
-        gradientColors = listOf(ClearSkyDayTop, ClearSkyDayBottom),
+        gradientColors = listOf(ClearSkyDayTop, ClearSkyDayMid, ClearSkyDayBottom),
         surfaceTint = ClearSkyDaySurfaceTint,
         textColor = Color.White,
-        accentColor = SunAccent
+        accentColor = SunAccent,
+        isDay = true
     )
 }
 
 val LocalReducedMotion = staticCompositionLocalOf { false }
 
 /**
- * Централізована політика анімацій та руху (Phase 5 — Motion & Accessibility).
+ * Централізована політика анімацій та руху (Phase 5 & Visual Design Recovery v2).
  * Забезпечує плавні переходи в нормальному режимі та миттєві або скорочені переходи,
  * коли в системі Android увімкнено зменшення руху (Reduced Motion).
  */
@@ -95,120 +102,175 @@ fun weatherPaletteFor(
     isDark: Boolean,
     isDay: Boolean = true
 ): WeatherPalette {
-    val basePalette = when (condition) {
+    val cardTop = if (isDay) GlassCardDayTop else GlassCardNightTop
+    val cardBot = if (isDay) GlassCardDayBottom else GlassCardNightBottom
+
+    return when (condition) {
         WeatherCondition.CLEAR_SKY, WeatherCondition.MAINLY_CLEAR -> {
             if (isDay) {
                 WeatherPalette(
-                    gradientColors = listOf(ClearSkyDayTop, ClearSkyDayBottom),
+                    gradientColors = listOf(ClearSkyDayTop, ClearSkyDayMid, ClearSkyDayBottom),
                     surfaceTint = ClearSkyDaySurfaceTint,
                     textColor = Color.White,
-                    accentColor = SunAccent
+                    accentColor = SunAccent,
+                    isDay = true,
+                    glassCardTopColor = cardTop,
+                    glassCardBottomColor = cardBot,
+                    heroGlowColor = SunAccent
                 )
             } else {
                 WeatherPalette(
-                    gradientColors = listOf(ClearSkyNightTop, ClearSkyNightBottom),
+                    gradientColors = listOf(ClearSkyNightTop, ClearSkyNightMid, ClearSkyNightBottom),
                     surfaceTint = ClearSkyNightSurfaceTint,
-                    textColor = Color(0xFFE0E6ED),
-                    accentColor = MoonAccent
+                    textColor = Color(0xFFF8FAFC),
+                    accentColor = MoonAccent,
+                    isDay = false,
+                    glassCardTopColor = cardTop,
+                    glassCardBottomColor = cardBot,
+                    heroGlowColor = Color(0xFF6366F1)
                 )
             }
         }
         WeatherCondition.PARTLY_CLOUDY -> {
-            if (isDark || !isDay) {
+            if (!isDay || isDark) {
                 WeatherPalette(
-                    gradientColors = listOf(OvercastDarkTop, OvercastDarkBottom),
+                    gradientColors = listOf(ClearSkyNightTop, OvercastDarkMid, OvercastDarkBottom),
                     surfaceTint = OvercastSurfaceTint,
-                    textColor = Color(0xFFF1F2F6),
-                    accentColor = MoonAccent
+                    textColor = Color(0xFFF8FAFC),
+                    accentColor = MoonAccent,
+                    isDay = isDay,
+                    glassCardTopColor = GlassCardNightTop,
+                    glassCardBottomColor = GlassCardNightBottom,
+                    heroGlowColor = MoonAccent
                 )
             } else {
                 WeatherPalette(
-                    gradientColors = listOf(ClearSkyDayTop, OvercastLightBottom),
+                    gradientColors = listOf(ClearSkyDayTop, ClearSkyDayMid, OvercastLightBottom),
                     surfaceTint = OvercastSurfaceTint,
                     textColor = Color.White,
-                    accentColor = SunAccent
+                    accentColor = SunAccent,
+                    isDay = true,
+                    glassCardTopColor = cardTop,
+                    glassCardBottomColor = cardBot,
+                    heroGlowColor = SunAccent
                 )
             }
         }
         WeatherCondition.OVERCAST -> {
-            if (isDark) {
+            if (!isDay || isDark) {
                 WeatherPalette(
-                    gradientColors = listOf(OvercastDarkTop, OvercastDarkBottom),
+                    gradientColors = listOf(OvercastDarkTop, OvercastDarkMid, OvercastDarkBottom),
                     surfaceTint = OvercastSurfaceTint,
-                    textColor = Color(0xFFF1F2F6),
-                    accentColor = Color(0xFFCFD8DC)
+                    textColor = Color(0xFFF8FAFC),
+                    accentColor = Color(0xFF7DD3FC),
+                    isDay = isDay,
+                    glassCardTopColor = GlassCardNightTop,
+                    glassCardBottomColor = GlassCardNightBottom,
+                    heroGlowColor = Color(0xFF38BDF8)
                 )
             } else {
                 WeatherPalette(
-                    gradientColors = listOf(OvercastLightTop, OvercastLightBottom),
+                    gradientColors = listOf(OvercastLightTop, OvercastLightMid, OvercastLightBottom),
                     surfaceTint = OvercastSurfaceTint,
                     textColor = Color.White,
-                    accentColor = Color(0xFFCFD8DC)
+                    accentColor = Color(0xFF7DD3FC),
+                    isDay = true,
+                    glassCardTopColor = cardTop,
+                    glassCardBottomColor = cardBot,
+                    heroGlowColor = Color(0xFF38BDF8)
                 )
             }
         }
         WeatherCondition.FOG -> {
             WeatherPalette(
-                gradientColors = listOf(FogTop, FogBottom),
-                surfaceTint = Color(0x1FFFFFFF),
+                gradientColors = listOf(FogTop, FogMid, FogBottom),
+                surfaceTint = OvercastSurfaceTint,
                 textColor = Color.White,
-                accentColor = Color(0xFFB0BEC5)
+                accentColor = Color(0xFF93C5FD),
+                isDay = isDay,
+                glassCardTopColor = cardTop,
+                glassCardBottomColor = cardBot,
+                heroGlowColor = Color(0xFF60A5FA)
             )
         }
         WeatherCondition.DRIZZLE, WeatherCondition.RAIN, WeatherCondition.HEAVY_RAIN -> {
             WeatherPalette(
-                gradientColors = listOf(RainTop, RainBottom),
+                gradientColors = listOf(RainTop, RainMid, RainBottom),
                 surfaceTint = RainSurfaceTint,
                 textColor = Color.White,
-                accentColor = RainAccent
+                accentColor = RainAccent,
+                isDay = isDay,
+                glassCardTopColor = Color(0xA616508C),
+                glassCardBottomColor = Color(0xBF0E2C58),
+                heroGlowColor = RainAccent
             )
         }
         WeatherCondition.THUNDERSTORM -> {
             WeatherPalette(
-                gradientColors = listOf(ThunderstormTop, ThunderstormBottom),
+                gradientColors = listOf(ThunderstormTop, ThunderstormMid, ThunderstormBottom),
                 surfaceTint = ThunderstormSurfaceTint,
-                textColor = Color(0xFFF8F9FA),
-                accentColor = LightningAccent
+                textColor = Color(0xFFF8FAFC),
+                accentColor = LightningAccent,
+                isDay = isDay,
+                glassCardTopColor = Color(0xAD2E286E),
+                glassCardBottomColor = Color(0xC4161442),
+                heroGlowColor = LightningAccent
             )
         }
         WeatherCondition.SNOW -> {
-            if (isDark) {
+            if (isDark || !isDay) {
                 WeatherPalette(
-                    gradientColors = listOf(SnowDarkTop, SnowDarkBottom),
+                    gradientColors = listOf(SnowDarkTop, SnowDarkMid, SnowDarkBottom),
                     surfaceTint = SnowSurfaceTint,
                     textColor = Color.White,
-                    accentColor = Color(0xFFE1F5FE)
+                    accentColor = Color(0xFFE0F2FE),
+                    isDay = isDay,
+                    glassCardTopColor = GlassCardNightTop,
+                    glassCardBottomColor = GlassCardNightBottom,
+                    heroGlowColor = Color(0xFF7DD3FC)
                 )
             } else {
                 WeatherPalette(
-                    gradientColors = listOf(SnowLightTop, SnowLightBottom),
+                    gradientColors = listOf(SnowLightTop, SnowLightMid, SnowLightBottom),
                     surfaceTint = SnowSurfaceTint,
-                    textColor = Color(0xFF102027),
-                    accentColor = Color(0xFFE1F5FE)
+                    textColor = Color.White,
+                    accentColor = Color(0xFFE0F2FE),
+                    isDay = true,
+                    glassCardTopColor = cardTop,
+                    glassCardBottomColor = cardBot,
+                    heroGlowColor = Color(0xFF7DD3FC)
                 )
             }
         }
         WeatherCondition.UNKNOWN -> {
             WeatherPalette(
-                gradientColors = listOf(OvercastLightTop, OvercastLightBottom),
+                gradientColors = if (isDay) {
+                    listOf(OvercastLightTop, OvercastLightMid, OvercastLightBottom)
+                } else {
+                    listOf(OvercastDarkTop, OvercastDarkMid, OvercastDarkBottom)
+                },
                 surfaceTint = OvercastSurfaceTint,
                 textColor = Color.White,
-                accentColor = Color(0xFFCFD8DC)
+                accentColor = Color(0xFF7DD3FC),
+                isDay = isDay,
+                glassCardTopColor = cardTop,
+                glassCardBottomColor = cardBot,
+                heroGlowColor = Color(0xFF38BDF8)
             )
         }
     }
-    return basePalette
 }
 
 @Composable
 fun WeatherTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     condition: WeatherCondition = WeatherCondition.CLEAR_SKY,
+    isDay: Boolean = true,
     reducedMotion: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    val weatherPalette = weatherPaletteFor(condition, isDark = darkTheme)
+    val colorScheme = if (darkTheme || !isDay) DarkColorScheme else LightColorScheme
+    val weatherPalette = weatherPaletteFor(condition, isDark = darkTheme, isDay = isDay)
 
     CompositionLocalProvider(
         LocalWeatherPalette provides weatherPalette,

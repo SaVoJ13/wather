@@ -130,4 +130,8 @@
     <string name="unit_mm">mm</string>
     <string name="remove_city_desc">%s entfernen</string>
     <string name="no_data">Keine Daten</string>
+    <string name="nav_forecast">Prognose</string>
+    <string name="nav_locations">Orte</string>
+    <string name="wind_unit_ms">m/s</string>
+    <string name="active_city_badge">AKTIV</string>
 </resources>

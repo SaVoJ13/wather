@@ -2,6 +2,7 @@
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.WaterDrop
-import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,63 +33,80 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
-import androidx.core.os.ConfigurationCompat
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.core.os.ConfigurationCompat
 import com.weather.app.R
 import com.weather.app.domain.model.DailyForecastItem
-import com.weather.app.ui.theme.LocalWeatherPalette
+import com.weather.app.ui.theme.GlassPillActiveFill
+import com.weather.app.ui.theme.LocalWeatherUnits
 import com.weather.app.ui.theme.RainAccent
-import com.weather.app.ui.theme.TempBarCold
-import com.weather.app.ui.theme.TempBarHot
-import com.weather.app.ui.theme.TempBarModerate
-import com.weather.app.ui.theme.TempBarWarm
+import com.weather.app.ui.theme.TempBarTrack
+import com.weather.app.ui.theme.TempTrendMaxCoral
+import com.weather.app.ui.theme.TempTrendMinCyan
 import java.time.format.DateTimeFormatter
 import java.util.Locale
-import kotlin.math.roundToInt
 
+/**
+ * Об'ємний список щоденного прогнозу на 14–16 днів (Sapphire Atmospheric Glass v2 — Макет 03).
+ *
+ * Відповідно до вимог Власника (Stage B — Requirement 2, 3, 5, 7, 9):
+ * - Підтримує всі фактичні дні прогнозу до 16 днів (без штучного обрізання);
+ * - Перший рядок («Сьогодні») виділений сапфіровою капсулою з блакитною рамкою;
+ * - Кожен рядок показує назву дня, реальну дату, багатошарову 3D-ілюстрацію погоди, опис стану,
+ *   пігулку ймовірності опадів та двоколірну шкалу температурного діапазону (Cyan -> Coral).
+ */
 @Composable
 fun DailyForecastList(
     dailyItems: List<DailyForecastItem>,
     onDayClick: (DailyForecastItem) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val palette = LocalWeatherPalette.current
     if (dailyItems.isEmpty()) return
 
     val globalMin = dailyItems.minOfOrNull { it.minTemperatureCelsius } ?: 0.0
     val globalMax = dailyItems.maxOfOrNull { it.maxTemperatureCelsius } ?: 30.0
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(palette.surfaceTint)
-            .padding(vertical = 16.dp)
+    GlassCard(
+        cornerRadius = 28.dp,
+        modifier = modifier.fillMaxWidth()
     ) {
-        Text(
-            text = stringResource(R.string.daily_forecast_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = palette.textColor,
-            modifier = Modifier.padding(horizontal = 20.dp)
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        dailyItems.forEachIndexed { index, item ->
-            DailyForecastRow(
-                index = index,
-                item = item,
-                globalMin = globalMin,
-                globalMax = globalMax,
-                onClick = { onDayClick(item) }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 16.dp)
+        ) {
+            Text(
+                text = "ЩОДЕННИЙ ПРОГНОЗ (${dailyItems.size} ДНІВ • ТАП ДЛЯ ДЕТАЛЕЙ)",
+                style = MaterialTheme.typography.labelLarge.copy(
+                    fontSize = 12.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.4.sp
+                ),
+                color = Color(0xFF93C5FD),
+                modifier = Modifier.padding(horizontal = 18.dp)
             )
 
-            if (index < dailyItems.lastIndex) {
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 20.dp),
-                    color = palette.textColor.copy(alpha = 0.1f),
-                    thickness = 0.5.dp
+            Spacer(modifier = Modifier.height(10.dp))
+
+            dailyItems.forEachIndexed { index, item ->
+                DailyForecastRow(
+                    index = index,
+                    item = item,
+                    globalMin = globalMin,
+                    globalMax = globalMax,
+                    onClick = { onDayClick(item) }
                 )
+
+                if (index < dailyItems.lastIndex && index > 0) {
+                    HorizontalDivider(
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = Color.White.copy(alpha = 0.12f),
+                        thickness = 0.5.dp
+                    )
+                }
             }
         }
     }
@@ -103,100 +120,152 @@ private fun DailyForecastRow(
     globalMax: Double,
     onClick: () -> Unit
 ) {
-    val palette = LocalWeatherPalette.current
+    val units = LocalWeatherUnits.current
     val configuration = LocalConfiguration.current
     val currentLocale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
-    val dayFormatter = DateTimeFormatter.ofPattern("EE, d MMM", currentLocale)
+    val dayNameFormatter = DateTimeFormatter.ofPattern("EEEE", currentLocale)
+    val shortDateFormatter = DateTimeFormatter.ofPattern("d MMM", currentLocale)
 
     val dayTitle = when (index) {
         0 -> stringResource(R.string.today)
         1 -> stringResource(R.string.tomorrow)
-        else -> item.date.format(dayFormatter).replaceFirstChar { it.uppercase(currentLocale) }
+        else -> item.date.format(dayNameFormatter).replaceFirstChar { it.uppercase(currentLocale) }
     }
-
-    val minInt = item.minTemperatureCelsius.roundToInt()
-    val maxInt = item.maxTemperatureCelsius.roundToInt()
+    val dateSubtitle = item.date.format(shortDateFormatter)
+    val isToday = index == 0
+    val rowShape = RoundedCornerShape(18.dp)
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .sizeIn(minHeight = 52.dp)
+            .padding(horizontal = 10.dp, vertical = 2.dp)
+            .clip(rowShape)
+            .then(
+                if (isToday) {
+                    Modifier
+                        .background(GlassPillActiveFill)
+                        .border(1.dp, Color(0x9938BDF8), rowShape)
+                } else {
+                    Modifier
+                }
+            )
+            .sizeIn(minHeight = 68.dp)
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Назва дня
-        Text(
-            text = dayTitle,
-            style = MaterialTheme.typography.bodyLarge,
-            color = palette.textColor,
-            modifier = Modifier.width(96.dp)
-        )
+        // 1. День тижня + реальна дата
+        Column(modifier = Modifier.width(102.dp)) {
+            Text(
+                text = dayTitle,
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontSize = 15.5.sp,
+                    fontWeight = FontWeight.Bold
+                ),
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = dateSubtitle,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                color = Color(0xFFBAD6F8),
+                maxLines = 1
+            )
+        }
 
-        // Іконка погоди
-        WeatherConditionIcon(
+        // 2. Багатошарова 3D-ілюстрація погоди
+        WeatherIllustration(
             condition = item.condition,
-            modifier = Modifier.size(26.dp)
+            isDay = true,
+            modifier = Modifier.size(38.dp)
         )
 
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
-        // Ймовірність опадів
-        Box(
-            modifier = Modifier.width(42.dp),
-            contentAlignment = Alignment.CenterStart
+        // 3. Опис стану погоди + темно-сапфірова пігулка опадів
+        Column(
+            modifier = Modifier.weight(1.1f),
+            verticalArrangement = Arrangement.Center
         ) {
-            if (item.precipitationProbabilityPercent != null && item.precipitationProbabilityPercent > 10) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.WaterDrop,
-                        contentDescription = stringResource(R.string.precipitation),
-                        tint = RainAccent,
-                        modifier = Modifier.size(10.dp)
-                    )
-                    Spacer(modifier = Modifier.width(2.dp))
-                    Text(
-                        text = "${item.precipitationProbabilityPercent}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = RainAccent
-                    )
+            Text(
+                text = stringResource(item.condition.stringRes),
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Medium
+                ),
+                color = Color(0xFFF1F5F9),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            val pop = item.precipitationProbabilityPercent
+            if (pop != null && pop > 10) {
+                Spacer(modifier = Modifier.height(3.dp))
+                GlassPillBadge(
+                    cornerRadius = 8.dp,
+                    fillColor = Color(0xE00E224C),
+                    borderColor = Color(0x7838BDF8)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.WaterDrop,
+                            contentDescription = stringResource(R.string.precipitation),
+                            tint = RainAccent,
+                            modifier = Modifier.size(10.dp)
+                        )
+                        Spacer(modifier = Modifier.width(3.dp))
+                        Text(
+                            text = "$pop%",
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = Color(0xFF7DD3FC)
+                        )
+                    }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.width(8.dp))
-
-        // Мін температура
-        val minPrefix = if (minInt > 0) "+" else ""
-        Text(
-            text = "$minPrefix$minInt°",
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.textColor.copy(alpha = 0.65f),
-            modifier = Modifier.width(36.dp)
-        )
-
         Spacer(modifier = Modifier.width(6.dp))
 
-        // Градієнтна температурна смуга (горизонтальний bar)
+        // 4. Мін температура
+        Text(
+            text = units.formatTemperature(item.minTemperatureCelsius),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 14.5.sp,
+                fontWeight = FontWeight.Medium
+            ),
+            color = Color(0xFFBAD6F8),
+            modifier = Modifier.width(38.dp)
+        )
+
+        // 5. Двоколірна шкала температурного діапазону (Cyan -> Coral)
         TemperatureRangeBar(
             min = item.minTemperatureCelsius,
             max = item.maxTemperatureCelsius,
             globalMin = globalMin,
             globalMax = globalMax,
             modifier = Modifier
-                .weight(1f)
-                .height(6.dp)
+                .width(56.dp)
+                .height(7.dp)
         )
 
-        Spacer(modifier = Modifier.width(6.dp))
+        Spacer(modifier = Modifier.width(8.dp))
 
-        // Макс температура
-        val maxPrefix = if (maxInt > 0) "+" else ""
+        // 6. Макс температура
         Text(
-            text = "$maxPrefix$maxInt°",
-            style = MaterialTheme.typography.bodyMedium,
-            color = palette.textColor,
-            modifier = Modifier.width(36.dp)
+            text = units.formatTemperature(item.maxTemperatureCelsius),
+            style = MaterialTheme.typography.bodyMedium.copy(
+                fontSize = 15.5.sp,
+                fontWeight = FontWeight.Bold
+            ),
+            color = Color.White,
+            modifier = Modifier.width(38.dp)
         )
     }
 }
@@ -214,41 +283,27 @@ private fun TemperatureRangeBar(
     val endFraction = ((max - globalMin) / totalRange).coerceIn(0.0, 1.0).toFloat()
 
     val barBrush = Brush.horizontalGradient(
-        colors = listOf(
-            tempToColor(min),
-            tempToColor(max)
-        )
+        colors = listOf(TempTrendMinCyan, TempTrendMaxCoral)
     )
 
     Canvas(modifier = modifier) {
         val barHeight = size.height
         val totalWidth = size.width
 
-        // Сірий фоновий трек
         drawRoundRect(
-            color = Color.White.copy(alpha = 0.15f),
+            color = TempBarTrack,
             size = Size(totalWidth, barHeight),
-            cornerRadius = CornerRadius(barHeight / 2, barHeight / 2)
+            cornerRadius = CornerRadius(barHeight / 2f, barHeight / 2f)
         )
 
-        // Активна ділянка діапазону дня
         val left = totalWidth * startFraction
-        val width = (totalWidth * (endFraction - startFraction)).coerceAtLeast(barHeight)
+        val width = (totalWidth * (endFraction - startFraction)).coerceAtLeast(barHeight * 1.4f)
 
         drawRoundRect(
             brush = barBrush,
-            topLeft = Offset(left, 0f),
+            topLeft = Offset(left.coerceAtMost(totalWidth - width), 0f),
             size = Size(width, barHeight),
-            cornerRadius = CornerRadius(barHeight / 2, barHeight / 2)
+            cornerRadius = CornerRadius(barHeight / 2f, barHeight / 2f)
         )
-    }
-}
-
-private fun tempToColor(temp: Double): Color {
-    return when {
-        temp <= 0 -> TempBarCold
-        temp in 0.1..15.0 -> TempBarModerate
-        temp in 15.1..25.0 -> TempBarWarm
-        else -> TempBarHot
     }
 }

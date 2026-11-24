@@ -173,8 +173,9 @@ fun WeatherMainScreen(
         }
     }
 
-    // Завантажуємо збережену активну локацію з локального кешу без автоматичного запиту GPS
+    // Завантажуємо збережену активну локацію та одиниці вимірювання з локального кешу без автоматичного запиту GPS
     androidx.compose.runtime.LaunchedEffect(Unit) {
+        com.weather.app.ui.theme.WeatherUnitPreferences.load(context)
         viewModel.loadSelectedCities(context)
         val savedLoc = com.weather.app.data.local.WeatherLocalCache.loadActiveLocation(context)
         if (savedLoc != null) {
@@ -218,39 +219,61 @@ fun WeatherMainScreen(
 
     val uiState by viewModel.uiState.collectAsState()
     val selectedCities by viewModel.selectedCities.collectAsState()
-    val condition = when (val state = uiState) {
-        is WeatherUiState.Success -> state.forecast.current.condition
-        is WeatherUiState.Error -> state.lastCachedForecast?.current?.condition ?: WeatherCondition.CLEAR_SKY
-        is WeatherUiState.Loading -> WeatherCondition.CLEAR_SKY
+    val cityForecasts by viewModel.cityForecasts.collectAsState()
+    val unitState by com.weather.app.ui.theme.WeatherUnitPreferences.unitState.collectAsState()
+
+    val activeForecastForTheme = when (val state = uiState) {
+        is WeatherUiState.Success -> state.forecast
+        is WeatherUiState.Error -> state.lastCachedForecast
+        is WeatherUiState.Loading -> null
+    }
+    val condition = activeForecastForTheme?.current?.condition ?: WeatherCondition.CLEAR_SKY
+    val isDayForTheme = remember(activeForecastForTheme) {
+        val f = activeForecastForTheme ?: return@remember true
+        val today = f.daily14Days.firstOrNull()
+        val nowTime = f.current.time
+        if (today?.sunrise != null && today.sunset != null) {
+            !nowTime.isBefore(today.sunrise) && !nowTime.isAfter(today.sunset)
+        } else {
+            nowTime.hour in 6..20
+        }
     }
 
-    WeatherTheme(
-        condition = condition,
-        reducedMotion = isSystemReducedMotion
+    androidx.compose.runtime.CompositionLocalProvider(
+        com.weather.app.ui.theme.LocalWeatherUnits provides unitState
     ) {
-        WeatherMainScreenContent(
-            uiState = uiState,
-            snackbarHostState = snackbarHostState,
-            onRefresh = {
-                viewModel.refresh(onLoaded = { forecast ->
-                    com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
-                })
-            },
-            onSearchClick = { isSearchSheetOpen = true },
-            onLocationClick = onLocationClick,
-            onLanguageClick = { isLanguageDialogOpen = true },
-            selectedCities = selectedCities,
-            onCitySelected = { city ->
-                com.weather.app.data.local.WeatherLocalCache.saveActiveLocation(context, city)
-                viewModel.selectLocation(city, context = context, onLoaded = { forecast ->
-                    com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
-                })
-            },
-            onCityRemoved = { city ->
-                viewModel.removeSelectedCity(context, city)
-            },
-            modifier = modifier
-        )
+        WeatherTheme(
+            condition = condition,
+            isDay = isDayForTheme,
+            reducedMotion = isSystemReducedMotion
+        ) {
+            WeatherMainScreenContent(
+                uiState = uiState,
+                snackbarHostState = snackbarHostState,
+                onRefresh = {
+                    viewModel.refresh(onLoaded = { forecast ->
+                        com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+                    })
+                },
+                onSearchClick = { isSearchSheetOpen = true },
+                onLocationClick = onLocationClick,
+                onLanguageClick = { isLanguageDialogOpen = true },
+                selectedCities = selectedCities,
+                cityForecasts = cityForecasts,
+                onRequestPreloadCities = {
+                    viewModel.preloadMissingCityForecasts(context)
+                },
+                onCitySelected = { city ->
+                    com.weather.app.data.local.WeatherLocalCache.saveActiveLocation(context, city)
+                    viewModel.selectLocation(city, context = context, onLoaded = { forecast ->
+                        com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+                    })
+                },
+                onCityRemoved = { city ->
+                    viewModel.removeSelectedCity(context, city)
+                },
+                modifier = modifier
+            )
 
         // Модальне вікно вибору мови
         if (isLanguageDialogOpen) {
@@ -259,24 +282,25 @@ fun WeatherMainScreen(
             )
         }
 
-        // Модальне вікно пошуку міст
-        if (isSearchSheetOpen) {
-            SearchCityBottomSheet(
-                onDismissRequest = { isSearchSheetOpen = false },
-                onCitySelected = { city ->
-                    com.weather.app.data.local.WeatherLocalCache.saveActiveLocation(context, city)
-                    viewModel.selectLocation(city, context = context, onLoaded = { forecast ->
-                        com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
-                    })
-                },
-                onRemoveCity = { city ->
-                    viewModel.removeSelectedCity(context, city)
-                },
-                onSearchQuery = { query ->
-                    viewModel.searchCities(query)
-                },
-                selectedCities = selectedCities
-            )
+            // Модальне вікно пошуку міст
+            if (isSearchSheetOpen) {
+                SearchCityBottomSheet(
+                    onDismissRequest = { isSearchSheetOpen = false },
+                    onCitySelected = { city ->
+                        com.weather.app.data.local.WeatherLocalCache.saveActiveLocation(context, city)
+                        viewModel.selectLocation(city, context = context, onLoaded = { forecast ->
+                            com.weather.app.widget.WeatherWidgetScheduler.updateWidgetNow(context, forecast)
+                        })
+                    },
+                    onRemoveCity = { city ->
+                        viewModel.removeSelectedCity(context, city)
+                    },
+                    onSearchQuery = { query ->
+                        viewModel.searchCities(query)
+                    },
+                    selectedCities = selectedCities
+                )
+            }
         }
     }
 }
@@ -291,6 +315,8 @@ fun WeatherMainScreenContent(
     onLanguageClick: () -> Unit,
     modifier: Modifier = Modifier,
     selectedCities: List<LocationModel> = emptyList(),
+    cityForecasts: Map<String, FullWeatherForecast> = emptyMap(),
+    onRequestPreloadCities: () -> Unit = {},
     onCitySelected: (LocationModel) -> Unit = {},
     onCityRemoved: (LocationModel) -> Unit = {}
 ) {
@@ -300,7 +326,8 @@ fun WeatherMainScreenContent(
     var isSettingsOpen by remember { mutableStateOf(false) }
     var selectedDayForDetails by remember { mutableStateOf<DailyForecastItem?>(null) }
 
-    val topTargetColor = palette.gradientColors.firstOrNull() ?: Color(0xFF1E3C72)
+    val topTargetColor = palette.gradientColors.firstOrNull() ?: Color(0xFF0B2454)
+    val midTargetColor = if (palette.gradientColors.size >= 3) palette.gradientColors[1] else topTargetColor
     val bottomTargetColor = palette.gradientColors.lastOrNull() ?: topTargetColor
     val skyAnimDuration = com.weather.app.ui.theme.WeatherMotionPolicy.skyGradientDurationMillis(reducedMotion)
     val animatedTopColor by androidx.compose.animation.animateColorAsState(
@@ -308,13 +335,18 @@ fun WeatherMainScreenContent(
         animationSpec = tween(durationMillis = skyAnimDuration),
         label = "SkyTopColor"
     )
+    val animatedMidColor by androidx.compose.animation.animateColorAsState(
+        targetValue = midTargetColor,
+        animationSpec = tween(durationMillis = skyAnimDuration),
+        label = "SkyMidColor"
+    )
     val animatedBottomColor by androidx.compose.animation.animateColorAsState(
         targetValue = bottomTargetColor,
         animationSpec = tween(durationMillis = skyAnimDuration),
         label = "SkyBottomColor"
     )
-    val backgroundBrush = remember(animatedTopColor, animatedBottomColor) {
-        Brush.verticalGradient(colors = listOf(animatedTopColor, animatedBottomColor))
+    val backgroundBrush = remember(animatedTopColor, animatedMidColor, animatedBottomColor) {
+        Brush.verticalGradient(colors = listOf(animatedTopColor, animatedMidColor, animatedBottomColor))
     }
 
     Scaffold(
@@ -418,6 +450,8 @@ fun WeatherMainScreenContent(
                             isRefreshing = state.isRefreshing,
                             isOffline = state.isOffline,
                             selectedCities = selectedCities,
+                            cityForecasts = cityForecasts,
+                            onRequestPreloadCities = onRequestPreloadCities,
                             onRefresh = onRefresh,
                             onSearchClick = onSearchClick,
                             onLocationClick = onLocationClick,
@@ -435,6 +469,8 @@ fun WeatherMainScreenContent(
                                 isRefreshing = false,
                                 isOffline = true,
                                 selectedCities = selectedCities,
+                                cityForecasts = cityForecasts,
+                                onRequestPreloadCities = onRequestPreloadCities,
                                 onRefresh = onRefresh,
                                 onSearchClick = onSearchClick,
                                 onLocationClick = onLocationClick,
@@ -472,6 +508,8 @@ private fun WeatherTabContent(
     isRefreshing: Boolean,
     isOffline: Boolean,
     selectedCities: List<LocationModel>,
+    cityForecasts: Map<String, FullWeatherForecast>,
+    onRequestPreloadCities: () -> Unit,
     onRefresh: () -> Unit,
     onSearchClick: () -> Unit,
     onLocationClick: () -> Unit,
@@ -538,6 +576,9 @@ private fun WeatherTabContent(
                     LocationsScreen(
                         currentLocation = forecast.location,
                         savedCities = selectedCities,
+                        activeForecast = forecast,
+                        cityForecasts = cityForecasts,
+                        onRequestPreloadCities = onRequestPreloadCities,
                         onCitySelected = onCitySelected,
                         onCityRemoved = onCityRemoved,
                         onSearchClick = onSearchClick,

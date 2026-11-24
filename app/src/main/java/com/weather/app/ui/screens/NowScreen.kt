@@ -42,7 +42,7 @@ fun NowScreen(
             .fillMaxSize()
             .verticalScroll(scrollState)
     ) {
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
         // Головний блок поточної погоди (Hero)
         CurrentWeatherHero(
@@ -53,7 +53,7 @@ fun NowScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // 24-годинна стрічка прогнозу від поточної години
         HourlyForecastRow(
@@ -61,7 +61,7 @@ fun NowScreen(
             modifier = Modifier.padding(horizontal = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
         // Ключові метрики (вологість, вітер, тиск, УФ)
         WeatherMetricsGrid(

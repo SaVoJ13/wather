@@ -186,44 +186,42 @@ fun SunriseSunsetCard(
     }
     val timeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(palette.surfaceTint)
-            .padding(16.dp)
+    GlassCard(
+        cornerRadius = 26.dp,
+        modifier = modifier.fillMaxWidth()
     ) {
-        // Заголовок
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.WbSunny,
-                    contentDescription = null,
-                    tint = palette.accentColor,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            // Заголовок
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 Text(
-                    text = stringResource(R.string.sunrise_sunset_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = palette.textColor
+                    text = stringResource(R.string.sunrise_sunset_title).uppercase(),
+                    style = MaterialTheme.typography.labelLarge.copy(
+                        fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                    ),
+                    color = Color(0xFF93C5FD)
                 )
-            }
 
-            Text(
-                text = statusText,
-                style = MaterialTheme.typography.labelSmall,
-                color = palette.textColor.copy(alpha = 0.85f),
-                modifier = Modifier
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(palette.textColor.copy(alpha = 0.12f))
-                    .padding(horizontal = 8.dp, vertical = 4.dp)
-            )
-        }
+                GlassPillBadge(
+                    cornerRadius = 12.dp
+                ) {
+                    Text(
+                        text = statusText,
+                        style = MaterialTheme.typography.labelSmall.copy(
+                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
+                        ),
+                        color = Color(0xFFE0F2FE),
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp)
+                    )
+                }
+            }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -420,6 +418,7 @@ fun SunriseSunsetCard(
                     color = palette.textColor
                 )
             }
+        }
         }
     }
 }

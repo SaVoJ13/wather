@@ -130,4 +130,8 @@
     <string name="unit_mm">мм</string>
     <string name="remove_city_desc">Удалить %s</string>
     <string name="no_data">Нет данных</string>
+    <string name="nav_forecast">Прогноз</string>
+    <string name="nav_locations">Места</string>
+    <string name="wind_unit_ms">м/с</string>
+    <string name="active_city_badge">АКТИВНО</string>
 </resources>

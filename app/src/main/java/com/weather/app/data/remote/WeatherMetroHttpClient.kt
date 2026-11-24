@@ -92,7 +92,9 @@ object WeatherMetroHttpClient {
                 temperature2m = hourlyTemp,
                 apparentTemperature = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("apparent_temperature")),
                 precipitationProbability = jsonArrayToNullableIntList(hourlyObj.optJSONArray("precipitation_probability")),
-                weathercode = jsonArrayToNullableIntList(hourlyObj.optJSONArray("weathercode")),
+                weathercode = jsonArrayToNullableIntList(
+                    hourlyObj.optJSONArray("weathercode") ?: hourlyObj.optJSONArray("weather_code")
+                ),
                 relativeHumidity2m = jsonArrayToNullableIntList(hourlyObj.optJSONArray("relative_humidity_2m")),
                 windSpeed10m = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("wind_speed_10m")),
                 surfacePressure = jsonArrayToNullableDoubleList(hourlyObj.optJSONArray("surface_pressure")),
@@ -115,7 +117,9 @@ object WeatherMetroHttpClient {
                 temperature2mMin = dailyTempMin,
                 precipitationSum = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("precipitation_sum")),
                 precipitationProbabilityMax = jsonArrayToNullableIntList(dailyObj.optJSONArray("precipitation_probability_max")),
-                weathercode = jsonArrayToNullableIntList(dailyObj.optJSONArray("weathercode")),
+                weathercode = jsonArrayToNullableIntList(
+                    dailyObj.optJSONArray("weathercode") ?: dailyObj.optJSONArray("weather_code")
+                ),
                 sunrise = jsonArrayToNullableStringList(dailyObj.optJSONArray("sunrise")),
                 sunset = jsonArrayToNullableStringList(dailyObj.optJSONArray("sunset")),
                 windSpeed10mMax = jsonArrayToNullableDoubleList(dailyObj.optJSONArray("wind_speed_10m_max"))

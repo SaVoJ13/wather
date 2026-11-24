@@ -56,14 +56,15 @@ fun DayDetailsBottomSheet(
     if (item == null) return
 
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val units = com.weather.app.ui.theme.LocalWeatherUnits.current
     val configuration = LocalConfiguration.current
     val currentLocale = ConfigurationCompat.getLocales(configuration)[0] ?: Locale.getDefault()
     val titleFormatter = DateTimeFormatter.ofPattern("EEEE, d MMMM", currentLocale)
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     val formattedDate = item.date.format(titleFormatter).replaceFirstChar { it.uppercase(currentLocale) }
-    val minTempInt = item.minTemperatureCelsius.roundToInt()
-    val maxTempInt = item.maxTemperatureCelsius.roundToInt()
+    val minTempStr = units.formatTemperature(item.minTemperatureCelsius)
+    val maxTempStr = units.formatTemperature(item.maxTemperatureCelsius)
 
     ModalBottomSheet(
         onDismissRequest = onDismissRequest,
@@ -126,10 +127,8 @@ fun DayDetailsBottomSheet(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
-                    val maxPrefix = if (maxTempInt > 0) "+" else ""
-                    val minPrefix = if (minTempInt > 0) "+" else ""
                     Text(
-                        text = "↑ $maxPrefix$maxTempInt°   ↓ $minPrefix$minTempInt°",
+                        text = "↑ $maxTempStr   ↓ $minTempStr",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -151,7 +150,11 @@ fun DayDetailsBottomSheet(
                 "${stringResource(R.string.precipitation_probability_desc)}: $noDataStr"
             }
             val windValue = if (item.maxWindSpeedKmh != null) {
-                "${item.maxWindSpeedKmh.roundToInt()} ${stringResource(R.string.wind_unit_kmh)}"
+                units.formatWindSpeed(
+                    kmh = item.maxWindSpeedKmh,
+                    unitLabelKmh = stringResource(R.string.wind_unit_kmh),
+                    unitLabelMs = stringResource(R.string.wind_unit_ms)
+                )
             } else {
                 noDataStr
             }

@@ -124,4 +124,80 @@ class WeatherThemeTest {
             }
         }
     }
+
+    @Test
+    fun testSapphireDesignRecoveryEliminatesFlatGrayBackgroundsAcrossAllConditions() {
+        val forbiddenConcreteGray = androidx.compose.ui.graphics.Color(0xFF708090)
+        val forbiddenLightGray = androidx.compose.ui.graphics.Color(0xFFA4B0BE)
+
+        for (condition in WeatherCondition.entries) {
+            for (isDark in listOf(false, true)) {
+                for (isDay in listOf(false, true)) {
+                    val palette = weatherPaletteFor(condition, isDark = isDark, isDay = isDay)
+                    assertEquals(
+                        "Sapphire Atmospheric Glass v2 requires 3-stop gradient for $condition",
+                        3,
+                        palette.gradientColors.size
+                    )
+                    org.junit.Assert.assertFalse(
+                        "Flat concrete gray #708090 must never be used in $condition",
+                        palette.gradientColors.contains(forbiddenConcreteGray)
+                    )
+                    org.junit.Assert.assertFalse(
+                        "Flat light gray #A4B0BE must never be used in $condition",
+                        palette.gradientColors.contains(forbiddenLightGray)
+                    )
+                    // White text contrast against sapphire top & mid stops must meet WCAG AA (>= 4.5)
+                    val topContrast = com.weather.app.ui.theme.WeatherMotionPolicy.calculateContrastRatio(
+                        palette.textColor,
+                        palette.gradientColors[0]
+                    )
+                    val midContrast = com.weather.app.ui.theme.WeatherMotionPolicy.calculateContrastRatio(
+                        palette.textColor,
+                        palette.gradientColors[1]
+                    )
+                    assertTrue(
+                        "Top sky gradient contrast ($topContrast) must meet WCAG AA for $condition (isDay=$isDay)",
+                        topContrast >= 4.5
+                    )
+                    assertTrue(
+                        "Mid sky gradient contrast ($midContrast) must meet WCAG AA for $condition (isDay=$isDay)",
+                        midContrast >= 4.5
+                    )
+                }
+            }
+        }
+    }
+
+    @Test
+    fun testWeatherUnitPreferencesConversionAndFormatting() {
+        com.weather.app.ui.theme.WeatherUnitPreferences.resetForTests()
+
+        val defaultUnits = com.weather.app.ui.theme.WeatherUnitPreferences.unitState.value
+        assertEquals(com.weather.app.ui.theme.TemperatureUnit.CELSIUS, defaultUnits.temperatureUnit)
+        assertEquals("+21°", defaultUnits.formatTemperature(21.2))
+        assertEquals("18 км/год", defaultUnits.formatWindSpeed(18.0))
+        assertEquals("1018 гПа", defaultUnits.formatPressurePrimary(1018.0))
+
+        com.weather.app.ui.theme.WeatherUnitPreferences.setTemperatureUnit(
+            null,
+            com.weather.app.ui.theme.TemperatureUnit.FAHRENHEIT
+        )
+        com.weather.app.ui.theme.WeatherUnitPreferences.setWindSpeedUnit(
+            null,
+            com.weather.app.ui.theme.WindSpeedUnit.MS
+        )
+        com.weather.app.ui.theme.WeatherUnitPreferences.setPressureUnit(
+            null,
+            com.weather.app.ui.theme.PressureUnit.MMHG
+        )
+
+        val updated = com.weather.app.ui.theme.WeatherUnitPreferences.unitState.value
+        assertEquals(70, updated.convertTemperature(21.1))
+        assertEquals("+70°", updated.formatTemperature(21.1))
+        assertEquals("5.0 м/с", updated.formatWindSpeed(18.0))
+        assertEquals("764 мм рт.ст.", updated.formatPressurePrimary(1018.0))
+
+        com.weather.app.ui.theme.WeatherUnitPreferences.resetForTests()
+    }
 }

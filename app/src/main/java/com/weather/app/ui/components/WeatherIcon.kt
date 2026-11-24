@@ -9,14 +9,12 @@ import androidx.compose.material.icons.filled.Thunderstorm
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.WbCloudy
 import androidx.compose.material.icons.filled.WbSunny
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import com.weather.app.domain.model.WeatherCondition
-import com.weather.app.ui.theme.SunAccent
+import com.weather.app.ui.theme.LocalWeatherPalette
 
 fun weatherConditionIconData(condition: WeatherCondition): Pair<ImageVector, String> {
     return when (condition) {
@@ -34,30 +32,20 @@ fun weatherConditionIconData(condition: WeatherCondition): Pair<ImageVector, Str
     }
 }
 
+/**
+ * Усі погодні іконки в застосунку тепер рендерять повноцінну багатошарову 3D-ілюстрацію [WeatherIllustration]
+ * відповідно до директиви Власника (Stage B — Requirement 2 & 3: не замінювати складні ілюстрації простими системними іконками).
+ */
 @Composable
 fun WeatherConditionIcon(
     condition: WeatherCondition,
     modifier: Modifier = Modifier,
-    tint: Color = Color.Unspecified
+    tint: Color = Color.Unspecified,
+    isDay: Boolean = LocalWeatherPalette.current.isDay
 ) {
-    val (icon, description) = weatherConditionIconData(condition)
-    val finalTint = if (tint == Color.Unspecified) {
-        when (condition) {
-            WeatherCondition.CLEAR_SKY, WeatherCondition.MAINLY_CLEAR -> SunAccent
-            WeatherCondition.SNOW -> Color(0xFFE1F5FE)
-            WeatherCondition.RAIN, WeatherCondition.HEAVY_RAIN -> Color(0xFF4FC3F7)
-            WeatherCondition.DRIZZLE -> Color(0xFF81D4FA)
-            WeatherCondition.THUNDERSTORM -> Color(0xFFFFD54F)
-            else -> Color.White
-        }
-    } else {
-        tint
-    }
-
-    Icon(
-        imageVector = icon,
-        contentDescription = stringResource(condition.stringRes),
+    WeatherIllustration(
+        condition = condition,
         modifier = modifier,
-        tint = finalTint
+        isDay = isDay
     )
 }
